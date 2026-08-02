@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#080808" />
+    <title>Fontally</title>
+  </head>
+  <body>
+    <div class="noise"></div>
+    <div id="toast" class="toast" aria-live="polite"></div>
+    <main>
+      <header class="topbar">
+        <a class="wordmark" href="#top" aria-label="Fontally home">fontally<span>™</span></a>
+      </header>
+
+      <section class="hero" id="top">
+        <h1>Make your<br/><em>type</em> talk.</h1>
+        <p class="hero-copy">A font-obsessed AI that gets your vibe,<br/>then finds the type system that says it louder.</p>
+        <div class="terminal">
+          <div class="prompt-row">
+            <span class="prompt-mark">›</span>
+            <textarea id="brief" rows="1" spellcheck="false" autofocus aria-label="Describe what you are building" placeholder="tell Fontally what you're building..."></textarea>
+          </div>
+          <div class="terminal-footer">
+            <div class="chips" aria-label="Style suggestions">
+              <button data-prompt="a future-facing fintech app for people building their first wealth">FINTECH, BUT HOT</button>
+              <button data-prompt="a brutalist portfolio for an experimental architect">CULTURAL MENACE</button>
+              <button data-prompt="a quiet, cult-like coffee shop with amazing ceramics">QUIET LUXURY</button>
+              <button data-prompt="a developer-first AI coding platform with high-speed latency">AI & SAAS</button>
+              <button data-prompt="a dystopian cyberpunk RPG game set in neo-tokyo 2099">CYBERPUNK</button>
+              <button data-prompt="a high fashion editorial for sustainable luxury skincare">LUXURY EDITORIAL</button>
+            </div>
+            <button class="analyse" id="analyse">ANALYSE <span>→</span></button>
+          </div>
+        </div>
+        <div class="type-playground" id="typePlayground" aria-hidden="true">
+          <div class="type-sculpture" id="typeSculpture">
+            <div class="sculpture-row"><span>A</span><span>B</span></div>
+            <div class="sculpture-row"><span>C</span><span>D</span><span>E</span></div>
+            <div class="sculpture-row"><span>F</span><span>G</span><span>H</span><span>I</span></div>
+            <div class="sculpture-row"><span>J</span><span>K</span><span>L</span><span>M</span><span>N</span></div>
+            <div class="sculpture-row"><span>O</span><span>P</span><span>Q</span><span>R</span></div>
+            <div class="sculpture-row"><span>S</span><span>T</span><span>U</span><span>V</span></div>
+            <div class="sculpture-row"><span>W</span><span>X</span><span>Y</span><span>Z</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="result-section" id="results" aria-live="polite">
+        <div class="result-grid">
+          <article class="recommendation">
+
+            <!-- Interactive Specimen Controls -->
+            <div class="specimen-controls">
+              <div class="control-group text-group">
+                <label for="specimenTextInput">Type your text here :</label>
+                <input type="text" id="specimenTextInput" value="Spezia Variable" placeholder="Type custom headline..." spellcheck="false" />
+              </div>
+              <div class="control-group range-group">
+                <label for="fontSizeSlider">SIZE <span id="fontSizeVal">96px</span></label>
+                <input type="range" id="fontSizeSlider" min="32" max="140" value="96" />
+              </div>
+              <div class="control-actions">
+                <button id="toggleCase" title="Toggle Uppercase">Aa</button>
+                <button id="toggleItalic" title="Toggle Italic"><i>I</i></button>
+              </div>
+            </div>
+
+            <div class="type-specimen" id="displaySample">Spezia<br/><i>Variable</i></div>
+            
+            <div class="font-info">
+              <div>
+                <h2 id="displayName">Spezia Variable</h2>
+                <p id="displayMeta">SERIF / VARIABLE</p>
+              </div>
+            </div>
+            
+            <p class="rationale" id="rationale">It has the kind of expensive weirdness that makes a product page feel like an editorial you want to keep reading.</p>
+            
+            <div class="font-pair">
+              <span>PAIR WITH</span>
+              <strong id="pairName">Neue Montreal</strong>
+              <span id="pairMeta">GROTESK / 18PX</span>
+            </div>
+
+            <!-- Developer Export Bar -->
+            <div class="export-bar">
+              <span>DEVELOPER EXPORT</span>
+              <div class="export-buttons">
+                <button id="copyCssBtn" class="btn-export">COPY CSS</button>
+                <button id="copyTailwindBtn" class="btn-export">TAILWIND CONFIG</button>
+                <button id="copyGoogleFontsBtn" class="btn-export">GOOGLE FONTS</button>
+              </div>
+            </div>
+          </article>
+          
+          <aside class="insights">
+            <div class="insight-title">READING YOUR<br/>DESIGN DNA <span>↘</span></div>
+            <div class="bars">
+              <div><span>EDITORIAL</span><b><i id="barEditorial" style="width:88%"></i></b><em id="valEditorial">88</em></div>
+              <div><span>DISRUPTIVE</span><b><i id="barDisruptive" style="width:74%"></i></b><em id="valDisruptive">74</em></div>
+              <div><span>WARMTH</span><b><i id="barWarmth" style="width:61%"></i></b><em id="valWarmth">61</em></div>
+              <div><span>UTILITY</span><b><i id="barUtility" style="width:42%"></i></b><em id="valUtility">42</em></div>
+            </div>
+            <div class="insight-foot"><span>VIBE ARCHETYPE</span><strong id="archetype">THE SENSORY EDITOR</strong></div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="library">
+        <div class="font-shelf">
+          <div class="shelf-item shelf-serif" data-profile-id="coffee" role="button" tabindex="0">
+            <span>01</span><strong>Windsor & Söhne</strong><em>for charming<br/>eccentrics & warmth</em>
+          </div>
+          <div class="shelf-item shelf-grotesk" data-profile-id="architect" role="button" tabindex="0">
+            <span>02</span><strong>Helvetica Now & Times</strong><em>for brutalist<br/>architects</em>
+          </div>
+          <div class="shelf-item shelf-display" data-profile-id="luxury" role="button" tabindex="0">
+            <span>03</span><strong>Cormorant & Jakarta</strong><em>for soft<br/>power moves</em>
+          </div>
+        </div>
+      </section>
+
+      <footer><span>FONTALLY © 2026 — Developed by <a href="https://www.linkedin.com/in/shreyashkadam400" target="_blank" rel="noopener noreferrer" class="dev-link">Shreyash</a></span><a href="#top">BACK TO THE TOP ↑</a></footer>
+    </main>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
