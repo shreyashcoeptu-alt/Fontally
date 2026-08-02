@@ -1,6 +1,6 @@
 <div align="center">
 
-  <h1>fontally™</h1>
+  <h1>Fontally</h1>
   <p><strong>Make your type talk.</strong></p>
   <p><em>An aesthetic, vibe-driven typography curation and font pairing engine powered by design intelligence.</em></p>
 
@@ -31,24 +31,24 @@ Give Fontally a prompt—whether it's *"a brutalist portfolio for an experimenta
 
 ---
 
-## ⚡ Key Features
+## ✦ Key Features
 
-- 🧠 **Design DNA Analysis**: Evaluates briefs across four core aesthetic vectors: `EDITORIAL`, `DISRUPTIVE`, `WARMTH`, and `UTILITY`.
-- 🔤 **50+ Curated Vibe Archetypes**: Handcrafted pairings of Google Fonts and legendary display typefaces (Neue Montreal, Spezia, Geist Mono, Reckless Neue, Syne, Bodoni Moda, etc.).
-- 🎛️ **Interactive Type Specimen Control**:
+-  **Design DNA Analysis**: Evaluates briefs across four core aesthetic vectors: `EDITORIAL`, `DISRUPTIVE`, `WARMTH`, and `UTILITY`.
+-  **50+ Curated Vibe Archetypes**: Handcrafted pairings of Google Fonts and legendary display typefaces (Neue Montreal, Spezia, Geist Mono, Reckless Neue, Syne, Bodoni Moda, etc.).
+-  **Interactive Type Specimen Control**:
   - Live custom headline text editor
   - Dynamic font size slider (`32px` – `140px`)
   - Instant uppercase (`Aa`) and italic (`<i>I</i>`) state toggles
-- 💻 **One-Click Developer Exports**:
+-  **One-Click Developer Exports**:
   - **CSS**: `@import` rules + `:root` CSS variables ready for your stylesheet
   - **Tailwind CSS**: `fontFamily` configuration snippets ready for `tailwind.config.js`
   - **Google Fonts**: Direct CDN links to drop straight into your `<head>`
-- ⚡ **Instant Prompt Chips**: Pre-loaded vibe presets like *Quiet Luxury*, *Fintech*, *Cultural Menace*, *AI & SaaS*, and *Cyberpunk*.
-- 🎨 **Sleek Minimalist UI**: Built with dark mode aesthetics, grain texture overlays, smooth micro-interactions, and high-contrast typography.
+- **Instant Prompt Chips**: Pre-loaded vibe presets like *Quiet Luxury*, *Fintech*, *Cultural Menace*, *AI & SaaS*, and *Cyberpunk*.
+-  **Sleek Minimalist UI**: Built with dark mode aesthetics, grain texture overlays, smooth micro-interactions, and high-contrast typography.
 
 ---
 
-## 🛠️ Tech Stack
+##  ✦ Tech Stack
 
 - **Frontend**: HTML5, Vanilla JavaScript (ES Modules), Vanilla CSS
 - **Build Tool / Dev Server**: [Vite](https://vitejs.dev/)
@@ -57,12 +57,12 @@ Give Fontally a prompt—whether it's *"a brutalist portfolio for an experimenta
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 Make sure you have [Node.js](https://nodejs.org/) installed (version 18 or higher recommended).
 
-### Installation & Local Setup
+### ✧ Installation & Local Setup
 
 1. **Clone the Repository**
    ```bash
@@ -88,7 +88,7 @@ Make sure you have [Node.js](https://nodejs.org/) installed (version 18 or highe
 
 ---
 
-## 🌌 Vibe Archetypes & Pairings
+## ✧ Vibe Archetypes & Pairings
 
 Fontally translates complex mood boards into distinct typography archetypes. Here are a few examples:
 
@@ -103,7 +103,7 @@ Fontally translates complex mood boards into distinct typography archetypes. Her
 
 ---
 
-## 📦 Developer Export Examples
+## ✧ Developer Export Examples
 
 ### 1. CSS Custom Properties (`:root`)
 ```css
@@ -132,7 +132,7 @@ module.exports = {
 
 ---
 
-## ✍️ Author
+## Author
 
 Designed & Developed with ♥ by **[Shreyash Kadam](https://www.linkedin.com/in/shreyashkadam400)**.
 
