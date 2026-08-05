@@ -134,7 +134,6 @@ module.exports = {
 
 ## Author
 
-Designed & Developed with ♥ by **[Shreyash Kadam](https://www.linkedin.com/in/shreyashkadam400)**.
+Designed & Developed by **Shreyash Kadam**.
 
 - LinkedIn: [in/shreyashkadam400](https://www.linkedin.com/in/shreyashkadam400)
-- Project: [Fontally™](https://github.com/<shreyashcoeptu-alt>/Fontally)
