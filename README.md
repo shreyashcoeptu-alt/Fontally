@@ -138,9 +138,3 @@ Designed & Developed with ♥ by **[Shreyash Kadam](https://www.linkedin.com/in/
 
 - LinkedIn: [in/shreyashkadam400](https://www.linkedin.com/in/shreyashkadam400)
 - Project: [Fontally™](https://github.com/<shreyashcoeptu-alt>/Fontally)
-
----
-
-<div align="center">
-  <p><sub>FONTALLY © 2026 — MAKE YOUR TYPE TALK.</sub></p>
-</div>
