@@ -25,9 +25,9 @@
 
 ## ✦ About Fontally
 
-**Fontally** is a font-obsessed web application designed to bridge the gap between creative brand brief vibes and high-craft typography systems. 
+**Fontally** is a font-obsessed web application designed to bridge the gap between creative brand brief vibes and highcraft typography systems. 
 
-Give Fontally a prompt—whether it's *"a brutalist portfolio for an experimental architect"*, *"a quiet cult-like coffee shop with amazing ceramics"*, or *"fintech, but hot"*—and Fontally analyzes your design brief, maps your project's **Design DNA**, and pairs complimentary heading and body typefaces complete with live interactive specimens and instant developer export code.
+Give Fontally a prompt—whether it's *"a brutalist portfolio for an experimental architect"*, *"a quiet cult like coffee shop with amazing ceramics"*, or *"fintech, but hot"* and Fontally analyzes your design brief, maps your project's **Design DNA**, and pairs complimentary heading and body typefaces complete with live interactive specimens and instant developer export code.
 
 ---
 
