@@ -66,7 +66,7 @@ Make sure you have [Node.js](https://nodejs.org/) installed (version 18 or highe
 
 1. **Clone the Repository**
    ```bash
-   git clone https://github.com/<YOUR-USERNAME>/Fontally.git
+   git clone https://github.com/<shreyashcoeptu-alt>/Fontally.git
    cd Fontally
    ```
 
@@ -134,13 +134,6 @@ module.exports = {
 
 ## Author
 
-Designed & Developed with ♥ by **[Shreyash Kadam](https://www.linkedin.com/in/shreyashkadam400)**.
+Designed & Developed by **Shreyash Kadam**.
 
 - LinkedIn: [in/shreyashkadam400](https://www.linkedin.com/in/shreyashkadam400)
-- Project: [Fontally™](https://github.com/<YOUR-USERNAME>/Fontally)
-
----
-
-<div align="center">
-  <p><sub>FONTALLY © 2026 — MAKE YOUR TYPE TALK.</sub></p>
-</div>
