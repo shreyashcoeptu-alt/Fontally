@@ -4,11 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#080808" />
+    <meta name="description" content="Fontally — a font-obsessed AI that reads your vibe and finds the perfect type system for your brand." />
     <title>Fontally</title>
   </head>
   <body>
     <div class="noise"></div>
-    <div id="toast" class="toast" aria-live="polite"></div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
     <main>
       <header class="topbar">
         <a class="wordmark" href="#top" aria-label="Fontally home">fontally<span>™</span></a>
@@ -73,6 +74,7 @@
               <div>
                 <h2 id="displayName">Spezia Variable</h2>
                 <p id="displayMeta">SERIF / VARIABLE</p>
+                <p id="licenseDisclaimer" class="license-disclaimer" style="display: none;"></p>
               </div>
             </div>
             
@@ -91,6 +93,7 @@
                 <button id="copyCssBtn" class="btn-export">COPY CSS</button>
                 <button id="copyTailwindBtn" class="btn-export">TAILWIND CONFIG</button>
                 <button id="copyGoogleFontsBtn" class="btn-export">GOOGLE FONTS</button>
+                <button id="savePngBtn" class="btn-export">SAVE PNG</button>
               </div>
             </div>
           </article>

@@ -1,4 +1,5 @@
 import './style.css'
+import html2canvas from 'html2canvas'
 
 const $ = (selector) => document.querySelector(selector)
 
@@ -11,9 +12,7 @@ const pairName = $('#pairName')
 const pairMeta = $('#pairMeta')
 const rationale = $('#rationale')
 const archetype = $('#archetype')
-const confidence = $('#confidence')
 const analyse = $('#analyse')
-const profileIndex = $('#profileIndex')
 const toast = $('#toast')
 
 // Specimen Control Handles
@@ -51,12 +50,9 @@ const profiles = [
     rationale: 'A calm, precision-first grotesk that feels incredibly fluent on a balance sheet, then lets the serif bring just enough human risk.',
     archetype: 'THE OPTIMISTIC OPERATOR',
     dna: { editorial: 64, disruptive: 48, warmth: 55, utility: 92 },
-    headingFontFamily: "'Plus Jakarta Sans', sans-serif",
-    pairFontFamily: "'Playfair Display', serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Playfair+Display:ital,wght@0,600;1,400&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Playfair+Display:ital,wght@0,600;1,400&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'PP Neue Montreal', 'Plus Jakarta Sans', sans-serif;\n  --font-body: 'ABC Arizona Flare', 'Playfair Display', serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"PP Neue Montreal"', '"Plus Jakarta Sans"', 'sans-serif'],\n  body: ['"ABC Arizona Flare"', '"Playfair Display"', 'serif']\n}`
+    headingFallback: "'Plus Jakarta Sans', sans-serif",
+    bodyFallback: "'Playfair Display', serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Playfair+Display:ital,wght@0,600;1,400&display=swap'
   },
   {
     id: 'architect',
@@ -69,12 +65,9 @@ const profiles = [
     rationale: 'An overfamiliar classic used without apology. The tension with Times makes the whole system feel like it was found on a construction hoarding.',
     archetype: 'THE BEAUTIFUL MENACE',
     dna: { editorial: 82, disruptive: 91, warmth: 32, utility: 78 },
-    headingFontFamily: "'Inter', sans-serif",
-    pairFontFamily: "'Newsreader', serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Helvetica Now Display', 'Inter', sans-serif;\n  --font-body: 'Times New Roman', 'Newsreader', serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Helvetica Now Display"', '"Inter"', 'sans-serif'],\n  body: ['"Times New Roman"', '"Newsreader"', 'serif']\n}`
+    headingFallback: "'Inter', sans-serif",
+    bodyFallback: "'Newsreader', serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap'
   },
   {
     id: 'coffee',
@@ -87,12 +80,9 @@ const profiles = [
     rationale: 'Soft and slightly eccentric, with just enough old-world materiality to make a twelve-dollar filter coffee feel spiritually necessary.',
     archetype: 'THE TENDER MAXIMALIST',
     dna: { editorial: 88, disruptive: 42, warmth: 94, utility: 60 },
-    headingFontFamily: "'Newsreader', serif",
-    pairFontFamily: "'DM Sans', sans-serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,500;1,6..72,400&family=DM+Sans:wght@400;500&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,500;1,6..72,400&family=DM+Sans:wght@400;500&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Reckless Neue', 'Newsreader', serif;\n  --font-body: 'Söhne', 'DM Sans', sans-serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Reckless Neue"', '"Newsreader"', 'serif'],\n  body: ['"Söhne"', '"DM Sans"', 'sans-serif']\n}`
+    headingFallback: "'Newsreader', serif",
+    bodyFallback: "'DM Sans', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,500;1,6..72,400&family=DM+Sans:wght@400;500&display=swap'
   },
   {
     id: 'fashion',
@@ -105,12 +95,9 @@ const profiles = [
     rationale: 'It has the kind of expensive weirdness that makes a product page feel like an editorial you want to keep reading.',
     archetype: 'THE SENSORY EDITOR',
     dna: { editorial: 95, disruptive: 74, warmth: 61, utility: 42 },
-    headingFontFamily: "'Bodoni Moda', serif",
-    pairFontFamily: "'Plus Jakarta Sans', sans-serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,600;1,6..96,400&family=Plus+Jakarta+Sans:wght@400;500&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,600;1,6..96,400&family=Plus+Jakarta+Sans:wght@400;500&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Spezia Variable', 'Bodoni Moda', serif;\n  --font-body: 'Neue Montreal', 'Plus Jakarta Sans', sans-serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Spezia Variable"', '"Bodoni Moda"', 'serif'],\n  body: ['"Neue Montreal"', '"Plus Jakarta Sans"', 'sans-serif']\n}`
+    headingFallback: "'Bodoni Moda', serif",
+    bodyFallback: "'Plus Jakarta Sans', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,600;1,6..96,400&family=Plus+Jakarta+Sans:wght@400;500&display=swap'
   },
   {
     id: 'tech',
@@ -123,16 +110,13 @@ const profiles = [
     rationale: 'Hyper-focused engineering precision. The razor-sharp monospaced letterforms project raw execution velocity and zero fluff.',
     archetype: 'THE SYSTEM ARCHITECT',
     dna: { editorial: 35, disruptive: 80, warmth: 28, utility: 99 },
-    headingFontFamily: "'Geist Mono', 'DM Mono', monospace",
-    pairFontFamily: "'Inter', sans-serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;700&family=Inter:wght@400;600&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;700&family=Inter:wght@400;600&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Geist Mono', monospace;\n  --font-body: 'Inter Display', 'Inter', sans-serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Geist Mono"', 'monospace'],\n  body: ['"Inter Display"', '"Inter"', 'sans-serif']\n}`
+    headingFallback: "'Geist Mono', 'DM Mono', monospace",
+    bodyFallback: "'Inter', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;700&family=Inter:wght@400;600&display=swap'
   },
   {
     id: 'cyberpunk',
-    words: ['cyberpunk', 'gaming', 'rpg', 'neo', 'dystopian', 'retro', 'arcade', 'synth', 'glitch', 'future', 'pixel', 'vr', 'sci-fi', 'cyber'],
+    words: ['cyberpunk', 'gaming', 'rpg', 'neo', 'dystopian', 'retro', 'arcade', 'synth', 'glitch', 'future', 'pixel', 'vr', 'scifi', 'cyber'],
     name: 'PP Neue Bit',
     sample: 'PP Neue<br/><i>Bit</i>',
     meta: 'PIXEL / DISPLAY',
@@ -141,16 +125,13 @@ const profiles = [
     rationale: 'Raw pixelated nostalgia colliding with extreme geometric wide typography. Reads like neon rain bouncing off chrome armor.',
     archetype: 'THE SYNTH CONSTRUCTOR',
     dna: { editorial: 40, disruptive: 98, warmth: 50, utility: 65 },
-    headingFontFamily: "'Silkscreen', monospace",
-    pairFontFamily: "'Syne', sans-serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Syne:wght@700;800&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Syne:wght@700;800&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'PP Neue Bit', 'Silkscreen', monospace;\n  --font-body: 'Syne', sans-serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"PP Neue Bit"', '"Silkscreen"', 'monospace'],\n  body: ['"Syne"', 'sans-serif']\n}`
+    headingFallback: "'Silkscreen', monospace",
+    bodyFallback: "'Syne', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Syne:wght@700;800&display=swap'
   },
   {
     id: 'luxury',
-    words: ['luxury', 'skincare', 'perfume', 'jewelry', 'parfum', 'chic', 'elegance', 'haute', 'boutique', 'premium', 'high-end', 'gold'],
+    words: ['luxury', 'skincare', 'perfume', 'jewelry', 'parfum', 'chic', 'elegance', 'haute', 'boutique', 'premium', 'highend', 'gold'],
     name: 'Cormorant Garamond',
     sample: 'Cormorant<br/><i>Garamond</i>',
     meta: 'SERIF / ELEGANT',
@@ -159,12 +140,9 @@ const profiles = [
     rationale: 'Uncompromising grace and high contrast serifs that emanate quiet opulence without needing to raise its voice.',
     archetype: 'THE HIGH COUTURIER',
     dna: { editorial: 96, disruptive: 35, warmth: 82, utility: 54 },
-    headingFontFamily: "'Cormorant Garamond', serif",
-    pairFontFamily: "'Plus Jakarta Sans', sans-serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;600&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;600&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Cormorant Garamond', serif;\n  --font-body: 'Plus Jakarta Sans', sans-serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Cormorant Garamond"', 'serif'],\n  body: ['"Plus Jakarta Sans"', 'sans-serif']\n}`
+    headingFallback: "'Cormorant Garamond', serif",
+    bodyFallback: "'Plus Jakarta Sans', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;600&display=swap'
   },
   {
     id: 'streetwear',
@@ -177,12 +155,9 @@ const profiles = [
     rationale: 'Heavy, unexpected counters and defiant letterform proportions engineered for high-visibility poster drops and billboards.',
     archetype: 'THE CULTURAL MENACE',
     dna: { editorial: 50, disruptive: 95, warmth: 40, utility: 72 },
-    headingFontFamily: "'Unbounded', sans-serif",
-    pairFontFamily: "'Space Grotesk', sans-serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&family=Space+Grotesk:wght@400;600&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&family=Space+Grotesk:wght@400;600&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Clash Display', 'Unbounded', sans-serif;\n  --font-body: 'Space Grotesk', sans-serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Clash Display"', '"Unbounded"', 'sans-serif'],\n  body: ['"Space Grotesk"', 'sans-serif']\n}`
+    headingFallback: "'Unbounded', sans-serif",
+    bodyFallback: "'Space Grotesk', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&family=Space+Grotesk:wght@400;600&display=swap'
   },
   {
     id: 'wellness',
@@ -195,12 +170,9 @@ const profiles = [
     rationale: 'Subtle flared stems and spacious tracking instill immediate breathing room and organic equilibrium into the layout.',
     archetype: 'THE HARMONIC SANCTUARY',
     dna: { editorial: 70, disruptive: 25, warmth: 98, utility: 84 },
-    headingFontFamily: "'Tenor Sans', sans-serif",
-    pairFontFamily: "'Outfit', sans-serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Tenor+Sans&family=Outfit:wght@400;600&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Tenor+Sans&family=Outfit:wght@400;600&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Tenor Sans', sans-serif;\n  --font-body: 'Outfit', sans-serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Tenor Sans"', 'sans-serif'],\n  body: ['"Outfit"', 'sans-serif']\n}`
+    headingFallback: "'Tenor Sans', sans-serif",
+    bodyFallback: "'Outfit', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Tenor+Sans&family=Outfit:wght@400;600&display=swap'
   },
   {
     id: 'retro',
@@ -213,12 +185,9 @@ const profiles = [
     rationale: 'Delicate high-contrast italic strokes paired with strict mechanical monospaced grid structure. Feels like a 1994 indie zine.',
     archetype: 'THE ANALOG CURATOR',
     dna: { editorial: 92, disruptive: 76, warmth: 80, utility: 65 },
-    headingFontFamily: "'Instrument Serif', serif",
-    pairFontFamily: "'DM Mono', monospace",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Instrument Serif', serif;\n  --font-body: 'DM Mono', monospace;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Instrument Serif"', 'serif'],\n  body: ['"DM Mono"', 'monospace']\n}`
+    headingFallback: "'Instrument Serif', serif",
+    bodyFallback: "'DM Mono', monospace",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&display=swap'
   },
   {
     id: 'editorial_news',
@@ -231,12 +200,9 @@ const profiles = [
     rationale: 'Calligraphic curves built for long-form readability, paired with a sturdy, neutral grotesk for dense data callouts.',
     archetype: 'THE CRITICAL CHRONICLER',
     dna: { editorial: 94, disruptive: 30, warmth: 70, utility: 88 },
-    headingFontFamily: "'Lora', serif",
-    pairFontFamily: "'Work Sans', sans-serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,600;1,400&family=Work+Sans:wght@400;600&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,600;1,400&family=Work+Sans:wght@400;600&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Lora', serif;\n  --font-body: 'Work Sans', sans-serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Lora"', 'serif'],\n  body: ['"Work Sans"', 'sans-serif']\n}`
+    headingFallback: "'Lora', serif",
+    bodyFallback: "'Work Sans', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,600;1,400&family=Work+Sans:wght@400;600&display=swap'
   },
   {
     id: 'modern_startup',
@@ -249,12 +215,9 @@ const profiles = [
     rationale: 'Bold geometric weight that commands immediate attention on hero headers, paired with Open Sans for crisp UI utility.',
     archetype: 'THE VENTURE LAUNCHER',
     dna: { editorial: 45, disruptive: 60, warmth: 50, utility: 95 },
-    headingFontFamily: "'Montserrat', sans-serif",
-    pairFontFamily: "'Open Sans', sans-serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Open+Sans:wght@400;600&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Open+Sans:wght@400;600&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Montserrat', sans-serif;\n  --font-body: 'Open Sans', sans-serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Montserrat"', 'sans-serif'],\n  body: ['"Open Sans"', 'sans-serif']\n}`
+    headingFallback: "'Montserrat', sans-serif",
+    bodyFallback: "'Open Sans', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Open+Sans:wght@400;600&display=swap'
   },
   {
     id: 'futuristic_ai',
@@ -267,12 +230,9 @@ const profiles = [
     rationale: 'Angular, square proportions engineered for telemetry displays and next-generation human-machine interfaces.',
     archetype: 'THE SYNTHETIC MATRIX',
     dna: { editorial: 20, disruptive: 96, warmth: 15, utility: 80 },
-    headingFontFamily: "'Orbitron', sans-serif",
-    pairFontFamily: "'Rajdhani', sans-serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;700&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;700&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Orbitron', sans-serif;\n  --font-body: 'Rajdhani', sans-serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Orbitron"', 'sans-serif'],\n  body: ['"Rajdhani"', 'sans-serif']\n}`
+    headingFallback: "'Orbitron', sans-serif",
+    bodyFallback: "'Rajdhani', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;700&display=swap'
   },
   {
     id: 'organic_farm',
@@ -285,12 +245,9 @@ const profiles = [
     rationale: 'Expressive variable optical sizes with soft organic curves that celebrate natural imperfections and handcrafted warmth.',
     archetype: 'THE EARTHEN BOTANIST',
     dna: { editorial: 85, disruptive: 55, warmth: 99, utility: 70 },
-    headingFontFamily: "'Fraunces', serif",
-    pairFontFamily: "'DM Sans', sans-serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,400&family=DM+Sans:wght@400;500&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,400&family=DM+Sans:wght@400;500&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Fraunces', serif;\n  --font-body: 'DM Sans', sans-serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Fraunces"', 'serif'],\n  body: ['"DM Sans"', 'sans-serif']\n}`
+    headingFallback: "'Fraunces', serif",
+    bodyFallback: "'DM Sans', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,400&family=DM+Sans:wght@400;500&display=swap'
   },
   {
     id: 'bold_ecommerce',
@@ -303,12 +260,9 @@ const profiles = [
     rationale: 'Tight vertical condensation built for punchy promo banners, sale callouts, and high-conversion e-commerce hero text.',
     archetype: 'THE HIGH-CONVERSION ENGINE',
     dna: { editorial: 30, disruptive: 85, warmth: 40, utility: 96 },
-    headingFontFamily: "'Oswald', sans-serif",
-    pairFontFamily: "'Lato', sans-serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=Lato:wght@400;700&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=Lato:wght@400;700&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Oswald', sans-serif;\n  --font-body: 'Lato', sans-serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Oswald"', 'sans-serif'],\n  body: ['"Lato"', 'sans-serif']\n}`
+    headingFallback: "'Oswald', sans-serif",
+    bodyFallback: "'Lato', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=Lato:wght@400;700&display=swap'
   },
   {
     id: 'sports_fitness',
@@ -321,12 +275,9 @@ const profiles = [
     rationale: 'Massive, unyielding letterform density designed to communicate raw muscular power and unrelenting momentum.',
     archetype: 'THE KINETIC ATHLETE',
     dna: { editorial: 15, disruptive: 92, warmth: 35, utility: 90 },
-    headingFontFamily: "'Anton', sans-serif",
-    pairFontFamily: "'Montserrat', sans-serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Anton&family=Montserrat:wght@400;700&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Anton&family=Montserrat:wght@400;700&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Anton', sans-serif;\n  --font-body: 'Montserrat', sans-serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Anton"', 'sans-serif'],\n  body: ['"Montserrat"', 'sans-serif']\n}`
+    headingFallback: "'Anton', sans-serif",
+    bodyFallback: "'Montserrat', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Anton&family=Montserrat:wght@400;700&display=swap'
   },
   {
     id: 'playful_kids',
@@ -339,12 +290,9 @@ const profiles = [
     rationale: 'Super-soft rounded corners and friendly letterforms that radiate joy, playfulness, and immediate approachability.',
     archetype: 'THE JOYFUL EXPLORER',
     dna: { editorial: 25, disruptive: 65, warmth: 100, utility: 80 },
-    headingFontFamily: "'Fredoka', sans-serif",
-    pairFontFamily: "'Quicksand', sans-serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Quicksand:wght@500;700&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Quicksand:wght@500;700&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Fredoka', sans-serif;\n  --font-body: 'Quicksand', sans-serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Fredoka"', 'sans-serif'],\n  body: ['"Quicksand"', 'sans-serif']\n}`
+    headingFallback: "'Fredoka', sans-serif",
+    bodyFallback: "'Quicksand', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Quicksand:wght@500;700&display=swap'
   },
   {
     id: 'medical_health',
@@ -357,12 +305,9 @@ const profiles = [
     rationale: 'Open aperture letterforms and clinical legibility designed to instill trust, safety, and calm authority.',
     archetype: 'THE TRUSTED CLINICIAN',
     dna: { editorial: 40, disruptive: 15, warmth: 75, utility: 98 },
-    headingFontFamily: "'Public Sans', sans-serif",
-    pairFontFamily: "'Inter', sans-serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Public+Sans:wght@600;700&family=Inter:wght@400;500&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@600;700&family=Inter:wght@400;500&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Public Sans', sans-serif;\n  --font-body: 'Inter', sans-serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Public Sans"', 'sans-serif'],\n  body: ['"Inter"', 'sans-serif']\n}`
+    headingFallback: "'Public Sans', sans-serif",
+    bodyFallback: "'Inter', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Public+Sans:wght@600;700&family=Inter:wght@400;500&display=swap'
   },
   {
     id: 'legal_corporate',
@@ -375,12 +320,9 @@ const profiles = [
     rationale: 'Traditional legal weight and historical gravitas paired with Source Sans 3 for impeccable contractual clarity.',
     archetype: 'THE CONSTANT COUNSEL',
     dna: { editorial: 90, disruptive: 20, warmth: 60, utility: 92 },
-    headingFontFamily: "'Libre Baskerville', serif",
-    pairFontFamily: "'Source Sans 3', sans-serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,700;1,400&family=Source+Sans+3:wght@400;600&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,700;1,400&family=Source+Sans+3:wght@400;600&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Libre Baskerville', serif;\n  --font-body: 'Source Sans 3', sans-serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Libre Baskerville"', 'serif'],\n  body: ['"Source Sans 3"', 'sans-serif']\n}`
+    headingFallback: "'Libre Baskerville', serif",
+    bodyFallback: "'Source Sans 3', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,700;1,400&family=Source+Sans+3:wght@400;600&display=swap'
   },
   {
     id: 'saas_analytics',
@@ -393,12 +335,9 @@ const profiles = [
     rationale: 'Increased letter height and distinct ligature design optimized for data tables, metrics dashboards, and live code feeds.',
     archetype: 'THE TELEMETRY ENGINE',
     dna: { editorial: 30, disruptive: 70, warmth: 30, utility: 100 },
-    headingFontFamily: "'JetBrains Mono', monospace",
-    pairFontFamily: "'Inter', sans-serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;600&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;600&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'JetBrains Mono', monospace;\n  --font-body: 'Inter', sans-serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"JetBrains Mono"', 'monospace'],\n  body: ['"Inter"', 'sans-serif']\n}`
+    headingFallback: "'JetBrains Mono', monospace",
+    bodyFallback: "'Inter', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;600&display=swap'
   },
   {
     id: 'indie_music',
@@ -411,16 +350,13 @@ const profiles = [
     rationale: 'Raw felt-tip marker strokes colliding with technical monospaced tracklists. Captures the DIY ethos of garage band tour posters.',
     archetype: 'THE UNDERGROUND SOUND',
     dna: { editorial: 75, disruptive: 98, warmth: 85, utility: 45 },
-    headingFontFamily: "'Permanent Marker', cursive",
-    pairFontFamily: "'Fira Code', monospace",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Fira+Code:wght@400;600&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Fira+Code:wght@400;600&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Permanent Marker', cursive;\n  --font-body: 'Fira Code', monospace;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Permanent Marker"', 'cursive'],\n  body: ['"Fira Code"', 'monospace']\n}`
+    headingFallback: "'Permanent Marker', cursive",
+    bodyFallback: "'Fira Code', monospace",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Fira+Code:wght@400;600&display=swap'
   },
   {
     id: 'gourmet_dining',
-    words: ['dining', 'gourmet', 'bistro', 'wine', 'chef', 'menu', 'steak', 'michelin', 'culinary', 'taste', 'restaurant', 'luxury food'],
+    words: ['dining', 'gourmet', 'bistro', 'wine', 'chef', 'menu', 'steak', 'michelin', 'culinary', 'taste', 'restaurant', 'upscale'],
     name: 'Cinzel Fine Dining',
     sample: 'Cinzel<br/><i>Gourmet</i>',
     meta: 'CLASSICAL MONUMENTAL SERIF',
@@ -429,12 +365,9 @@ const profiles = [
     rationale: 'Inspired by classical Roman inscriptions, casting an aura of timeless culinary mastery over fine dining menus.',
     archetype: 'THE MICHELIN MAESTRO',
     dna: { editorial: 95, disruptive: 40, warmth: 75, utility: 60 },
-    headingFontFamily: "'Cinzel', serif",
-    pairFontFamily: "'Lato', sans-serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Lato:wght@400;700&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Lato:wght@400;700&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Cinzel', serif;\n  --font-body: 'Lato', sans-serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Cinzel"', 'serif'],\n  body: ['"Lato"', 'sans-serif']\n}`
+    headingFallback: "'Cinzel', serif",
+    bodyFallback: "'Lato', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Lato:wght@400;700&display=swap'
   },
   {
     id: 'cinema_film',
@@ -447,12 +380,9 @@ const profiles = [
     rationale: 'High-contrast 19th century poster serif that turns every movie title into a dramatic cinematic event.',
     archetype: 'THE DRAMATIC AUTEUR',
     dna: { editorial: 98, disruptive: 80, warmth: 60, utility: 50 },
-    headingFontFamily: "'Abril Fatface', serif",
-    pairFontFamily: "'Raleway', sans-serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Raleway:wght@400;600&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Raleway:wght@400;600&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Abril Fatface', serif;\n  --font-body: 'Raleway', sans-serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Abril Fatface"', 'serif'],\n  body: ['"Raleway"', 'sans-serif']\n}`
+    headingFallback: "'Abril Fatface', serif",
+    bodyFallback: "'Raleway', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Raleway:wght@400;600&display=swap'
   },
   {
     id: 'nature_outdoor',
@@ -465,12 +395,9 @@ const profiles = [
     rationale: 'Inspired by traditional typewriter proportions with a rugged modern warmth made for field guides and adventure gear.',
     archetype: 'THE WILD VOYAGER',
     dna: { editorial: 60, disruptive: 45, warmth: 92, utility: 88 },
-    headingFontFamily: "'Cabin', sans-serif",
-    pairFontFamily: "'Merriweather', serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Cabin:wght@600;700&family=Merriweather:ital,wght@0,400;1,300&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Cabin:wght@600;700&family=Merriweather:ital,wght@0,400;1,300&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Cabin', sans-serif;\n  --font-body: 'Merriweather', serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Cabin"', 'sans-serif'],\n  body: ['"Merriweather"', 'serif']\n}`
+    headingFallback: "'Cabin', sans-serif",
+    bodyFallback: "'Merriweather', serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Cabin:wght@600;700&family=Merriweather:ital,wght@0,400;1,300&display=swap'
   },
   {
     id: 'gaming_esports',
@@ -483,12 +410,9 @@ const profiles = [
     rationale: 'Chunky, low-contrast headline strokes that project raw competitive dominance on esports leaderboards and streams.',
     archetype: 'THE ARENA CHAMPION',
     dna: { editorial: 15, disruptive: 95, warmth: 30, utility: 85 },
-    headingFontFamily: "'Russo One', sans-serif",
-    pairFontFamily: "'Exo 2', sans-serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Russo+One&family=Exo+2:wght@500;700&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Russo+One&family=Exo+2:wght@500;700&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Russo One', sans-serif;\n  --font-body: 'Exo 2', sans-serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Russo One"', 'sans-serif'],\n  body: ['"Exo 2"', 'sans-serif']\n}`
+    headingFallback: "'Russo One', sans-serif",
+    bodyFallback: "'Exo 2', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Russo+One&family=Exo+2:wght@500;700&display=swap'
   },
   {
     id: 'brutalist_poster',
@@ -501,12 +425,9 @@ const profiles = [
     rationale: 'Unapologetic historical quirks and flared terminals that transform poster typography into provocative graphic art.',
     archetype: 'THE BRUTALIST EXHIBITOR',
     dna: { editorial: 75, disruptive: 99, warmth: 40, utility: 65 },
-    headingFontFamily: "'Bricolage Grotesque', sans-serif",
-    pairFontFamily: "'Space Grotesk', sans-serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Space+Grotesk:wght@400;600&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Space+Grotesk:wght@400;600&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Bricolage Grotesque', sans-serif;\n  --font-body: 'Space Grotesk', sans-serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Bricolage Grotesque"', 'sans-serif'],\n  body: ['"Space Grotesk"', 'sans-serif']\n}`
+    headingFallback: "'Bricolage Grotesque', sans-serif",
+    bodyFallback: "'Space Grotesk', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Space+Grotesk:wght@400;600&display=swap'
   },
   {
     id: 'craft_beer',
@@ -519,12 +440,9 @@ const profiles = [
     rationale: 'Bold industrial block weight reminiscent of woodblock printing press stamps on artisan IPA cans.',
     archetype: 'THE ARTISAN BREWER',
     dna: { editorial: 45, disruptive: 85, warmth: 88, utility: 70 },
-    headingFontFamily: "'Rubik Mono One', sans-serif",
-    pairFontFamily: "'DM Sans', sans-serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Rubik+Mono+One&family=DM+Sans:wght@400;500&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Rubik+Mono+One&family=DM+Sans:wght@400;500&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Rubik Mono One', sans-serif;\n  --font-body: 'DM Sans', sans-serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Rubik Mono One"', 'sans-serif'],\n  body: ['"DM Sans"', 'sans-serif']\n}`
+    headingFallback: "'Rubik Mono One', sans-serif",
+    bodyFallback: "'DM Sans', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Rubik+Mono+One&family=DM+Sans:wght@400;500&display=swap'
   },
   {
     id: 'vintage_bakery',
@@ -537,12 +455,9 @@ const profiles = [
     rationale: 'Fluid retro script letterforms that invoke the comforting warmth of freshly baked morning pastries.',
     archetype: 'THE HOMETOWN BAKER',
     dna: { editorial: 70, disruptive: 50, warmth: 100, utility: 55 },
-    headingFontFamily: "'Pacifico', cursive",
-    pairFontFamily: "'Quicksand', sans-serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Pacifico&family=Quicksand:wght@400;600&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Quicksand:wght@400;600&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Pacifico', cursive;\n  --font-body: 'Quicksand', sans-serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Pacifico"', 'cursive'],\n  body: ['"Quicksand"', 'sans-serif']\n}`
+    headingFallback: "'Pacifico', cursive",
+    bodyFallback: "'Quicksand', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Pacifico&family=Quicksand:wght@400;600&display=swap'
   },
   {
     id: 'crypto_web3',
@@ -555,12 +470,9 @@ const profiles = [
     rationale: 'Direct 8-bit retro arcade aesthetic colliding with modern smart contract code for decentralized web applications.',
     archetype: 'THE DECENTRALIZED REBEL',
     dna: { editorial: 20, disruptive: 100, warmth: 35, utility: 75 },
-    headingFontFamily: "'Press Start 2P', monospace",
-    pairFontFamily: "'Space Mono', monospace",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Mono:wght@400;700&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Mono:wght@400;700&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Press Start 2P', monospace;\n  --font-body: 'Space Mono', monospace;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Press Start 2P"', 'monospace'],\n  body: ['"Space Mono"', 'monospace']\n}`
+    headingFallback: "'Press Start 2P', monospace",
+    bodyFallback: "'Space Mono', monospace",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Mono:wght@400;700&display=swap'
   },
   {
     id: 'modern_realestate',
@@ -573,12 +485,9 @@ const profiles = [
     rationale: 'Clean geometric proportions and open counters tailored for modern architectural listings and luxury home brochures.',
     archetype: 'THE ARCHITECTURAL BROKER',
     dna: { editorial: 55, disruptive: 35, warmth: 75, utility: 95 },
-    headingFontFamily: "'Manrope', sans-serif",
-    pairFontFamily: "'Open Sans', sans-serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Manrope:wght@600;800&family=Open+Sans:wght@400;600&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@600;800&family=Open+Sans:wght@400;600&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Manrope', sans-serif;\n  --font-body: 'Open Sans', sans-serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Manrope"', 'sans-serif'],\n  body: ['"Open Sans"', 'sans-serif']\n}`
+    headingFallback: "'Manrope', sans-serif",
+    bodyFallback: "'Open Sans', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Manrope:wght@600;800&family=Open+Sans:wght@400;600&display=swap'
   },
   {
     id: 'beauty_cosmetics',
@@ -591,12 +500,9 @@ const profiles = [
     rationale: 'Delicate flared serif terminals inspired by ancient Roman titling, delivering effortless radiance for skincare packaging.',
     archetype: 'THE RADIANT ALCHEMIST',
     dna: { editorial: 92, disruptive: 30, warmth: 85, utility: 65 },
-    headingFontFamily: "'Marcellus', serif",
-    pairFontFamily: "'Plus Jakarta Sans', sans-serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Marcellus&family=Plus+Jakarta+Sans:wght@400;600&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Marcellus&family=Plus+Jakarta+Sans:wght@400;600&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Marcellus', serif;\n  --font-body: 'Plus Jakarta Sans', sans-serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Marcellus"', 'serif'],\n  body: ['"Plus Jakarta Sans"', 'sans-serif']\n}`
+    headingFallback: "'Marcellus', serif",
+    bodyFallback: "'Plus Jakarta Sans', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Marcellus&family=Plus+Jakarta+Sans:wght@400;600&display=swap'
   },
   {
     id: 'automotive_cars',
@@ -609,12 +515,9 @@ const profiles = [
     rationale: 'Extreme wide tracking and geometric stance engineered for high-performance automotive dashboards and carbon fiber aesthetics.',
     archetype: 'THE HIGH-OCTANE PILOT',
     dna: { editorial: 25, disruptive: 90, warmth: 20, utility: 85 },
-    headingFontFamily: "'Syncopate', sans-serif",
-    pairFontFamily: "'Rajdhani', sans-serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Rajdhani:wght@500;700&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Rajdhani:wght@500;700&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Syncopate', sans-serif;\n  --font-body: 'Rajdhani', sans-serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Syncopate"', 'sans-serif'],\n  body: ['"Rajdhani"', 'sans-serif']\n}`
+    headingFallback: "'Syncopate', sans-serif",
+    bodyFallback: "'Rajdhani', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Rajdhani:wght@500;700&display=swap'
   },
   {
     id: 'podcast_media',
@@ -627,12 +530,9 @@ const profiles = [
     rationale: 'Tall, punchy vertical capital letters that dominate podcast cover art and thumbnail graphics.',
     archetype: 'THE BROADCAST HOST',
     dna: { editorial: 40, disruptive: 75, warmth: 50, utility: 90 },
-    headingFontFamily: "'Bebas Neue', sans-serif",
-    pairFontFamily: "'Roboto', sans-serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;500&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;500&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Bebas Neue', sans-serif;\n  --font-body: 'Roboto', sans-serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Bebas Neue"', 'sans-serif'],\n  body: ['"Roboto"', 'sans-serif']\n}`
+    headingFallback: "'Bebas Neue', sans-serif",
+    bodyFallback: "'Roboto', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;500&display=swap'
   },
   {
     id: 'nonprofit_cause',
@@ -645,12 +545,9 @@ const profiles = [
     rationale: 'Friendly geometric circularity paired with a warm literary serif to convey heartfelt humanitarian purpose.',
     archetype: 'THE HUMANE ADVOCATE',
     dna: { editorial: 70, disruptive: 30, warmth: 95, utility: 85 },
-    headingFontFamily: "'Poppins', sans-serif",
-    pairFontFamily: "'Lora', serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Lora:ital,wght@0,400;1,400&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Lora:ital,wght@0,400;1,400&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Poppins', sans-serif;\n  --font-body: 'Lora', serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Poppins"', 'sans-serif'],\n  body: ['"Lora"', 'serif']\n}`
+    headingFallback: "'Poppins', sans-serif",
+    bodyFallback: "'Lora', serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Lora:ital,wght@0,400;1,400&display=swap'
   },
   {
     id: 'science_research',
@@ -663,12 +560,9 @@ const profiles = [
     rationale: 'Specifically optimized for dense digital research papers and mathematical formulas alongside technical code blocks.',
     archetype: 'THE SCHOLARLY INQUIRER',
     dna: { editorial: 95, disruptive: 25, warmth: 45, utility: 95 },
-    headingFontFamily: "'Spectral', serif",
-    pairFontFamily: "'Fira Code', monospace",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,600;1,400&family=Fira+Code:wght@400;500&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,600;1,400&family=Fira+Code:wght@400;500&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Spectral', serif;\n  --font-body: 'Fira Code', monospace;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Spectral"', 'serif'],\n  body: ['"Fira Code"', 'monospace']\n}`
+    headingFallback: "'Spectral', serif",
+    bodyFallback: "'Fira Code', monospace",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,600;1,400&family=Fira+Code:wght@400;500&display=swap'
   },
   {
     id: 'cozy_bookstore',
@@ -681,12 +575,9 @@ const profiles = [
     rationale: 'Soft single-storey letterforms reminiscent of classic 19th-century children’s storybooks and vintage paperbacks.',
     archetype: 'THE STORYBOOK CURATOR',
     dna: { editorial: 96, disruptive: 35, warmth: 92, utility: 60 },
-    headingFontFamily: "'Cormorant Infant', serif",
-    pairFontFamily: "'DM Sans', sans-serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Cormorant+Infant:ital,wght@0,600;1,400&family=DM+Sans:wght@400;500&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Cormorant+Infant:ital,wght@0,600;1,400&family=DM+Sans:wght@400;500&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Cormorant Infant', serif;\n  --font-body: 'DM Sans', sans-serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Cormorant Infant"', 'serif'],\n  body: ['"DM Sans"', 'sans-serif']\n}`
+    headingFallback: "'Cormorant Infant', serif",
+    bodyFallback: "'DM Sans', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Cormorant+Infant:ital,wght@0,600;1,400&family=DM+Sans:wght@400;500&display=swap'
   },
   {
     id: 'wedding_invitation',
@@ -699,12 +590,9 @@ const profiles = [
     rationale: 'Flowing cursive penmanship designed for luxury wedding invitations, place cards, and romantic stationery.',
     archetype: 'THE ROMANTIC POET',
     dna: { editorial: 98, disruptive: 40, warmth: 95, utility: 35 },
-    headingFontFamily: "'Great Vibes', cursive",
-    pairFontFamily: "'Playfair Display', serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;1,400&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;1,400&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Great Vibes', cursive;\n  --font-body: 'Playfair Display', serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Great Vibes"', 'cursive'],\n  body: ['"Playfair Display"', 'serif']\n}`
+    headingFallback: "'Great Vibes', cursive",
+    bodyFallback: "'Playfair Display', serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;1,400&display=swap'
   },
   {
     id: 'fitness_gym',
@@ -717,12 +605,9 @@ const profiles = [
     rationale: 'Square condensed proportions that mirror heavy barbell plates and high-intensity workout timer displays.',
     archetype: 'THE IRON ATHLETE',
     dna: { editorial: 10, disruptive: 90, warmth: 25, utility: 95 },
-    headingFontFamily: "'Teko', sans-serif",
-    pairFontFamily: "'Montserrat', sans-serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Teko:wght@600;700&family=Montserrat:wght@400;600&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Teko:wght@600;700&family=Montserrat:wght@400;600&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Teko', sans-serif;\n  --font-body: 'Montserrat', sans-serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Teko"', 'sans-serif'],\n  body: ['"Montserrat"', 'sans-serif']\n}`
+    headingFallback: "'Teko', sans-serif",
+    bodyFallback: "'Montserrat', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Teko:wght@600;700&family=Montserrat:wght@400;600&display=swap'
   },
   {
     id: 'pet_care',
@@ -735,12 +620,9 @@ const profiles = [
     rationale: 'Whimsical rounded shapes that bring instant warmth and playful energy to pet care brands and veterinary clinics.',
     archetype: 'THE COMPANION GUARDIAN',
     dna: { editorial: 20, disruptive: 60, warmth: 100, utility: 75 },
-    headingFontFamily: "'Sniglet', cursive",
-    pairFontFamily: "'Quicksand', sans-serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Sniglet:wght@800&family=Quicksand:wght@400;600&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Sniglet:wght@800&family=Quicksand:wght@400;600&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Sniglet', cursive;\n  --font-body: 'Quicksand', sans-serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Sniglet"', 'cursive'],\n  body: ['"Quicksand"', 'sans-serif']\n}`
+    headingFallback: "'Sniglet', cursive",
+    bodyFallback: "'Quicksand', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Sniglet:wght@800&family=Quicksand:wght@400;600&display=swap'
   },
   {
     id: 'event_festival',
@@ -753,12 +635,9 @@ const profiles = [
     rationale: 'Inspired by Art Deco posters and 1980s synth-wave album art, delivering high-impact festival energy.',
     archetype: 'THE ELECTRIC HOST',
     dna: { editorial: 35, disruptive: 95, warmth: 70, utility: 65 },
-    headingFontFamily: "'Righteous', sans-serif",
-    pairFontFamily: "'Plus Jakarta Sans', sans-serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Righteous&family=Plus+Jakarta+Sans:wght@400;600&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Righteous&family=Plus+Jakarta+Sans:wght@400;600&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Righteous', sans-serif;\n  --font-body: 'Plus Jakarta Sans', sans-serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Righteous"', 'sans-serif'],\n  body: ['"Plus Jakarta Sans"', 'sans-serif']\n}`
+    headingFallback: "'Righteous', sans-serif",
+    bodyFallback: "'Plus Jakarta Sans', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Righteous&family=Plus+Jakarta+Sans:wght@400;600&display=swap'
   },
   {
     id: 'fintech_bank',
@@ -771,12 +650,9 @@ const profiles = [
     rationale: 'Fresh, geometric clarity engineered for modern neo-banks, digital wallets, and financial mobile dashboards.',
     archetype: 'THE DIGITAL TRUSTEE',
     dna: { editorial: 35, disruptive: 45, warmth: 60, utility: 98 },
-    headingFontFamily: "'Red Hat Display', sans-serif",
-    pairFontFamily: "'Inter', sans-serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@700;900&family=Inter:wght@400;500&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@700;900&family=Inter:wght@400;500&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Red Hat Display', sans-serif;\n  --font-body: 'Inter', sans-serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Red Hat Display"', 'sans-serif'],\n  body: ['"Inter"', 'sans-serif']\n}`
+    headingFallback: "'Red Hat Display', sans-serif",
+    bodyFallback: "'Inter', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@700;900&family=Inter:wght@400;500&display=swap'
   },
   {
     id: 'retro_arcade',
@@ -789,16 +665,13 @@ const profiles = [
     rationale: 'Direct glowing phosphor CRT monitor typography that takes you straight back to 1987 arcade machines.',
     archetype: 'THE RETRO TERMINAL',
     dna: { editorial: 30, disruptive: 98, warmth: 50, utility: 70 },
-    headingFontFamily: "'VT323', monospace",
-    pairFontFamily: "'DM Mono', monospace",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=VT323&family=DM+Mono:wght@400;500&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=VT323&family=DM+Mono:wght@400;500&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'VT323', monospace;\n  --font-body: 'DM Mono', monospace;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"VT323"', 'monospace'],\n  body: ['"DM Mono"', 'monospace']\n}`
+    headingFallback: "'VT323', monospace",
+    bodyFallback: "'DM Mono', monospace",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=VT323&family=DM+Mono:wght@400;500&display=swap'
   },
   {
     id: 'eco_sustainability',
-    words: ['eco', 'sustainability', 'recycle', 'climate', 'green', 'solar', 'wind', 'planet', 'zero waste', 'clean energy'],
+    words: ['eco', 'sustainability', 'recycle', 'climate', 'green', 'solar', 'wind', 'planet', 'zerowaste', 'cleanenergy'],
     name: 'Josefin Eco',
     sample: 'Josefin<br/><i>Sans</i>',
     meta: 'GEOMETRIC HUMANIST',
@@ -807,16 +680,13 @@ const profiles = [
     rationale: 'Inspired by 1930s Scandinavian geometric design, conveying clean energy and planet-first values.',
     archetype: 'THE SUSTAINABLE PIONEER',
     dna: { editorial: 75, disruptive: 40, warmth: 90, utility: 80 },
-    headingFontFamily: "'Josefin Sans', sans-serif",
-    pairFontFamily: "'Lora', serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@600;700&family=Lora:ital,wght@0,400;1,400&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@600;700&family=Lora:ital,wght@0,400;1,400&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Josefin Sans', sans-serif;\n  --font-body: 'Lora', serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Josefin Sans"', 'sans-serif'],\n  body: ['"Lora"', 'serif']\n}`
+    headingFallback: "'Josefin Sans', sans-serif",
+    bodyFallback: "'Lora', serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@600;700&family=Lora:ital,wght@0,400;1,400&display=swap'
   },
   {
     id: 'modern_fashion',
-    words: ['haute', 'couture', 'glamour', 'runway', 'vogue', 'italiana', 'luxury fashion', 'paris', 'milan'],
+    words: ['haute', 'couture', 'glamour', 'runway', 'vogue', 'italiana', 'paris', 'milan', 'couture'],
     name: 'Italiana Couture',
     sample: 'Italiana<br/><i>Couture</i>',
     meta: 'HIGH-CONTRAST DIDONE',
@@ -825,17 +695,11 @@ const profiles = [
     rationale: 'Graceful calligraphic proportions inspired by Italian newspaper typography, radiating high-fashion luxury.',
     archetype: 'THE MILAN STYLIST',
     dna: { editorial: 99, disruptive: 50, warmth: 70, utility: 45 },
-    headingFontFamily: "'Italiana', serif",
-    pairFontFamily: "'Plus Jakarta Sans', sans-serif",
-    googleFonts: 'https://fonts.googleapis.com/css2?family=Italiana&family=Plus+Jakarta+Sans:wght@400;600&display=swap',
-    cssImport: `@import url('https://fonts.googleapis.com/css2?family=Italiana&family=Plus+Jakarta+Sans:wght@400;600&display=swap');`,
-    cssVars: `:root {\n  --font-heading: 'Italiana', serif;\n  --font-body: 'Plus Jakarta Sans', sans-serif;\n}`,
-    tailwind: `fontFamily: {\n  heading: ['"Italiana"', 'serif'],\n  body: ['"Plus Jakarta Sans"', 'sans-serif']\n}`
+    headingFallback: "'Italiana', serif",
+    bodyFallback: "'Plus Jakarta Sans', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Italiana&family=Plus+Jakarta+Sans:wght@400;600&display=swap'
   }
 ]
-
-const getRandomProfile = () => profiles[Math.floor(Math.random() * profiles.length)]
-let activeProfile = getRandomProfile()
 
 // Dynamic Google Font Loader via standard Google Fonts Web API
 function loadGoogleFont(url) {
@@ -850,12 +714,47 @@ function loadGoogleFont(url) {
   link.href = url
 }
 
-// Enhanced AI Recommendation Matcher Algorithm (Weighted Token Matching & Score Calculation)
+// Data Profile Builder (Reduces duplication)
+function buildProfile(p) {
+  const cssImport = `@import url('${p.googleFontsUrl}');`
+  const cssVars = `:root {\n  --font-heading: '${p.name}', ${p.headingFallback};\n  --font-body: '${p.pair}', ${p.bodyFallback};\n}`
+
+  // Tailwind expects each family as a quoted string. Generics (serif, sans-serif,
+  // monospace, cursive, system-ui, etc.) are CSS keywords and stay unquoted.
+  const GENERICS = new Set(['serif', 'sans-serif', 'monospace', 'cursive', 'fantasy', 'system-ui', 'ui-serif', 'ui-sans-serif', 'ui-monospace'])
+  const toTailwindFamily = (raw) => {
+    const s = raw.trim().replace(/^['"]|['"]$/g, '')
+    if (GENERICS.has(s.toLowerCase())) return s  // CSS generic keywords stay unquoted
+    return `'${JSON.stringify(s).slice(1, -1)}'` // named fonts wrap in single quotes
+  }
+  const tailwindFamilies = (fallback) => fallback.split(',').map(toTailwindFamily).join(', ')
+
+  const tailwind = `fontFamily: {\n  heading: [${tailwindFamilies(p.name)}, ${tailwindFamilies(p.headingFallback)}],\n  body: [${tailwindFamilies(p.pair)}, ${tailwindFamilies(p.bodyFallback)}]\n}`
+
+  return { ...p, cssImport, cssVars, tailwind }
+}
+
+// Compute Inverse Document Frequency for TF-IDF matching
+const totalProfiles = profiles.length
+const wordDocFrequency = {}
+profiles.forEach(p => {
+  const uniqueWords = new Set(p.words)
+  uniqueWords.forEach(w => {
+    wordDocFrequency[w] = (wordDocFrequency[w] || 0) + 1
+  })
+})
+
+function getIDF(word) {
+  const df = wordDocFrequency[word] || 1 // avoid div by zero, assume min 1
+  return Math.log10(totalProfiles / df) + 1 // +1 so every word has some weight
+}
+
+// Enhanced AI Recommendation Matcher Algorithm (TF-IDF weighted matching)
 function chooseProfile(promptText) {
-  if (!promptText || !promptText.trim()) return getRandomProfile()
+  if (!promptText || !promptText.trim()) return profiles[Math.floor(Math.random() * profiles.length)]
   
   const queryWords = promptText.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(Boolean)
-  if (queryWords.length === 0) return getRandomProfile()
+  if (queryWords.length === 0) return profiles[Math.floor(Math.random() * profiles.length)]
 
   let bestScore = -1
   let bestProfile = profiles[0]
@@ -863,13 +762,13 @@ function chooseProfile(promptText) {
   profiles.forEach((profile) => {
     let score = 0
     
-    // Check direct word matches and partial substring overlaps
+    // Check direct word matches and partial substring overlaps with IDF weighting
     profile.words.forEach((targetWord) => {
       queryWords.forEach((userWord) => {
         if (userWord === targetWord) {
-          score += 4.0 // Exact match bonus
+          score += 4.0 * getIDF(targetWord) // Exact match bonus
         } else if (targetWord.includes(userWord) || userWord.includes(targetWord)) {
-          if (userWord.length > 2) score += 2.0 // Partial match
+          if (userWord.length > 2) score += 2.0 * getIDF(targetWord) // Partial match
         }
       })
     })
@@ -889,11 +788,7 @@ function chooseProfile(promptText) {
     }
   })
 
-  // Fallback to random if no keyword score matched
-  if (bestScore <= 0) {
-    return getRandomProfile()
-  }
-
+  if (bestScore <= 0) return profiles[Math.floor(Math.random() * profiles.length)]
   return bestProfile
 }
 
@@ -903,7 +798,6 @@ function animateDNABars(dna) {
   barDisruptive.style.width = dna.disruptive + '%'
   barWarmth.style.width = dna.warmth + '%'
   barUtility.style.width = dna.utility + '%'
-
   valEditorial.textContent = dna.editorial
   valDisruptive.textContent = dna.disruptive
   valWarmth.textContent = dna.warmth
@@ -954,13 +848,32 @@ async function copyToClipboard(text, button) {
   }
 }
 
-// Update Active Recommendation
-function applyProfile(profile) {
-  activeProfile = profile
-  loadGoogleFont(profile.googleFonts)
+// Componentized State
+const state = {
+  activeProfile: null,
+  listeners: [],
+  setActiveProfile(profile) {
+    this.activeProfile = buildProfile(profile);
+    this.notify();
+    
+    // URL Persistence
+    const url = new URL(window.location);
+    url.searchParams.set('vibe', profile.id);
+    window.history.pushState({}, '', url);
+  },
+  subscribe(listener) {
+    this.listeners.push(listener);
+  },
+  notify() {
+    this.listeners.forEach(listener => listener(this.activeProfile));
+  }
+};
 
-  const index = profiles.findIndex((p) => p.id === profile.id) + 1
-  if (profileIndex) profileIndex.textContent = `${index < 10 ? '0' + index : index} / ${profiles.length}`
+// Render DOM on State Change
+state.subscribe((profile) => {
+  loadGoogleFont(profile.googleFontsUrl)
+
+
 
   displayName.textContent = profile.name
   displaySample.innerHTML = profile.sample
@@ -970,25 +883,36 @@ function applyProfile(profile) {
   rationale.textContent = profile.rationale
   archetype.textContent = profile.archetype
   
-  // Apply dynamic font families so headings, live specimen, input, and pairs render in their font styles!
-  if (profile.headingFontFamily) {
-    displaySample.style.fontFamily = profile.headingFontFamily
-    displayName.style.fontFamily = profile.headingFontFamily
-    specimenTextInput.style.fontFamily = profile.headingFontFamily
+  // Font licensing disclaimer verification
+  const disclaimer = document.getElementById('licenseDisclaimer');
+  const fallbackFamily = profile.headingFallback.split(',')[0].replace(/['"]/g, '').trim();
+  if (profile.name.toLowerCase() !== fallbackFamily.toLowerCase()) {
+    disclaimer.textContent = `Preview rendered using free fallback: ${fallbackFamily}`;
+    disclaimer.style.display = 'block';
+  } else {
+    disclaimer.style.display = 'none';
   }
-  if (profile.pairFontFamily) {
-    pairName.style.fontFamily = profile.pairFontFamily
+  
+  if (profile.headingFallback) {
+    displaySample.style.fontFamily = profile.headingFallback
+    displayName.style.fontFamily = profile.headingFallback
+    specimenTextInput.style.fontFamily = profile.headingFallback
+  }
+  if (profile.bodyFallback) {
+    pairName.style.fontFamily = profile.bodyFallback
   }
 
-  // Specimen text input reset to font name
   specimenTextInput.value = profile.name.replace('<br/>', ' ')
-
-  // Animate Design DNA
   animateDNABars(profile.dna)
-}
+});
 
-// Initial Load
-applyProfile(activeProfile)
+// Initialization
+function init() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const vibeId = urlParams.get('vibe');
+  const targetProfile = profiles.find(p => p.id === vibeId) || profiles[Math.floor(Math.random() * profiles.length)];
+  state.setActiveProfile(targetProfile);
+}
 
 function updateRecommendation() {
   const p = chooseProfile(brief.value)
@@ -996,8 +920,8 @@ function updateRecommendation() {
   analyse.innerHTML = 'READING <span>◌</span>'
   
   setTimeout(() => {
-    applyProfile(p)
-    $('#results').scrollIntoView({ behavior: 'smooth', block: 'start' })
+    state.setActiveProfile(p)
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' })
     analyse.classList.remove('loading')
     analyse.innerHTML = 'ANALYSE <span>→</span>'
   }, 480)
@@ -1018,7 +942,7 @@ specimenTextInput.addEventListener('input', (e) => {
   if (val) {
     displaySample.textContent = val
   } else {
-    displaySample.innerHTML = activeProfile.sample
+    displaySample.innerHTML = state.activeProfile.sample
   }
 })
 
@@ -1040,16 +964,52 @@ toggleItalic.addEventListener('click', () => {
 
 // Developer Code Exporter Handlers
 copyCssBtn.addEventListener('click', (e) => {
-  copyToClipboard(activeProfile.cssImport + '\n\n' + activeProfile.cssVars, e.currentTarget)
+  copyToClipboard(state.activeProfile.cssImport + '\n\n' + state.activeProfile.cssVars, e.currentTarget)
 })
 
 copyTailwindBtn.addEventListener('click', (e) => {
-  copyToClipboard(activeProfile.tailwind, e.currentTarget)
+  copyToClipboard(state.activeProfile.tailwind, e.currentTarget)
 })
 
 copyGoogleFontsBtn.addEventListener('click', (e) => {
-  copyToClipboard(activeProfile.googleFonts, e.currentTarget)
+  copyToClipboard(state.activeProfile.googleFontsUrl, e.currentTarget)
 })
+
+// PNG Export using html2canvas
+const savePngBtn = document.getElementById('savePngBtn');
+if (savePngBtn) {
+  savePngBtn.addEventListener('click', async (e) => {
+    const originalText = e.currentTarget.textContent;
+    e.currentTarget.textContent = 'SAVING...';
+    try {
+      const card = document.querySelector('.recommendation');
+      // Hide specimen controls and export bar during capture
+      const controls = card.querySelector('.specimen-controls');
+      const exportBar = card.querySelector('.export-bar');
+      controls.style.display = 'none';
+      exportBar.style.display = 'none';
+      
+      const canvas = await html2canvas(card, { backgroundColor: '#ebe9df', scale: 2 });
+      
+      controls.style.display = '';
+      exportBar.style.display = '';
+      
+      const imgData = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.download = `fontally-${state.activeProfile.id}.png`;
+      link.href = imgData;
+      link.click();
+      
+      showToast('✓ Saved as PNG');
+      savePngBtn.textContent = 'SAVED! ✓';
+      setTimeout(() => { savePngBtn.textContent = originalText; }, 2000);
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to save PNG');
+      savePngBtn.textContent = originalText;
+    }
+  });
+}
 
 // Interactive Preset Prompt Chips
 document.querySelectorAll('.chips button').forEach((chip) => {
@@ -1061,6 +1021,25 @@ document.querySelectorAll('.chips button').forEach((chip) => {
     }
   })
 })
+
+// Font Shelf wiring
+document.querySelectorAll('.shelf-item').forEach((item) => {
+  const handler = () => {
+    const pid = item.dataset.profileId;
+    const p = profiles.find(p => p.id === pid);
+    if (p) {
+      state.setActiveProfile(p);
+      document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+  item.addEventListener('click', handler);
+  item.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handler();
+    }
+  });
+});
 
 // Interactive Typography Sculpture Controller
 (function initTypographySculpture() {
@@ -1078,7 +1057,6 @@ document.querySelectorAll('.chips button').forEach((chip) => {
     "'Playfair Display', serif"
   ]
 
-  // On page load & click, randomize letter fonts & subtle rotations for fresh artisanal feel
   sculptureSpans.forEach((span) => {
     span.style.fontFamily = fontChoices[Math.floor(Math.random() * fontChoices.length)]
     
@@ -1093,3 +1071,5 @@ document.querySelectorAll('.chips button').forEach((chip) => {
   })
 })()
 
+init();
+export { chooseProfile, profiles, buildProfile };
