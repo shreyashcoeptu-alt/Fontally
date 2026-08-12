@@ -1,5 +1,4 @@
 import './style.css'
-import html2canvas from 'html2canvas'
 
 const $ = (selector) => document.querySelector(selector)
 
@@ -22,6 +21,7 @@ const fontSizeVal = $('#fontSizeVal')
 const toggleCase = $('#toggleCase')
 const toggleItalic = $('#toggleItalic')
 
+const toggleBold = $('#toggleBold')
 // Export Handles
 const copyCssBtn = $('#copyCssBtn')
 const copyTailwindBtn = $('#copyTailwindBtn')
@@ -30,15 +30,6 @@ const shareBtn = $("#shareBtn")
 const recommendationStatus = $("#recommendationStatus")
 const aiMatchMeta = $("#aiMatchMeta")
 
-// DNA Bar Handles
-const barEditorial = $('#barEditorial')
-const barDisruptive = $('#barDisruptive')
-const barWarmth = $('#barWarmth')
-const barUtility = $('#barUtility')
-const valEditorial = $('#valEditorial')
-const valDisruptive = $('#valDisruptive')
-const valWarmth = $('#valWarmth')
-const valUtility = $('#valUtility')
 
 // Curated Google Fonts Profiles Database (50 Distinct Vibe Archetypes)
 const profiles = [
@@ -52,7 +43,6 @@ const profiles = [
     pairMeta: 'SERIF / 20PX',
     rationale: 'A calm, precision-first grotesk that feels incredibly fluent on a balance sheet, then lets the serif bring just enough human risk.',
     archetype: 'THE OPTIMISTIC OPERATOR',
-    dna: { editorial: 64, disruptive: 48, warmth: 55, utility: 92 },
     headingFallback: "'Plus Jakarta Sans', sans-serif",
     bodyFallback: "'Playfair Display', serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Playfair+Display:ital,wght@0,600;1,400&display=swap'
@@ -67,7 +57,6 @@ const profiles = [
     pairMeta: 'SERIF / 16PX',
     rationale: 'An overfamiliar classic used without apology. The tension with Times makes the whole system feel like it was found on a construction hoarding.',
     archetype: 'THE BEAUTIFUL MENACE',
-    dna: { editorial: 82, disruptive: 91, warmth: 32, utility: 78 },
     headingFallback: "'Inter', sans-serif",
     bodyFallback: "'Newsreader', serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap'
@@ -82,7 +71,6 @@ const profiles = [
     pairMeta: 'GROTESK / 15PX',
     rationale: 'Soft and slightly eccentric, with just enough old-world materiality to make a twelve-dollar filter coffee feel spiritually necessary.',
     archetype: 'THE TENDER MAXIMALIST',
-    dna: { editorial: 88, disruptive: 42, warmth: 94, utility: 60 },
     headingFallback: "'Newsreader', serif",
     bodyFallback: "'DM Sans', sans-serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,500;1,6..72,400&family=DM+Sans:wght@400;500&display=swap'
@@ -97,7 +85,6 @@ const profiles = [
     pairMeta: 'GROTESK / 18PX',
     rationale: 'It has the kind of expensive weirdness that makes a product page feel like an editorial you want to keep reading.',
     archetype: 'THE SENSORY EDITOR',
-    dna: { editorial: 95, disruptive: 74, warmth: 61, utility: 42 },
     headingFallback: "'Bodoni Moda', serif",
     bodyFallback: "'Plus Jakarta Sans', sans-serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,600;1,6..96,400&family=Plus+Jakarta+Sans:wght@400;500&display=swap'
@@ -112,7 +99,6 @@ const profiles = [
     pairMeta: 'SANS / 14PX',
     rationale: 'Hyper-focused engineering precision. The razor-sharp monospaced letterforms project raw execution velocity and zero fluff.',
     archetype: 'THE SYSTEM ARCHITECT',
-    dna: { editorial: 35, disruptive: 80, warmth: 28, utility: 99 },
     headingFallback: "'Geist Mono', 'DM Mono', monospace",
     bodyFallback: "'Inter', sans-serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;700&family=Inter:wght@400;600&display=swap'
@@ -127,7 +113,6 @@ const profiles = [
     pairMeta: 'GEOMETRIC / 16PX',
     rationale: 'Raw pixelated nostalgia colliding with extreme geometric wide typography. Reads like neon rain bouncing off chrome armor.',
     archetype: 'THE SYNTH CONSTRUCTOR',
-    dna: { editorial: 40, disruptive: 98, warmth: 50, utility: 65 },
     headingFallback: "'Silkscreen', monospace",
     bodyFallback: "'Syne', sans-serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Syne:wght@700;800&display=swap'
@@ -142,7 +127,6 @@ const profiles = [
     pairMeta: 'SANS / 14PX',
     rationale: 'Uncompromising grace and high contrast serifs that emanate quiet opulence without needing to raise its voice.',
     archetype: 'THE HIGH COUTURIER',
-    dna: { editorial: 96, disruptive: 35, warmth: 82, utility: 54 },
     headingFallback: "'Cormorant Garamond', serif",
     bodyFallback: "'Plus Jakarta Sans', sans-serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;600&display=swap'
@@ -157,7 +141,6 @@ const profiles = [
     pairMeta: 'MONOSPACE SANS / 16PX',
     rationale: 'Heavy, unexpected counters and defiant letterform proportions engineered for high-visibility poster drops and billboards.',
     archetype: 'THE CULTURAL MENACE',
-    dna: { editorial: 50, disruptive: 95, warmth: 40, utility: 72 },
     headingFallback: "'Unbounded', sans-serif",
     bodyFallback: "'Space Grotesk', sans-serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&family=Space+Grotesk:wght@400;600&display=swap'
@@ -172,7 +155,6 @@ const profiles = [
     pairMeta: 'GEOMETRIC / 15PX',
     rationale: 'Subtle flared stems and spacious tracking instill immediate breathing room and organic equilibrium into the layout.',
     archetype: 'THE HARMONIC SANCTUARY',
-    dna: { editorial: 70, disruptive: 25, warmth: 98, utility: 84 },
     headingFallback: "'Tenor Sans', sans-serif",
     bodyFallback: "'Outfit', sans-serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Tenor+Sans&family=Outfit:wght@400;600&display=swap'
@@ -187,7 +169,6 @@ const profiles = [
     pairMeta: 'MONO / 14PX',
     rationale: 'Delicate high-contrast italic strokes paired with strict mechanical monospaced grid structure. Feels like a 1994 indie zine.',
     archetype: 'THE ANALOG CURATOR',
-    dna: { editorial: 92, disruptive: 76, warmth: 80, utility: 65 },
     headingFallback: "'Instrument Serif', serif",
     bodyFallback: "'DM Mono', monospace",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&display=swap'
@@ -202,7 +183,6 @@ const profiles = [
     pairMeta: 'SANS / 15PX',
     rationale: 'Calligraphic curves built for long-form readability, paired with a sturdy, neutral grotesk for dense data callouts.',
     archetype: 'THE CRITICAL CHRONICLER',
-    dna: { editorial: 94, disruptive: 30, warmth: 70, utility: 88 },
     headingFallback: "'Lora', serif",
     bodyFallback: "'Work Sans', sans-serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,600;1,400&family=Work+Sans:wght@400;600&display=swap'
@@ -217,7 +197,6 @@ const profiles = [
     pairMeta: 'HUMANIST / 14PX',
     rationale: 'Bold geometric weight that commands immediate attention on hero headers, paired with Open Sans for crisp UI utility.',
     archetype: 'THE VENTURE LAUNCHER',
-    dna: { editorial: 45, disruptive: 60, warmth: 50, utility: 95 },
     headingFallback: "'Montserrat', sans-serif",
     bodyFallback: "'Open Sans', sans-serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Open+Sans:wght@400;600&display=swap'
@@ -232,7 +211,6 @@ const profiles = [
     pairMeta: 'CONDENSED SANS / 16PX',
     rationale: 'Angular, square proportions engineered for telemetry displays and next-generation human-machine interfaces.',
     archetype: 'THE SYNTHETIC MATRIX',
-    dna: { editorial: 20, disruptive: 96, warmth: 15, utility: 80 },
     headingFallback: "'Orbitron', sans-serif",
     bodyFallback: "'Rajdhani', sans-serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;700&display=swap'
@@ -247,7 +225,6 @@ const profiles = [
     pairMeta: 'NEUTRAL SANS / 15PX',
     rationale: 'Expressive variable optical sizes with soft organic curves that celebrate natural imperfections and handcrafted warmth.',
     archetype: 'THE EARTHEN BOTANIST',
-    dna: { editorial: 85, disruptive: 55, warmth: 99, utility: 70 },
     headingFallback: "'Fraunces', serif",
     bodyFallback: "'DM Sans', sans-serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,400&family=DM+Sans:wght@400;500&display=swap'
@@ -262,7 +239,6 @@ const profiles = [
     pairMeta: 'HUMANIST SANS / 14PX',
     rationale: 'Tight vertical condensation built for punchy promo banners, sale callouts, and high-conversion e-commerce hero text.',
     archetype: 'THE HIGH-CONVERSION ENGINE',
-    dna: { editorial: 30, disruptive: 85, warmth: 40, utility: 96 },
     headingFallback: "'Oswald', sans-serif",
     bodyFallback: "'Lato', sans-serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=Lato:wght@400;700&display=swap'
@@ -277,7 +253,6 @@ const profiles = [
     pairMeta: 'GEOMETRIC SANS / 16PX',
     rationale: 'Massive, unyielding letterform density designed to communicate raw muscular power and unrelenting momentum.',
     archetype: 'THE KINETIC ATHLETE',
-    dna: { editorial: 15, disruptive: 92, warmth: 35, utility: 90 },
     headingFallback: "'Anton', sans-serif",
     bodyFallback: "'Montserrat', sans-serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Anton&family=Montserrat:wght@400;700&display=swap'
@@ -292,7 +267,6 @@ const profiles = [
     pairMeta: 'ROUNDED SANS / 15PX',
     rationale: 'Super-soft rounded corners and friendly letterforms that radiate joy, playfulness, and immediate approachability.',
     archetype: 'THE JOYFUL EXPLORER',
-    dna: { editorial: 25, disruptive: 65, warmth: 100, utility: 80 },
     headingFallback: "'Fredoka', sans-serif",
     bodyFallback: "'Quicksand', sans-serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Quicksand:wght@500;700&display=swap'
@@ -307,7 +281,6 @@ const profiles = [
     pairMeta: 'NEUTRAL SANS / 14PX',
     rationale: 'Open aperture letterforms and clinical legibility designed to instill trust, safety, and calm authority.',
     archetype: 'THE TRUSTED CLINICIAN',
-    dna: { editorial: 40, disruptive: 15, warmth: 75, utility: 98 },
     headingFallback: "'Public Sans', sans-serif",
     bodyFallback: "'Inter', sans-serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Public+Sans:wght@600;700&family=Inter:wght@400;500&display=swap'
@@ -322,7 +295,6 @@ const profiles = [
     pairMeta: 'CORPORATE SANS / 15PX',
     rationale: 'Traditional legal weight and historical gravitas paired with Source Sans 3 for impeccable contractual clarity.',
     archetype: 'THE CONSTANT COUNSEL',
-    dna: { editorial: 90, disruptive: 20, warmth: 60, utility: 92 },
     headingFallback: "'Libre Baskerville', serif",
     bodyFallback: "'Source Sans 3', sans-serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,700;1,400&family=Source+Sans+3:wght@400;600&display=swap'
@@ -337,7 +309,6 @@ const profiles = [
     pairMeta: 'SYSTEM SANS / 14PX',
     rationale: 'Increased letter height and distinct ligature design optimized for data tables, metrics dashboards, and live code feeds.',
     archetype: 'THE TELEMETRY ENGINE',
-    dna: { editorial: 30, disruptive: 70, warmth: 30, utility: 100 },
     headingFallback: "'JetBrains Mono', monospace",
     bodyFallback: "'Inter', sans-serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;600&display=swap'
@@ -352,7 +323,6 @@ const profiles = [
     pairMeta: 'MONOSPACE / 14PX',
     rationale: 'Raw felt-tip marker strokes colliding with technical monospaced tracklists. Captures the DIY ethos of garage band tour posters.',
     archetype: 'THE UNDERGROUND SOUND',
-    dna: { editorial: 75, disruptive: 98, warmth: 85, utility: 45 },
     headingFallback: "'Permanent Marker', cursive",
     bodyFallback: "'Fira Code', monospace",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Fira+Code:wght@400;600&display=swap'
@@ -367,7 +337,6 @@ const profiles = [
     pairMeta: 'CLEAN SANS / 14PX',
     rationale: 'Inspired by classical Roman inscriptions, casting an aura of timeless culinary mastery over fine dining menus.',
     archetype: 'THE MICHELIN MAESTRO',
-    dna: { editorial: 95, disruptive: 40, warmth: 75, utility: 60 },
     headingFallback: "'Cinzel', serif",
     bodyFallback: "'Lato', sans-serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Lato:wght@400;700&display=swap'
@@ -382,7 +351,6 @@ const profiles = [
     pairMeta: 'ELEGANT SANS / 15PX',
     rationale: 'High-contrast 19th century poster serif that turns every movie title into a dramatic cinematic event.',
     archetype: 'THE DRAMATIC AUTEUR',
-    dna: { editorial: 98, disruptive: 80, warmth: 60, utility: 50 },
     headingFallback: "'Abril Fatface', serif",
     bodyFallback: "'Raleway', sans-serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Raleway:wght@400;600&display=swap'
@@ -397,7 +365,6 @@ const profiles = [
     pairMeta: 'STURDY SERIF / 15PX',
     rationale: 'Inspired by traditional typewriter proportions with a rugged modern warmth made for field guides and adventure gear.',
     archetype: 'THE WILD VOYAGER',
-    dna: { editorial: 60, disruptive: 45, warmth: 92, utility: 88 },
     headingFallback: "'Cabin', sans-serif",
     bodyFallback: "'Merriweather', serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Cabin:wght@600;700&family=Merriweather:ital,wght@0,400;1,300&display=swap'
@@ -412,7 +379,6 @@ const profiles = [
     pairMeta: 'FUTURISTIC SANS / 15PX',
     rationale: 'Chunky, low-contrast headline strokes that project raw competitive dominance on esports leaderboards and streams.',
     archetype: 'THE ARENA CHAMPION',
-    dna: { editorial: 15, disruptive: 95, warmth: 30, utility: 85 },
     headingFallback: "'Russo One', sans-serif",
     bodyFallback: "'Exo 2', sans-serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Russo+One&family=Exo+2:wght@500;700&display=swap'
@@ -427,7 +393,6 @@ const profiles = [
     pairMeta: 'MONOSPACE SANS / 16PX',
     rationale: 'Unapologetic historical quirks and flared terminals that transform poster typography into provocative graphic art.',
     archetype: 'THE BRUTALIST EXHIBITOR',
-    dna: { editorial: 75, disruptive: 99, warmth: 40, utility: 65 },
     headingFallback: "'Bricolage Grotesque', sans-serif",
     bodyFallback: "'Space Grotesk', sans-serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Space+Grotesk:wght@400;600&display=swap'
@@ -442,7 +407,6 @@ const profiles = [
     pairMeta: 'NEUTRAL SANS / 15PX',
     rationale: 'Bold industrial block weight reminiscent of woodblock printing press stamps on artisan IPA cans.',
     archetype: 'THE ARTISAN BREWER',
-    dna: { editorial: 45, disruptive: 85, warmth: 88, utility: 70 },
     headingFallback: "'Rubik Mono One', sans-serif",
     bodyFallback: "'DM Sans', sans-serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Rubik+Mono+One&family=DM+Sans:wght@400;500&display=swap'
@@ -457,7 +421,6 @@ const profiles = [
     pairMeta: 'ROUNDED SANS / 15PX',
     rationale: 'Fluid retro script letterforms that invoke the comforting warmth of freshly baked morning pastries.',
     archetype: 'THE HOMETOWN BAKER',
-    dna: { editorial: 70, disruptive: 50, warmth: 100, utility: 55 },
     headingFallback: "'Pacifico', cursive",
     bodyFallback: "'Quicksand', sans-serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Pacifico&family=Quicksand:wght@400;600&display=swap'
@@ -472,7 +435,6 @@ const profiles = [
     pairMeta: 'MONOSPACE / 14PX',
     rationale: 'Direct 8-bit retro arcade aesthetic colliding with modern smart contract code for decentralized web applications.',
     archetype: 'THE DECENTRALIZED REBEL',
-    dna: { editorial: 20, disruptive: 100, warmth: 35, utility: 75 },
     headingFallback: "'Press Start 2P', monospace",
     bodyFallback: "'Space Mono', monospace",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Mono:wght@400;700&display=swap'
@@ -487,7 +449,6 @@ const profiles = [
     pairMeta: 'HUMANIST SANS / 14PX',
     rationale: 'Clean geometric proportions and open counters tailored for modern architectural listings and luxury home brochures.',
     archetype: 'THE ARCHITECTURAL BROKER',
-    dna: { editorial: 55, disruptive: 35, warmth: 75, utility: 95 },
     headingFallback: "'Manrope', sans-serif",
     bodyFallback: "'Open Sans', sans-serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Manrope:wght@600;800&family=Open+Sans:wght@400;600&display=swap'
@@ -502,7 +463,6 @@ const profiles = [
     pairMeta: 'CLEAN SANS / 15PX',
     rationale: 'Delicate flared serif terminals inspired by ancient Roman titling, delivering effortless radiance for skincare packaging.',
     archetype: 'THE RADIANT ALCHEMIST',
-    dna: { editorial: 92, disruptive: 30, warmth: 85, utility: 65 },
     headingFallback: "'Marcellus', serif",
     bodyFallback: "'Plus Jakarta Sans', sans-serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Marcellus&family=Plus+Jakarta+Sans:wght@400;600&display=swap'
@@ -517,7 +477,6 @@ const profiles = [
     pairMeta: 'TECHNICAL SANS / 16PX',
     rationale: 'Extreme wide tracking and geometric stance engineered for high-performance automotive dashboards and carbon fiber aesthetics.',
     archetype: 'THE HIGH-OCTANE PILOT',
-    dna: { editorial: 25, disruptive: 90, warmth: 20, utility: 85 },
     headingFallback: "'Syncopate', sans-serif",
     bodyFallback: "'Rajdhani', sans-serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Rajdhani:wght@500;700&display=swap'
@@ -532,7 +491,6 @@ const profiles = [
     pairMeta: 'SYSTEM SANS / 14PX',
     rationale: 'Tall, punchy vertical capital letters that dominate podcast cover art and thumbnail graphics.',
     archetype: 'THE BROADCAST HOST',
-    dna: { editorial: 40, disruptive: 75, warmth: 50, utility: 90 },
     headingFallback: "'Bebas Neue', sans-serif",
     bodyFallback: "'Roboto', sans-serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;500&display=swap'
@@ -547,7 +505,6 @@ const profiles = [
     pairMeta: 'WARM SERIF / 15PX',
     rationale: 'Friendly geometric circularity paired with a warm literary serif to convey heartfelt humanitarian purpose.',
     archetype: 'THE HUMANE ADVOCATE',
-    dna: { editorial: 70, disruptive: 30, warmth: 95, utility: 85 },
     headingFallback: "'Poppins', sans-serif",
     bodyFallback: "'Lora', serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Lora:ital,wght@0,400;1,400&display=swap'
@@ -562,7 +519,6 @@ const profiles = [
     pairMeta: 'CODE MONO / 14PX',
     rationale: 'Specifically optimized for dense digital research papers and mathematical formulas alongside technical code blocks.',
     archetype: 'THE SCHOLARLY INQUIRER',
-    dna: { editorial: 95, disruptive: 25, warmth: 45, utility: 95 },
     headingFallback: "'Spectral', serif",
     bodyFallback: "'Fira Code', monospace",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,600;1,400&family=Fira+Code:wght@400;500&display=swap'
@@ -577,7 +533,6 @@ const profiles = [
     pairMeta: 'WARM SANS / 15PX',
     rationale: 'Soft single-storey letterforms reminiscent of classic 19th-century children’s storybooks and vintage paperbacks.',
     archetype: 'THE STORYBOOK CURATOR',
-    dna: { editorial: 96, disruptive: 35, warmth: 92, utility: 60 },
     headingFallback: "'Cormorant Infant', serif",
     bodyFallback: "'DM Sans', sans-serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Cormorant+Infant:ital,wght@0,600;1,400&family=DM+Sans:wght@400;500&display=swap'
@@ -592,7 +547,6 @@ const profiles = [
     pairMeta: 'ROMANTIC SERIF / 16PX',
     rationale: 'Flowing cursive penmanship designed for luxury wedding invitations, place cards, and romantic stationery.',
     archetype: 'THE ROMANTIC POET',
-    dna: { editorial: 98, disruptive: 40, warmth: 95, utility: 35 },
     headingFallback: "'Great Vibes', cursive",
     bodyFallback: "'Playfair Display', serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;1,400&display=swap'
@@ -607,7 +561,6 @@ const profiles = [
     pairMeta: 'GEOMETRIC SANS / 15PX',
     rationale: 'Square condensed proportions that mirror heavy barbell plates and high-intensity workout timer displays.',
     archetype: 'THE IRON ATHLETE',
-    dna: { editorial: 10, disruptive: 90, warmth: 25, utility: 95 },
     headingFallback: "'Teko', sans-serif",
     bodyFallback: "'Montserrat', sans-serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Teko:wght@600;700&family=Montserrat:wght@400;600&display=swap'
@@ -622,7 +575,6 @@ const profiles = [
     pairMeta: 'ROUNDED SANS / 15PX',
     rationale: 'Whimsical rounded shapes that bring instant warmth and playful energy to pet care brands and veterinary clinics.',
     archetype: 'THE COMPANION GUARDIAN',
-    dna: { editorial: 20, disruptive: 60, warmth: 100, utility: 75 },
     headingFallback: "'Sniglet', cursive",
     bodyFallback: "'Quicksand', sans-serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Sniglet:wght@800&family=Quicksand:wght@400;600&display=swap'
@@ -637,7 +589,6 @@ const profiles = [
     pairMeta: 'SANS / 15PX',
     rationale: 'Inspired by Art Deco posters and 1980s synth-wave album art, delivering high-impact festival energy.',
     archetype: 'THE ELECTRIC HOST',
-    dna: { editorial: 35, disruptive: 95, warmth: 70, utility: 65 },
     headingFallback: "'Righteous', sans-serif",
     bodyFallback: "'Plus Jakarta Sans', sans-serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Righteous&family=Plus+Jakarta+Sans:wght@400;600&display=swap'
@@ -652,7 +603,6 @@ const profiles = [
     pairMeta: 'NEUTRAL SANS / 14PX',
     rationale: 'Fresh, geometric clarity engineered for modern neo-banks, digital wallets, and financial mobile dashboards.',
     archetype: 'THE DIGITAL TRUSTEE',
-    dna: { editorial: 35, disruptive: 45, warmth: 60, utility: 98 },
     headingFallback: "'Red Hat Display', sans-serif",
     bodyFallback: "'Inter', sans-serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@700;900&family=Inter:wght@400;500&display=swap'
@@ -667,7 +617,6 @@ const profiles = [
     pairMeta: 'SYSTEM MONO / 14PX',
     rationale: 'Direct glowing phosphor CRT monitor typography that takes you straight back to 1987 arcade machines.',
     archetype: 'THE RETRO TERMINAL',
-    dna: { editorial: 30, disruptive: 98, warmth: 50, utility: 70 },
     headingFallback: "'VT323', monospace",
     bodyFallback: "'DM Mono', monospace",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=VT323&family=DM+Mono:wght@400;500&display=swap'
@@ -682,7 +631,6 @@ const profiles = [
     pairMeta: 'ORGANIC SERIF / 15PX',
     rationale: 'Inspired by 1930s Scandinavian geometric design, conveying clean energy and planet-first values.',
     archetype: 'THE SUSTAINABLE PIONEER',
-    dna: { editorial: 75, disruptive: 40, warmth: 90, utility: 80 },
     headingFallback: "'Josefin Sans', sans-serif",
     bodyFallback: "'Lora', serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@600;700&family=Lora:ital,wght@0,400;1,400&display=swap'
@@ -697,7 +645,6 @@ const profiles = [
     pairMeta: 'CLEAN SANS / 15PX',
     rationale: 'Graceful calligraphic proportions inspired by Italian newspaper typography, radiating high-fashion luxury.',
     archetype: 'THE MILAN STYLIST',
-    dna: { editorial: 99, disruptive: 50, warmth: 70, utility: 45 },
     headingFallback: "'Italiana', serif",
     bodyFallback: "'Plus Jakarta Sans', sans-serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Italiana&family=Plus+Jakarta+Sans:wght@400;600&display=swap'
@@ -756,18 +703,6 @@ async function recommendProfile(promptText) {
   return { profile, aiResult: payload }
 }
 
-// Dynamic DNA Bars Renderer
-// Dynamic DNA Bars Renderer
-function animateDNABars(dna) {
-  barEditorial.style.width = dna.editorial + '%'
-  barDisruptive.style.width = dna.disruptive + '%'
-  barWarmth.style.width = dna.warmth + '%'
-  barUtility.style.width = dna.utility + '%'
-  valEditorial.textContent = dna.editorial
-  valDisruptive.textContent = dna.disruptive
-  valWarmth.textContent = dna.warmth
-  valUtility.textContent = dna.utility
-}
 
 // Toast Alert
 function showToast(message) {
@@ -889,7 +824,6 @@ state.subscribe((profile) => {
   }
   if (profile.bodyFallback) pairName.style.fontFamily = profile.bodyFallback
   specimenTextInput.value = profile.sample.replaceAll('<br/>', ' ').replaceAll('<br>', ' ').replace(/<[^>]+>/g, '')
-  animateDNABars(profile.dna)
 })
 // Initialization
 function init() {
@@ -954,18 +888,28 @@ fontSizeSlider.addEventListener('input', (e) => {
   fontSizeVal.textContent = `${size}px`
   displaySample.style.fontSize = `${size}px`
 })
-
 toggleCase.addEventListener('click', () => {
   const isActive = toggleCase.classList.toggle('active')
-  displaySample.style.textTransform = toggleCase.classList.contains('active') ? 'uppercase' : 'none'
-  toggleCase.setAttribute("aria-pressed", String(isActive))
+  const transform = isActive ? 'uppercase' : 'none'
+  displaySample.style.textTransform = transform
+  specimenTextInput.style.textTransform = transform
+  toggleCase.setAttribute('aria-pressed', String(isActive))
 })
 
 toggleItalic.addEventListener('click', () => {
-  toggleItalic.classList.toggle('active')
-  const isActive = toggleItalic.classList.contains("active")
-  displaySample.style.fontStyle = toggleItalic.classList.contains('active') ? 'italic' : 'normal'
-  toggleItalic.setAttribute("aria-pressed", String(isActive))
+  const isActive = toggleItalic.classList.toggle('active')
+  const style = isActive ? 'italic' : 'normal'
+  displaySample.style.fontStyle = style
+  specimenTextInput.style.fontStyle = style
+  toggleItalic.setAttribute('aria-pressed', String(isActive))
+})
+
+toggleBold.addEventListener('click', () => {
+  const isActive = toggleBold.classList.toggle('active')
+  const weight = isActive ? '700' : '400'
+  displaySample.style.fontWeight = weight
+  specimenTextInput.style.fontWeight = weight
+  toggleBold.setAttribute('aria-pressed', String(isActive))
 })
 
 // Developer Code Exporter Handlers
@@ -981,43 +925,6 @@ copyGoogleFontsBtn.addEventListener('click', (e) => {
   copyToClipboard(state.activeProfile.googleFontsUrl, e.currentTarget)
 })
 
-// PNG Export using html2canvas
-const savePngBtn = document.getElementById('savePngBtn');
-if (savePngBtn) {
-  savePngBtn.addEventListener('click', async (e) => {
-    const originalText = e.currentTarget.textContent;
-    e.currentTarget.textContent = 'SAVING...';
-    try {
-      const card = document.querySelector('.recommendation');
-      const controls = card.querySelector('.specimen-controls');
-      const exportBar = card.querySelector('.export-bar');
-      controls.style.display = 'none';
-      exportBar.style.display = 'none';
-      
-      const canvas = await html2canvas(card, { backgroundColor: '#ebe9df', scale: 2 });
-      
-      const imgData = canvas.toDataURL('image/png');
-      const link = document.createElement('a');
-      link.download = `fontally-${state.activeProfile.id}.png`;
-      link.href = imgData;
-      link.click();
-      
-      showToast('✓ Saved as PNG');
-      savePngBtn.textContent = 'SAVED! ✓';
-      setTimeout(() => { savePngBtn.textContent = originalText; }, 2000);
-    } catch (err) {
-      console.error(err);
-      showToast('Failed to save PNG');
-      savePngBtn.textContent = originalText;
-    } finally {
-      const card = document.querySelector('.recommendation');
-      const controls = card.querySelector('.specimen-controls');
-      const exportBar = card.querySelector('.export-bar');
-      if (controls) controls.style.display = '';
-      if (exportBar) exportBar.style.display = '';
-    }
-  });
-}
 
 // Interactive Preset Prompt Chips
 document.querySelectorAll('.chips button').forEach((chip) => {

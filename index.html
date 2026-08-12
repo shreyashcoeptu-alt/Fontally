@@ -55,11 +55,7 @@
           <article class="recommendation">
 
             <!-- Interactive Specimen Controls -->
-            <div class="specimen-controls">
-              <div class="control-group text-group">
-                <label for="specimenTextInput">Type your text here :</label>
-                <input type="text" id="specimenTextInput" value="Spezia Variable" placeholder="Type custom headline..." spellcheck="false" />
-              </div>
+            <div class="specimen-controls" aria-label="Specimen formatting controls">
               <div class="control-group range-group">
                 <label for="fontSizeSlider">SIZE <span id="fontSizeVal">96px</span></label>
                 <input type="range" id="fontSizeSlider" min="32" max="140" value="96" />
@@ -67,10 +63,16 @@
               <div class="control-actions">
                 <button id="toggleCase" type="button" title="Toggle uppercase" aria-label="Toggle uppercase" aria-pressed="false">Aa</button>
                 <button id="toggleItalic" type="button" title="Toggle italic" aria-label="Toggle italic" aria-pressed="false"><i>I</i></button>
+                <button id="toggleBold" type="button" title="Toggle bold" aria-label="Toggle bold" aria-pressed="false"><strong>B</strong></button>
               </div>
             </div>
 
             <div class="type-specimen" id="displaySample" aria-live="polite" aria-atomic="true">Spezia<br/><i>Variable</i></div>
+
+            <div class="specimen-input-line">
+              <label for="specimenTextInput">TYPE</label>
+              <input type="text" id="specimenTextInput" value="Spezia Variable" placeholder="Type a headline..." aria-label="Type custom specimen text" spellcheck="false" />
+            </div>
             
             <div class="font-info">
               <div>
@@ -96,40 +98,32 @@
                 <button id="copyCssBtn" class="btn-export">COPY CSS</button>
                 <button id="copyTailwindBtn" class="btn-export">TAILWIND CONFIG</button>
                 <button id="copyGoogleFontsBtn" class="btn-export">GOOGLE FONTS</button>
-                <button id="savePngBtn" class="btn-export">SAVE PNG</button>
                 <button id="shareBtn" class="btn-export">SHARE LINK</button>
                 <span id="recommendationStatus" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></span>
               </div>
             </div>
           </article>
           
-          <aside class="insights">
-            <div class="insight-title">READING YOUR<br/>DESIGN DNA <span>↘</span></div>
-            <div class="bars">
-              <div><span>EDITORIAL</span><b><i id="barEditorial"></i></b><em id="valEditorial">0</em></div>
-              <div><span>DISRUPTIVE</span><b><i id="barDisruptive"></i></b><em id="valDisruptive">0</em></div>
-              <div><span>WARMTH</span><b><i id="barWarmth"></i></b><em id="valWarmth">0</em></div>
-              <div><span>UTILITY</span><b><i id="barUtility"></i></b><em id="valUtility">0</em></div>
-            </div>
-            <div class="insight-foot"><span>VIBE ARCHETYPE</span><strong id="archetype">THE SENSORY EDITOR</strong></div>
-          </aside>
-        </div>
       </section>
 
       <section class="library">
+        <div class="library-heading">
+          <span class="library-heading-rule" aria-hidden="true"></span>
+          <h2>Some personal <em>favourites</em></h2>
+          <span class="library-heading-rule" aria-hidden="true"></span>
+        </div>
         <div class="font-shelf">
           <div class="shelf-item shelf-serif" data-profile-id="coffee" role="button" tabindex="0">
-            <span>01</span><strong>Windsor & Söhne</strong><em>for charming<br/>eccentrics & warmth</em>
+            <span>01</span><strong>Windsor &amp; Söhne</strong><em>for charming<br/>eccentrics &amp; warmth</em>
           </div>
           <div class="shelf-item shelf-grotesk" data-profile-id="architect" role="button" tabindex="0">
-            <span>02</span><strong>Helvetica Now & Times</strong><em>for brutalist<br/>architects</em>
+            <span>02</span><strong>Helvetica Now &amp; Times</strong><em>for brutalist<br/>architects</em>
           </div>
           <div class="shelf-item shelf-display" data-profile-id="luxury" role="button" tabindex="0">
-            <span>03</span><strong>Cormorant & Jakarta</strong><em>for soft<br/>power moves</em>
+            <span>03</span><strong>Cormorant &amp; Jakarta</strong><em>for soft<br/>power moves</em>
           </div>
         </div>
       </section>
-
       <footer><span>FONTALLY © 2026 — Developed by <a href="https://www.linkedin.com/in/shreyashkadam400" target="_blank" rel="noopener noreferrer" class="dev-link">Shreyash</a></span><a href="#top">BACK TO THE TOP ↑</a></footer>
     </main>
     <script type="module" src="/src/main.js"></script>

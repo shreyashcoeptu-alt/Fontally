@@ -27,14 +27,13 @@
 
 **Fontally** is a font-obsessed web application designed to bridge the gap between creative brand brief vibes and highcraft typography systems. 
 
-Give Fontally a prompt—whether it's *"a brutalist portfolio for an experimental architect"*, *"a quiet cult like coffee shop with amazing ceramics"*, or *"fintech, but hot"* and Fontally analyzes your design brief, maps your project's **Design DNA**, and pairs complimentary heading and body typefaces complete with live interactive specimens and instant developer export code.
+Give Fontally a prompt—whether it's *"a brutalist portfolio for an experimental architect"*, *"a quiet cult-like coffee shop with amazing ceramics"*, or *"fintech, but hot"*—and Fontally interprets the brief, pairs complementary heading and body typefaces, and provides live interactive specimens with instant developer export code.
 
 ---
 
 ## ✦ Key Features
 
--  **Design DNA Analysis**: Evaluates briefs across four core aesthetic vectors: `EDITORIAL`, `DISRUPTIVE`, `WARMTH`, and `UTILITY`.
--  **50+ Curated Vibe Archetypes**: Handcrafted pairings of Google Fonts and legendary display typefaces (Neue Montreal, Spezia, Geist Mono, Reckless Neue, Syne, Bodoni Moda, etc.).
+-  **Curated Vibe Archetypes**: Handcrafted pairings of Google Fonts and legendary display typefaces (Neue Montreal, Spezia, Geist Mono, Reckless Neue, Syne, Bodoni Moda, etc.).
 -  **Interactive Type Specimen Control**:
   - Live custom headline text editor
   - Dynamic font size slider (`32px` – `140px`)
