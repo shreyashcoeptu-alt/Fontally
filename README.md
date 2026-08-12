@@ -132,6 +132,28 @@ module.exports = {
 
 ---
 
+## ✧ Gemini Recommendation Engine
+
+Fontally now uses Gemini as the recommendation engine. The browser sends the design brief and the curated profile catalog to the same-origin `/api/recommend` endpoint; the API key never enters the browser bundle. The server proxy calls Gemini 3.6 Flash with structured JSON output, validates that the returned `profileId` exists in the supplied catalog, clamps the confidence value, and returns the model rationale and vibe tags to the UI.
+
+Create a local `.env` file from `.env.example` or export these variables in your shell:
+
+```bash
+GEMINI_API_KEY=your_server_only_key
+GEMINI_MODEL=gemini-3.6-flash
+```
+
+Start the application with:
+
+```bash
+npm run dev
+```
+
+The Vite development middleware serves the Gemini proxy at `POST /api/recommend`. The proxy enforces a request-size limit, prompt length limit, timeout, basic in-memory rate limit, response validation, and `Cache-Control: no-store`. It does not expose provider error details or API keys to the browser. Do not commit `.env` or any provider secret.
+
+The previous TF-IDF matcher is no longer used by the frontend recommendation flow. If Gemini is unavailable, Fontally reports the service error instead of silently selecting a local profile, so users can distinguish a live AI recommendation from an unavailable provider.
+
+---
 ## Author
 
 Designed & Developed by **Shreyash Kadam**.

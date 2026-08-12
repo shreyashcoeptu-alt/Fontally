@@ -21,7 +21,8 @@
         <div class="terminal">
           <div class="prompt-row">
             <span class="prompt-mark">›</span>
-            <textarea id="brief" rows="1" spellcheck="false" autofocus aria-label="Describe what you are building" placeholder="tell Fontally what you're building..."></textarea>
+            <textarea id="brief" rows="1" spellcheck="false" autofocus aria-describedby="promptHelp" aria-label="Describe what you are building" placeholder="tell Fontally what you're building..."></textarea>
+            <span id="promptHelp" class="sr-only">Describe a brand, product, mood, or creative project. Press Enter to analyse it.</span>
           </div>
           <div class="terminal-footer">
             <div class="chips" aria-label="Style suggestions">
@@ -32,10 +33,10 @@
               <button data-prompt="a dystopian cyberpunk RPG game set in neo-tokyo 2099">CYBERPUNK</button>
               <button data-prompt="a high fashion editorial for sustainable luxury skincare">LUXURY EDITORIAL</button>
             </div>
-            <button class="analyse" id="analyse">ANALYSE <span>→</span></button>
+            <button class="analyse" id="analyse">ASK GEMINI <span>→</span></button>
           </div>
         </div>
-        <div class="type-playground" id="typePlayground" aria-hidden="true">
+        <div class="type-playground" id="typePlayground" aria-label="Interactive type sculpture. Activate a letter to change its preview font.">
           <div class="type-sculpture" id="typeSculpture">
             <div class="sculpture-row"><span>A</span><span>B</span></div>
             <div class="sculpture-row"><span>C</span><span>D</span><span>E</span></div>
@@ -48,7 +49,8 @@
         </div>
       </section>
 
-      <section class="result-section" id="results" aria-live="polite">
+      <section class="result-section" id="results" aria-labelledby="resultsHeading">
+        <h2 id="resultsHeading" class="sr-only">Font recommendation</h2>
         <div class="result-grid">
           <article class="recommendation">
 
@@ -63,18 +65,19 @@
                 <input type="range" id="fontSizeSlider" min="32" max="140" value="96" />
               </div>
               <div class="control-actions">
-                <button id="toggleCase" title="Toggle Uppercase">Aa</button>
-                <button id="toggleItalic" title="Toggle Italic"><i>I</i></button>
+                <button id="toggleCase" type="button" title="Toggle uppercase" aria-label="Toggle uppercase" aria-pressed="false">Aa</button>
+                <button id="toggleItalic" type="button" title="Toggle italic" aria-label="Toggle italic" aria-pressed="false"><i>I</i></button>
               </div>
             </div>
 
-            <div class="type-specimen" id="displaySample">Spezia<br/><i>Variable</i></div>
+            <div class="type-specimen" id="displaySample" aria-live="polite" aria-atomic="true">Spezia<br/><i>Variable</i></div>
             
             <div class="font-info">
               <div>
                 <h2 id="displayName">Spezia Variable</h2>
                 <p id="displayMeta">SERIF / VARIABLE</p>
                 <p id="licenseDisclaimer" class="license-disclaimer" style="display: none;"></p>
+                <p id="aiMatchMeta" class="ai-match-meta" style="display: none;"></p>
               </div>
             </div>
             
@@ -94,6 +97,8 @@
                 <button id="copyTailwindBtn" class="btn-export">TAILWIND CONFIG</button>
                 <button id="copyGoogleFontsBtn" class="btn-export">GOOGLE FONTS</button>
                 <button id="savePngBtn" class="btn-export">SAVE PNG</button>
+                <button id="shareBtn" class="btn-export">SHARE LINK</button>
+                <span id="recommendationStatus" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></span>
               </div>
             </div>
           </article>
@@ -101,10 +106,10 @@
           <aside class="insights">
             <div class="insight-title">READING YOUR<br/>DESIGN DNA <span>↘</span></div>
             <div class="bars">
-              <div><span>EDITORIAL</span><b><i id="barEditorial" style="width:88%"></i></b><em id="valEditorial">88</em></div>
-              <div><span>DISRUPTIVE</span><b><i id="barDisruptive" style="width:74%"></i></b><em id="valDisruptive">74</em></div>
-              <div><span>WARMTH</span><b><i id="barWarmth" style="width:61%"></i></b><em id="valWarmth">61</em></div>
-              <div><span>UTILITY</span><b><i id="barUtility" style="width:42%"></i></b><em id="valUtility">42</em></div>
+              <div><span>EDITORIAL</span><b><i id="barEditorial"></i></b><em id="valEditorial">0</em></div>
+              <div><span>DISRUPTIVE</span><b><i id="barDisruptive"></i></b><em id="valDisruptive">0</em></div>
+              <div><span>WARMTH</span><b><i id="barWarmth"></i></b><em id="valWarmth">0</em></div>
+              <div><span>UTILITY</span><b><i id="barUtility"></i></b><em id="valUtility">0</em></div>
             </div>
             <div class="insight-foot"><span>VIBE ARCHETYPE</span><strong id="archetype">THE SENSORY EDITOR</strong></div>
           </aside>

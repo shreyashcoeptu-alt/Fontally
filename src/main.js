@@ -26,6 +26,9 @@ const toggleItalic = $('#toggleItalic')
 const copyCssBtn = $('#copyCssBtn')
 const copyTailwindBtn = $('#copyTailwindBtn')
 const copyGoogleFontsBtn = $('#copyGoogleFontsBtn')
+const shareBtn = $("#shareBtn")
+const recommendationStatus = $("#recommendationStatus")
+const aiMatchMeta = $("#aiMatchMeta")
 
 // DNA Bar Handles
 const barEditorial = $('#barEditorial')
@@ -734,64 +737,26 @@ function buildProfile(p) {
   return { ...p, cssImport, cssVars, tailwind }
 }
 
-// Compute Inverse Document Frequency for TF-IDF matching
-const totalProfiles = profiles.length
-const wordDocFrequency = {}
-profiles.forEach(p => {
-  const uniqueWords = new Set(p.words)
-  uniqueWords.forEach(w => {
-    wordDocFrequency[w] = (wordDocFrequency[w] || 0) + 1
-  })
-})
+// Gemini recommendation client
+const RECOMMENDATION_ENDPOINT = '/api/recommend'
 
-function getIDF(word) {
-  const df = wordDocFrequency[word] || 1 // avoid div by zero, assume min 1
-  return Math.log10(totalProfiles / df) + 1 // +1 so every word has some weight
+async function recommendProfile(promptText) {
+  const response = await fetch(RECOMMENDATION_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      prompt: promptText.trim().slice(0, 1200),
+      profiles: profiles.map(({ id, name, meta, archetype, rationale, words }) => ({ id, name, meta, archetype, rationale, words }))
+    })
+  })
+  const payload = await response.json().catch(() => ({}))
+  if (!response.ok) throw new Error(payload.error || 'Gemini could not complete the recommendation.')
+  const profile = profiles.find((candidate) => candidate.id === payload.profileId)
+  if (!profile) throw new Error('Gemini returned an unknown recommendation.')
+  return { profile, aiResult: payload }
 }
 
-// Enhanced AI Recommendation Matcher Algorithm (TF-IDF weighted matching)
-function chooseProfile(promptText) {
-  if (!promptText || !promptText.trim()) return profiles[Math.floor(Math.random() * profiles.length)]
-  
-  const queryWords = promptText.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(Boolean)
-  if (queryWords.length === 0) return profiles[Math.floor(Math.random() * profiles.length)]
-
-  let bestScore = -1
-  let bestProfile = profiles[0]
-
-  profiles.forEach((profile) => {
-    let score = 0
-    
-    // Check direct word matches and partial substring overlaps with IDF weighting
-    profile.words.forEach((targetWord) => {
-      queryWords.forEach((userWord) => {
-        if (userWord === targetWord) {
-          score += 4.0 * getIDF(targetWord) // Exact match bonus
-        } else if (targetWord.includes(userWord) || userWord.includes(targetWord)) {
-          if (userWord.length > 2) score += 2.0 * getIDF(targetWord) // Partial match
-        }
-      })
-    })
-
-    // Check archetype & meta keyword hits
-    const metaLower = profile.meta.toLowerCase()
-    const archetypeLower = profile.archetype.toLowerCase()
-    queryWords.forEach((userWord) => {
-      if (userWord.length > 2 && (metaLower.includes(userWord) || archetypeLower.includes(userWord))) {
-        score += 3.0
-      }
-    })
-
-    if (score > bestScore) {
-      bestScore = score
-      bestProfile = profile
-    }
-  })
-
-  if (bestScore <= 0) return profiles[Math.floor(Math.random() * profiles.length)]
-  return bestProfile
-}
-
+// Dynamic DNA Bars Renderer
 // Dynamic DNA Bars Renderer
 function animateDNABars(dna) {
   barEditorial.style.width = dna.editorial + '%'
@@ -852,14 +817,15 @@ async function copyToClipboard(text, button) {
 const state = {
   activeProfile: null,
   listeners: [],
-  setActiveProfile(profile) {
-    this.activeProfile = buildProfile(profile);
+  setActiveProfile(profile, { updateUrl = true, aiResult = null } = {}) {
+    this.activeProfile = { ...buildProfile(profile), aiResult };
     this.notify();
     
     // URL Persistence
     const url = new URL(window.location);
+    const currentVibe = url.searchParams.get('vibe');
     url.searchParams.set('vibe', profile.id);
-    window.history.pushState({}, '', url);
+    if (updateUrl && currentVibe !== profile.id) window.history.pushState({}, '', url);
   },
   subscribe(listener) {
     this.listeners.push(listener);
@@ -869,43 +835,62 @@ const state = {
   }
 };
 
+function getShareUrl() {
+  const url = new URL(window.location.href)
+  if (state.activeProfile) url.searchParams.set("vibe", state.activeProfile.id)
+  return url.toString()
+}
+shareBtn.addEventListener("click", (event) => {
+  copyToClipboard(getShareUrl(), event.currentTarget)
+})
+window.addEventListener("popstate", () => {
+  const vibeId = new URLSearchParams(window.location.search).get("vibe")
+  const profile = profiles.find((candidate) => candidate.id === vibeId)
+  if (profile && state.activeProfile?.id !== profile.id) state.setActiveProfile(profile, { updateUrl: false })
+})
 // Render DOM on State Change
 state.subscribe((profile) => {
+  const aiResult = profile.aiResult
   loadGoogleFont(profile.googleFontsUrl)
-
-
-
   displayName.textContent = profile.name
   displaySample.innerHTML = profile.sample
-  displayMeta.textContent = profile.meta
+  displayMeta.textContent = aiResult?.tags?.length
+    ? `${profile.meta} · ${aiResult.tags.join(' · ').toUpperCase()}`
+    : profile.meta
   pairName.textContent = profile.pair
   pairMeta.textContent = profile.pairMeta
-  rationale.textContent = profile.rationale
+  rationale.textContent = aiResult?.rationale || profile.rationale
   archetype.textContent = profile.archetype
-  
-  // Font licensing disclaimer verification
-  const disclaimer = document.getElementById('licenseDisclaimer');
-  const fallbackFamily = profile.headingFallback.split(',')[0].replace(/['"]/g, '').trim();
-  if (profile.name.toLowerCase() !== fallbackFamily.toLowerCase()) {
-    disclaimer.textContent = `Preview rendered using free fallback: ${fallbackFamily}`;
-    disclaimer.style.display = 'block';
+  recommendationStatus.textContent = aiResult
+    ? `${profile.name} selected by Gemini. ${aiResult.rationale}`
+    : `${profile.name} selected. ${profile.rationale}`
+  if (aiResult) {
+    const confidence = Math.round((aiResult.confidence || 0) * 100)
+    aiMatchMeta.textContent = `GEMINI MATCH ${confidence}%${aiResult.tags?.length ? ` · ${aiResult.tags.join(' / ').toUpperCase()}` : ''}`
+    aiMatchMeta.style.display = 'block'
   } else {
-    disclaimer.style.display = 'none';
+    aiMatchMeta.textContent = ''
+    aiMatchMeta.style.display = 'none'
   }
-  
+
+  // Font licensing disclaimer verification
+  const disclaimer = document.getElementById('licenseDisclaimer')
+  const fallbackFamily = profile.headingFallback.split(',')[0].replace(/['"]/g, '').trim()
+  if (profile.name.toLowerCase() !== fallbackFamily.toLowerCase()) {
+    disclaimer.textContent = `Preview rendered using free fallback: ${fallbackFamily}`
+    disclaimer.style.display = 'block'
+  } else {
+    disclaimer.style.display = 'none'
+  }
   if (profile.headingFallback) {
     displaySample.style.fontFamily = profile.headingFallback
     displayName.style.fontFamily = profile.headingFallback
     specimenTextInput.style.fontFamily = profile.headingFallback
   }
-  if (profile.bodyFallback) {
-    pairName.style.fontFamily = profile.bodyFallback
-  }
-
-  specimenTextInput.value = profile.name.replace('<br/>', ' ')
+  if (profile.bodyFallback) pairName.style.fontFamily = profile.bodyFallback
+  specimenTextInput.value = profile.sample.replaceAll('<br/>', ' ').replaceAll('<br>', ' ').replace(/<[^>]+>/g, '')
   animateDNABars(profile.dna)
-});
-
+})
 // Initialization
 function init() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -914,18 +899,36 @@ function init() {
   state.setActiveProfile(targetProfile);
 }
 
-function updateRecommendation() {
-  const p = chooseProfile(brief.value)
+async function updateRecommendation() {
+  const prompt = brief.value.trim()
+  if (!prompt) {
+    showToast('Describe your project first.')
+    brief.focus()
+    return
+  }
+  analyse.disabled = true
   analyse.classList.add('loading')
-  analyse.innerHTML = 'READING <span>◌</span>'
-  
-  setTimeout(() => {
-    state.setActiveProfile(p)
+  analyse.innerHTML = 'ASKING GEMINI <span>◌</span>'
+  try {
+    const recommendation = await recommendProfile(prompt)
+    await new Promise((resolve) => setTimeout(resolve, 480))
+    state.setActiveProfile(recommendation.profile, { aiResult: recommendation.aiResult })
     document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' })
+  } catch (error) {
+    console.error('Gemini recommendation failed:', error)
+    recommendationStatus.textContent = `Gemini recommendation failed. ${error.message}`
+    showToast(error.message || 'Gemini recommendation failed.')
+  } finally {
+    analyse.disabled = false
     analyse.classList.remove('loading')
     analyse.innerHTML = 'ANALYSE <span>→</span>'
-  }, 480)
+  }
 }
+
+brief.addEventListener('input', () => {
+  brief.style.height = 'auto'
+  brief.style.height = brief.scrollHeight + 'px'
+})
 
 brief.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
@@ -953,13 +956,16 @@ fontSizeSlider.addEventListener('input', (e) => {
 })
 
 toggleCase.addEventListener('click', () => {
-  toggleCase.classList.toggle('active')
+  const isActive = toggleCase.classList.toggle('active')
   displaySample.style.textTransform = toggleCase.classList.contains('active') ? 'uppercase' : 'none'
+  toggleCase.setAttribute("aria-pressed", String(isActive))
 })
 
 toggleItalic.addEventListener('click', () => {
   toggleItalic.classList.toggle('active')
+  const isActive = toggleItalic.classList.contains("active")
   displaySample.style.fontStyle = toggleItalic.classList.contains('active') ? 'italic' : 'normal'
+  toggleItalic.setAttribute("aria-pressed", String(isActive))
 })
 
 // Developer Code Exporter Handlers
@@ -983,16 +989,12 @@ if (savePngBtn) {
     e.currentTarget.textContent = 'SAVING...';
     try {
       const card = document.querySelector('.recommendation');
-      // Hide specimen controls and export bar during capture
       const controls = card.querySelector('.specimen-controls');
       const exportBar = card.querySelector('.export-bar');
       controls.style.display = 'none';
       exportBar.style.display = 'none';
       
       const canvas = await html2canvas(card, { backgroundColor: '#ebe9df', scale: 2 });
-      
-      controls.style.display = '';
-      exportBar.style.display = '';
       
       const imgData = canvas.toDataURL('image/png');
       const link = document.createElement('a');
@@ -1007,6 +1009,12 @@ if (savePngBtn) {
       console.error(err);
       showToast('Failed to save PNG');
       savePngBtn.textContent = originalText;
+    } finally {
+      const card = document.querySelector('.recommendation');
+      const controls = card.querySelector('.specimen-controls');
+      const exportBar = card.querySelector('.export-bar');
+      if (controls) controls.style.display = '';
+      if (exportBar) exportBar.style.display = '';
     }
   });
 }
@@ -1047,29 +1055,38 @@ document.querySelectorAll('.shelf-item').forEach((item) => {
   if (!sculptureSpans.length) return
 
   const fontChoices = [
-    "'Syne', sans-serif",
-    "'Unbounded', sans-serif",
-    "'Outfit', sans-serif",
-    "'Montserrat', sans-serif",
-    "'Space Grotesk', sans-serif",
+    "'Anybody', sans-serif",
     "'Bricolage Grotesque', sans-serif",
+    "'Fraunces', serif",
     "'Instrument Serif', serif",
-    "'Playfair Display', serif"
+    "'Space Grotesk', sans-serif",
+    "'Syne', sans-serif",
+    "'Unbounded', sans-serif"
   ]
 
   sculptureSpans.forEach((span) => {
+    span.setAttribute('role', 'button')
+    span.setAttribute('tabindex', '0')
+    span.setAttribute('aria-label', `Randomize ${span.textContent} type preview`)
     span.style.fontFamily = fontChoices[Math.floor(Math.random() * fontChoices.length)]
     
-    span.addEventListener('click', () => {
+    const handleActivate = () => {
       span.style.fontFamily = fontChoices[Math.floor(Math.random() * fontChoices.length)]
       const rot = (Math.random() * 14 - 7).toFixed(1)
       span.style.transform = `scale(1.25) rotate(${rot}deg)`
       setTimeout(() => {
         span.style.transform = `rotate(${rot}deg)`
       }, 250)
+    }
+    span.addEventListener('click', handleActivate)
+    span.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        handleActivate()
+      }
     })
   })
 })()
 
 init();
-export { chooseProfile, profiles, buildProfile };
+export { profiles, buildProfile };
