@@ -1812,7 +1812,7 @@ async function searchGoogleFonts(query = '', category = 'all') {
     const params = new URLSearchParams()
     if (query) params.set('query', query)
     if (category && category !== 'all') params.set('category', category)
-    params.set('limit', '50')
+    params.set('limit', '250')
 
     const res = await fetch(`/api/fonts?${params.toString()}`)
     if (!res.ok) throw new Error('Failed to query fonts')
