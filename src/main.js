@@ -14,21 +14,28 @@ const archetype = $('#archetype')
 const analyse = $('#analyse')
 const toast = $('#toast')
 
-// Specimen Control Handles
+// Specimen & Type Lab Handles
+const testerPreview = $('#testerPreview')
+const activeFontBadge = $('#activeFontBadge')
 const specimenTextInput = $('#specimenTextInput')
 const fontSizeSlider = $('#fontSizeSlider')
 const fontSizeVal = $('#fontSizeVal')
 const toggleCase = $('#toggleCase')
 const toggleItalic = $('#toggleItalic')
-
 const toggleBold = $('#toggleBold')
+const specimenColorPicker = $('#specimenColorPicker')
+const customColorPreview = $('#customColorPreview')
+const customColorWrapper = $('.custom-color-wrapper')
+const clearSpecimenText = $('#clearSpecimenText')
+const colorSwatches = document.querySelectorAll('.color-swatch')
+const specimenPresetChips = document.querySelectorAll('.specimen-preset-chip')
+
 // Export Handles
 const copyCssBtn = $('#copyCssBtn')
 const copyTailwindBtn = $('#copyTailwindBtn')
 const copyGoogleFontsBtn = $('#copyGoogleFontsBtn')
 const shareBtn = $("#shareBtn")
 const recommendationStatus = $("#recommendationStatus")
-const aiMatchMeta = $("#aiMatchMeta")
 
 
 // Curated Google Fonts Profiles Database (50 Distinct Vibe Archetypes)
@@ -783,12 +790,76 @@ window.addEventListener("popstate", () => {
   const profile = profiles.find((candidate) => candidate.id === vibeId)
   if (profile && state.activeProfile?.id !== profile.id) state.setActiveProfile(profile, { updateUrl: false })
 })
+// Interactive Specimen State for Type Lab
+const specimenState = {
+  text: 'The quick brown fox jumps over the lazy dog',
+  fontSize: 56,
+  isBold: false,
+  isItalic: false,
+  isUppercase: false,
+  color: '#121212'
+}
+
+function renderSpecimenContent() {
+  const content = specimenState.text.trim() || 'Type something to preview...'
+  if (testerPreview) {
+    testerPreview.textContent = content
+  }
+}
+
+function applySpecimenStyles() {
+  if (testerPreview) {
+    testerPreview.style.fontSize = `${specimenState.fontSize}px`
+    testerPreview.style.fontWeight = specimenState.isBold ? '700' : '400'
+    testerPreview.style.fontStyle = specimenState.isItalic ? 'italic' : 'normal'
+    testerPreview.style.textTransform = specimenState.isUppercase ? 'uppercase' : 'none'
+    testerPreview.style.color = specimenState.color
+    testerPreview.style.setProperty('--specimen-color', specimenState.color)
+  }
+}
+
+function setSpecimenColor(color, isCustom = false) {
+  specimenState.color = color
+  applySpecimenStyles()
+
+  colorSwatches.forEach(swatch => {
+    const match = !isCustom && swatch.dataset.color.toLowerCase() === color.toLowerCase()
+    swatch.classList.toggle('active', match)
+    swatch.setAttribute('aria-checked', String(match))
+  })
+
+  if (customColorWrapper) {
+    customColorWrapper.classList.toggle('active', isCustom)
+  }
+  if (customColorPreview) {
+    customColorPreview.style.backgroundColor = color
+  }
+  if (specimenColorPicker && specimenColorPicker.value !== color) {
+    specimenColorPicker.value = color
+  }
+}
+
 // Render DOM on State Change
 state.subscribe((profile) => {
   const aiResult = profile.aiResult
   loadGoogleFont(profile.googleFontsUrl)
   displayName.textContent = profile.name
   displaySample.innerHTML = profile.sample
+
+  if (activeFontBadge) {
+    activeFontBadge.textContent = profile.name
+  }
+  
+  if (profile.headingFallback) {
+    displaySample.style.fontFamily = profile.headingFallback
+    displayName.style.fontFamily = profile.headingFallback
+    if (testerPreview) testerPreview.style.fontFamily = profile.headingFallback
+  }
+  if (profile.bodyFallback) pairName.style.fontFamily = profile.bodyFallback
+
+  renderSpecimenContent()
+  applySpecimenStyles()
+
   displayMeta.textContent = aiResult?.tags?.length
     ? `${profile.meta} · ${aiResult.tags.join(' · ').toUpperCase()}`
     : profile.meta
@@ -799,14 +870,6 @@ state.subscribe((profile) => {
   recommendationStatus.textContent = aiResult
     ? `${profile.name} selected by Gemini. ${aiResult.rationale}`
     : `${profile.name} selected. ${profile.rationale}`
-  if (aiResult) {
-    const confidence = Math.round((aiResult.confidence || 0) * 100)
-    aiMatchMeta.textContent = `GEMINI MATCH ${confidence}%${aiResult.tags?.length ? ` · ${aiResult.tags.join(' / ').toUpperCase()}` : ''}`
-    aiMatchMeta.style.display = 'block'
-  } else {
-    aiMatchMeta.textContent = ''
-    aiMatchMeta.style.display = 'none'
-  }
 
   // Font licensing disclaimer verification
   const disclaimer = document.getElementById('licenseDisclaimer')
@@ -817,13 +880,6 @@ state.subscribe((profile) => {
   } else {
     disclaimer.style.display = 'none'
   }
-  if (profile.headingFallback) {
-    displaySample.style.fontFamily = profile.headingFallback
-    displayName.style.fontFamily = profile.headingFallback
-    specimenTextInput.style.fontFamily = profile.headingFallback
-  }
-  if (profile.bodyFallback) pairName.style.fontFamily = profile.bodyFallback
-  specimenTextInput.value = profile.sample.replaceAll('<br/>', ' ').replaceAll('<br>', ' ').replace(/<[^>]+>/g, '')
 })
 // Initialization
 function init() {
@@ -873,44 +929,90 @@ brief.addEventListener('keydown', (e) => {
 
 analyse.addEventListener('click', updateRecommendation)
 
-// Specimen Customizer Handlers
-specimenTextInput.addEventListener('input', (e) => {
-  const val = e.target.value.trim()
-  if (val) {
-    displaySample.textContent = val
-  } else {
-    displaySample.innerHTML = state.activeProfile.sample
-  }
+// Specimen Customizer Handlers in Type Lab
+if (specimenTextInput) {
+  specimenTextInput.addEventListener('input', (e) => {
+    specimenState.text = e.target.value
+    renderSpecimenContent()
+  })
+}
+
+if (clearSpecimenText) {
+  clearSpecimenText.addEventListener('click', () => {
+    specimenState.text = ''
+    if (specimenTextInput) specimenTextInput.value = ''
+    renderSpecimenContent()
+    if (specimenTextInput) specimenTextInput.focus()
+  })
+}
+
+const dummyPresets = {
+  pangram: 'The quick brown fox jumps over the lazy dog',
+  headline: 'Design with intention, build with character.',
+  alphabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz',
+  numbers: '0123456789 — $1,999.00 (50% OFF) & #@?!',
+  paragraph: 'Typography is the art and technique of arranging type to make written language legible, readable, and appealing when displayed.'
+}
+
+specimenPresetChips.forEach(chip => {
+  chip.addEventListener('click', () => {
+    const presetKey = chip.dataset.preset
+    if (dummyPresets[presetKey]) {
+      specimenState.text = dummyPresets[presetKey]
+      if (specimenTextInput) specimenTextInput.value = dummyPresets[presetKey]
+      renderSpecimenContent()
+    }
+  })
 })
 
-fontSizeSlider.addEventListener('input', (e) => {
-  const size = e.target.value
-  fontSizeVal.textContent = `${size}px`
-  displaySample.style.fontSize = `${size}px`
-})
-toggleCase.addEventListener('click', () => {
-  const isActive = toggleCase.classList.toggle('active')
-  const transform = isActive ? 'uppercase' : 'none'
-  displaySample.style.textTransform = transform
-  specimenTextInput.style.textTransform = transform
-  toggleCase.setAttribute('aria-pressed', String(isActive))
+if (fontSizeSlider) {
+  fontSizeSlider.addEventListener('input', (e) => {
+    specimenState.fontSize = Number(e.target.value)
+    if (fontSizeVal) fontSizeVal.textContent = `${specimenState.fontSize}px`
+    applySpecimenStyles()
+  })
+}
+
+if (toggleCase) {
+  toggleCase.addEventListener('click', () => {
+    specimenState.isUppercase = !specimenState.isUppercase
+    toggleCase.classList.toggle('active', specimenState.isUppercase)
+    toggleCase.setAttribute('aria-pressed', String(specimenState.isUppercase))
+    applySpecimenStyles()
+  })
+}
+
+if (toggleItalic) {
+  toggleItalic.addEventListener('click', () => {
+    specimenState.isItalic = !specimenState.isItalic
+    toggleItalic.classList.toggle('active', specimenState.isItalic)
+    toggleItalic.setAttribute('aria-pressed', String(specimenState.isItalic))
+    applySpecimenStyles()
+  })
+}
+
+if (toggleBold) {
+  toggleBold.addEventListener('click', () => {
+    specimenState.isBold = !specimenState.isBold
+    toggleBold.classList.toggle('active', specimenState.isBold)
+    toggleBold.setAttribute('aria-pressed', String(specimenState.isBold))
+    applySpecimenStyles()
+  })
+}
+
+// Color Selector Handlers
+colorSwatches.forEach(swatch => {
+  swatch.addEventListener('click', () => {
+    const color = swatch.dataset.color
+    if (color) setSpecimenColor(color, false)
+  })
 })
 
-toggleItalic.addEventListener('click', () => {
-  const isActive = toggleItalic.classList.toggle('active')
-  const style = isActive ? 'italic' : 'normal'
-  displaySample.style.fontStyle = style
-  specimenTextInput.style.fontStyle = style
-  toggleItalic.setAttribute('aria-pressed', String(isActive))
-})
-
-toggleBold.addEventListener('click', () => {
-  const isActive = toggleBold.classList.toggle('active')
-  const weight = isActive ? '700' : '400'
-  displaySample.style.fontWeight = weight
-  specimenTextInput.style.fontWeight = weight
-  toggleBold.setAttribute('aria-pressed', String(isActive))
-})
+if (specimenColorPicker) {
+  specimenColorPicker.addEventListener('input', (e) => {
+    setSpecimenColor(e.target.value, true)
+  })
+}
 
 // Developer Code Exporter Handlers
 copyCssBtn.addEventListener('click', (e) => {
