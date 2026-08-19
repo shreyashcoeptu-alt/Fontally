@@ -37,6 +37,15 @@ const copyGoogleFontsBtn = $('#copyGoogleFontsBtn')
 const shareBtn = $("#shareBtn")
 const recommendationStatus = $("#recommendationStatus")
 
+// Google Fonts Explorer Handles
+const fontSearchInput = $('#fontSearchInput')
+const clearFontSearch = $('#clearFontSearch')
+const fontSearchDropdown = $('#fontSearchDropdown')
+const fontResultsCount = $('#fontResultsCount')
+const fontResultsList = $('#fontResultsList')
+const categoryFilterBtns = document.querySelectorAll('.category-filter-btn')
+
+
 
 // Curated Google Fonts Profiles Database (50 Distinct Vibe Archetypes)
 const profiles = [
@@ -1792,5 +1801,169 @@ document.querySelectorAll('.shelf-item').forEach((item) => {
   })
 })()
 
+// Google Fonts Live Explorer Controller
+let currentSearchCategory = 'all'
+let searchDebounceTimer = null
+let currentFontResults = []
+let activeDropdownIndex = -1
+
+async function searchGoogleFonts(query = '', category = 'all') {
+  try {
+    const params = new URLSearchParams()
+    if (query) params.set('query', query)
+    if (category && category !== 'all') params.set('category', category)
+    params.set('limit', '50')
+
+    const res = await fetch(`/api/fonts?${params.toString()}`)
+    if (!res.ok) throw new Error('Failed to query fonts')
+    const data = await res.json()
+    return data.fonts || []
+  } catch (err) {
+    console.warn('Error fetching fonts from API:', err)
+    return []
+  }
+}
+
+function renderFontSearchResults(fonts) {
+  currentFontResults = fonts
+  activeDropdownIndex = -1
+  if (!fontResultsList) return
+  fontResultsList.innerHTML = ''
+
+  if (!fonts.length) {
+    fontResultsCount.textContent = 'No matching Google Fonts found'
+    fontSearchDropdown.style.display = 'block'
+    return
+  }
+
+  fontResultsCount.textContent = `${fonts.length} Google Font${fonts.length > 1 ? 's' : ''} available`
+
+  fonts.forEach((font, idx) => {
+    const li = document.createElement('li')
+    li.className = 'font-result-item'
+    li.dataset.index = idx
+    li.dataset.family = font.family
+    li.dataset.category = font.category
+
+    li.innerHTML = `
+      <div class="font-result-info">
+        <span class="font-result-name" style="font-family: '${font.family}', sans-serif;">${font.family}</span>
+        <span class="font-result-category">${font.category}</span>
+      </div>
+      <span class="font-result-badge">PREVIEW →</span>
+    `
+
+    li.addEventListener('click', () => {
+      selectGoogleFont(font)
+    })
+
+    fontResultsList.appendChild(li)
+  })
+
+  fontSearchDropdown.style.display = 'block'
+}
+
+function selectGoogleFont(font) {
+  const fontUrl = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(font.family).replace(/%20/g, '+')}:ital,wght@0,400;0,600;0,700;1,400&display=swap`
+  loadGoogleFont(fontUrl)
+
+  const fallback = font.category === 'serif' ? 'serif' : font.category === 'monospace' ? 'monospace' : font.category === 'handwriting' ? 'cursive' : 'sans-serif'
+
+  // Create a customized profile for state
+  const dynamicProfile = {
+    id: `gfont_${font.family.toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
+    name: font.family,
+    sample: `${font.family}<br/><i>Specimen</i>`,
+    meta: `${font.category.toUpperCase()} / GOOGLE FONT`,
+    pair: font.category === 'serif' ? 'Inter' : 'Newsreader',
+    pairMeta: font.category === 'serif' ? 'SANS / 14PX' : 'SERIF / 15PX',
+    rationale: `Directly loaded from the live Google Fonts catalog (${font.category}). Excellent typographical balance with versatile weights.`,
+    archetype: `GOOGLE FONT EXPLORER: ${font.family.toUpperCase()}`,
+    headingFallback: `'${font.family}', ${fallback}`,
+    bodyFallback: font.category === 'serif' ? "'Inter', sans-serif" : "'Newsreader', serif",
+    googleFontsUrl: fontUrl
+  }
+
+  state.setActiveProfile(dynamicProfile, { updateUrl: false })
+  if (fontSearchDropdown) fontSearchDropdown.style.display = 'none'
+  if (fontSearchInput) fontSearchInput.value = font.family
+  if (clearFontSearch) clearFontSearch.style.display = 'inline-flex'
+  showToast(`✓ Loaded Google Font: ${font.family}`)
+}
+
+if (fontSearchInput) {
+  const triggerSearch = () => {
+    const q = fontSearchInput.value.trim()
+    if (clearFontSearch) clearFontSearch.style.display = q ? 'inline-flex' : 'none'
+    clearTimeout(searchDebounceTimer)
+    searchDebounceTimer = setTimeout(async () => {
+      const fonts = await searchGoogleFonts(q, currentSearchCategory)
+      renderFontSearchResults(fonts)
+    }, 150)
+  }
+
+  fontSearchInput.addEventListener('input', triggerSearch)
+  fontSearchInput.addEventListener('focus', triggerSearch)
+
+  fontSearchInput.addEventListener('keydown', (e) => {
+    if (!fontSearchDropdown || fontSearchDropdown.style.display === 'none') return
+
+    const items = fontResultsList.querySelectorAll('.font-result-item')
+    if (!items.length) return
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      activeDropdownIndex = Math.min(items.length - 1, activeDropdownIndex + 1)
+      items.forEach((item, i) => item.classList.toggle('selected', i === activeDropdownIndex))
+      if (items[activeDropdownIndex]) items[activeDropdownIndex].scrollIntoView({ block: 'nearest' })
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      activeDropdownIndex = Math.max(0, activeDropdownIndex - 1)
+      items.forEach((item, i) => item.classList.toggle('selected', i === activeDropdownIndex))
+      if (items[activeDropdownIndex]) items[activeDropdownIndex].scrollIntoView({ block: 'nearest' })
+    } else if (e.key === 'Enter') {
+      if (activeDropdownIndex >= 0 && currentFontResults[activeDropdownIndex]) {
+        e.preventDefault()
+        selectGoogleFont(currentFontResults[activeDropdownIndex])
+      }
+    } else if (e.key === 'Escape') {
+      fontSearchDropdown.style.display = 'none'
+    }
+  })
+}
+
+if (clearFontSearch) {
+  clearFontSearch.addEventListener('click', () => {
+    fontSearchInput.value = ''
+    clearFontSearch.style.display = 'none'
+    if (fontSearchDropdown) fontSearchDropdown.style.display = 'none'
+    fontSearchInput.focus()
+  })
+}
+
+categoryFilterBtns.forEach((btn) => {
+  btn.addEventListener('click', async () => {
+    categoryFilterBtns.forEach((b) => {
+      b.classList.remove('active')
+      b.setAttribute('aria-checked', 'false')
+    })
+    btn.classList.add('active')
+    btn.setAttribute('aria-checked', 'true')
+    currentSearchCategory = btn.dataset.category || 'all'
+    const q = fontSearchInput ? fontSearchInput.value.trim() : ''
+    const fonts = await searchGoogleFonts(q, currentSearchCategory)
+    renderFontSearchResults(fonts)
+  })
+})
+
+// Close dropdown on outside click
+document.addEventListener('click', (e) => {
+  const explorer = document.querySelector('.font-explorer-section')
+  if (explorer && !explorer.contains(e.target)) {
+    if (fontSearchDropdown) fontSearchDropdown.style.display = 'none'
+  }
+})
+
 init();
 export { profiles, buildProfile };
+

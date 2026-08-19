@@ -141,11 +141,191 @@ main { max-width:1440px; margin:auto; border-inline:1px solid #242424; }
 .score { color:#77776f; }
 
 /* Right Side: Type Lab Container */
-.type-lab { padding:22px; background:#f4f2e9; display:flex; flex-direction:column; gap:16px; position:relative; }
-.type-lab-header { display:flex; justify-content:space-between; align-items:center; padding-bottom:12px; border-bottom:1px solid #c8c7be; font:9px 'DM Mono',monospace; }
+.type-lab { padding:22px; background:#f4f2e9; display:flex; flex-direction:column; gap:14px; position:relative; }
+.type-lab-header { display:flex; justify-content:space-between; align-items:center; padding-bottom:10px; border-bottom:1px solid #c8c7be; font:9px 'DM Mono',monospace; }
 .type-lab-title { display:flex; align-items:center; gap:8px; }
 .type-lab-title h3 { margin:0; font:11px/1 'DM Mono',monospace; font-weight:700; letter-spacing:.09em; color:#161616; }
-.active-font-badge { font:10px 'DM Mono',monospace; color:#54544d; background:rgba(0,0,0,0.05); padding:4px 8px; border:1px solid #c8c7be; letter-spacing:.04em; max-width:200px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap; }
+.active-font-badge { font:10px 'DM Mono',monospace; color:#54544d; background:rgba(0,0,0,0.05); padding:4px 8px; border:1px solid #c8c7be; letter-spacing:.04em; max-width:220px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap; }
+
+/* Google Fonts Live Explorer & Search */
+.font-explorer-section {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid #c8c7be;
+  padding: 10px 12px;
+  border-radius: 2px;
+}
+
+.font-search-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.font-search-input-wrapper {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.font-search-input-wrapper .search-icon {
+  position: absolute;
+  left: 9px;
+  font-size: 13px;
+  color: #77776f;
+  pointer-events: none;
+}
+
+.font-search-input-wrapper input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 7px 28px 7px 28px;
+  background: #ffffff;
+  border: 1px solid #c8c7be;
+  color: #121212;
+  font: 11px 'DM Mono', monospace;
+  letter-spacing: .02em;
+  outline: none;
+  border-radius: 2px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.font-search-input-wrapper input:focus {
+  border-color: #161616;
+  box-shadow: 0 0 0 1px #161616;
+}
+
+.btn-clear-search {
+  position: absolute;
+  right: 7px;
+  background: transparent;
+  border: none;
+  color: #77776f;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 3px 5px;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-clear-search:hover {
+  color: #121212;
+}
+
+.category-filters {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.category-filter-btn {
+  background: transparent;
+  border: 1px solid #c8c7be;
+  color: #64645d;
+  font: 9px 'DM Mono', monospace;
+  padding: 3px 7px;
+  cursor: pointer;
+  border-radius: 2px;
+  letter-spacing: .05em;
+  transition: all 0.15s ease;
+}
+
+.category-filter-btn:hover {
+  background: #161616;
+  color: var(--acid);
+  border-color: #161616;
+}
+
+.category-filter-btn.active {
+  background: #161616;
+  color: var(--acid);
+  border-color: #161616;
+  font-weight: 700;
+}
+
+/* Dropdown Results */
+.font-search-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  background: #ffffff;
+  border: 1px solid #161616;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+  max-height: 260px;
+  overflow-y: auto;
+  z-index: 100;
+  border-radius: 2px;
+}
+
+.font-results-count {
+  font: 9px 'DM Mono', monospace;
+  color: #77776f;
+  padding: 6px 12px;
+  border-bottom: 1px solid #eae9e2;
+  background: #faf9f5;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.font-results-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.font-result-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0efe8;
+  transition: background 0.12s ease;
+}
+
+.font-result-item:last-child {
+  border-bottom: none;
+}
+
+.font-result-item:hover, .font-result-item.selected {
+  background: #f1efdf;
+}
+
+.font-result-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.font-result-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #121212;
+}
+
+.font-result-category {
+  font: 8px 'DM Mono', monospace;
+  color: #77776f;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.font-result-badge {
+  font: 9px 'DM Mono', monospace;
+  background: #161616;
+  color: var(--acid);
+  padding: 2px 6px;
+  border-radius: 2px;
+}
 
 /* Specimen Controls Bar */
 .specimen-controls { padding:10px 12px; background:rgba(0,0,0,0.04); border:1px solid #c8c7be; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; font:9px 'DM Mono',monospace; }

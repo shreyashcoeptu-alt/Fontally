@@ -8,6 +8,7 @@ import {
   parseRecommendation,
   recommendationSchema
 } from '../server/gemini-recommendation.mjs'
+import { createGoogleFontsHandler } from '../server/google-fonts.mjs'
 
 function makeRequest(body, remoteAddress = `test-${Math.random()}`) {
   const request = Readable.from([JSON.stringify(body)])
@@ -110,3 +111,45 @@ describe('Gemini recommendation service', () => {
     expect(JSON.parse(response.body).error).toMatch(/GEMINI_API_KEY/)
   })
 })
+
+describe('Google Fonts API service', () => {
+  it('returns default catalog with category and query filtering', async () => {
+    const handler = createGoogleFontsHandler()
+    const req = { method: 'GET', url: '/api/fonts?query=inter&category=sans-serif' }
+    const res = makeResponse()
+
+    await handler(req, res)
+
+    expect(res.statusCode).toBe(200)
+    const body = JSON.parse(res.body)
+    expect(body.fonts.length).toBeGreaterThan(0)
+    expect(body.fonts.some((f) => f.family.toLowerCase().includes('inter'))).toBe(true)
+  })
+
+  it('fetches from live Google Fonts API if API key is provided', async () => {
+    let requestedUrl
+    const handler = createGoogleFontsHandler({
+      apiKey: 'test-gfonts-key',
+      fetchImpl: async (url) => {
+        requestedUrl = url
+        return new Response(JSON.stringify({
+          items: [
+            { family: 'Custom Test Sans', category: 'sans-serif', variants: ['400'] },
+            { family: 'Custom Test Serif', category: 'serif', variants: ['400'] }
+          ]
+        }), { status: 200, headers: { 'content-type': 'application/json' } })
+      }
+    })
+
+    const req = { method: 'GET', url: '/api/fonts?category=serif' }
+    const res = makeResponse()
+
+    await handler(req, res)
+
+    expect(res.statusCode).toBe(200)
+    expect(requestedUrl).toContain('key=test-gfonts-key')
+    const body = JSON.parse(res.body)
+    expect(body.fonts).toEqual([{ family: 'Custom Test Serif', category: 'serif', variants: ['400'] }])
+  })
+})
+

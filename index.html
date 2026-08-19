@@ -110,6 +110,30 @@
             <span class="active-font-badge" id="activeFontBadge">Spezia Variable</span>
           </div>
 
+          <!-- Google Fonts Live Explorer & Search Bar -->
+          <div class="font-explorer-section">
+            <div class="font-search-row">
+              <div class="font-search-input-wrapper">
+                <span class="search-icon" aria-hidden="true">⌕</span>
+                <input type="text" id="fontSearchInput" placeholder="Search Google Fonts (e.g. Inter, Playfair, Space Mono)..." autocomplete="off" spellcheck="false" aria-label="Search Google Fonts" />
+                <button id="clearFontSearch" type="button" class="btn-clear-search" style="display:none;" title="Clear search" aria-label="Clear font search">✕</button>
+              </div>
+            </div>
+            <div class="category-filters" id="categoryFilters" role="radiogroup" aria-label="Filter by font category">
+              <button type="button" class="category-filter-btn active" data-category="all" role="radio" aria-checked="true">ALL</button>
+              <button type="button" class="category-filter-btn" data-category="sans-serif" role="radio" aria-checked="false">SANS</button>
+              <button type="button" class="category-filter-btn" data-category="serif" role="radio" aria-checked="false">SERIF</button>
+              <button type="button" class="category-filter-btn" data-category="display" role="radio" aria-checked="false">DISPLAY</button>
+              <button type="button" class="category-filter-btn" data-category="monospace" role="radio" aria-checked="false">MONO</button>
+              <button type="button" class="category-filter-btn" data-category="handwriting" role="radio" aria-checked="false">SCRIPT</button>
+            </div>
+            <!-- Search Results Dropdown -->
+            <div class="font-search-dropdown" id="fontSearchDropdown" style="display: none;" role="listbox" aria-label="Google Fonts search results">
+              <div class="font-results-count" id="fontResultsCount">Available Google Fonts</div>
+              <ul class="font-results-list" id="fontResultsList"></ul>
+            </div>
+          </div>
+
           <!-- Formatting & Color Toolbar -->
           <div class="specimen-controls" aria-label="Specimen formatting controls">
             <div class="control-group range-group">
