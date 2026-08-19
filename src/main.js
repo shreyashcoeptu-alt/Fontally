@@ -1372,13 +1372,21 @@ function matchProfileLocally(promptText) {
   }
 }
 
-// Gemini recommendation client with Resilient Local Semantic Fallback
+// Client-side Memory Cache for Instant <1ms repeated lookups
+const clientRecommendationCache = new Map()
+
+// Gemini recommendation client with Resilient Local Semantic Fallback & Instant Cache
 const RECOMMENDATION_ENDPOINT = '/api/recommend'
 
 async function recommendProfile(promptText) {
+  const cacheKey = promptText.trim().toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, ' ')
+  if (clientRecommendationCache.has(cacheKey)) {
+    return clientRecommendationCache.get(cacheKey)
+  }
+
   try {
     const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 12000)
+    const timeout = setTimeout(() => controller.abort(), 8000)
     const response = await fetch(RECOMMENDATION_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1393,7 +1401,9 @@ async function recommendProfile(promptText) {
     if (response.ok && payload.profileId) {
       const profile = profiles.find((candidate) => candidate.id === payload.profileId)
       if (profile) {
-        return { profile, aiResult: payload }
+        const result = { profile, aiResult: payload }
+        clientRecommendationCache.set(cacheKey, result)
+        return result
       }
     }
     console.warn('Gemini API response unfulfilled, activating local semantic vibe engine:', payload?.error)
@@ -1403,7 +1413,7 @@ async function recommendProfile(promptText) {
 
   // Graceful Local Semantic Engine Fallback
   const fallbackMatch = matchProfileLocally(promptText)
-  return {
+  const result = {
     profile: fallbackMatch.profile,
     aiResult: {
       profileId: fallbackMatch.profile.id,
@@ -1412,6 +1422,8 @@ async function recommendProfile(promptText) {
       tags: fallbackMatch.tags
     }
   }
+  clientRecommendationCache.set(cacheKey, result)
+  return result
 }
 
 
@@ -1605,7 +1617,6 @@ async function updateRecommendation() {
   analyse.innerHTML = 'ASKING GEMINI <span>◌</span>'
   try {
     const recommendation = await recommendProfile(prompt)
-    await new Promise((resolve) => setTimeout(resolve, 480))
     state.setActiveProfile(recommendation.profile, { aiResult: recommendation.aiResult })
     document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' })
   } catch (error) {
