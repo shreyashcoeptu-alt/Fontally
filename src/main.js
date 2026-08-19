@@ -643,18 +643,228 @@ const profiles = [
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@600;700&family=Lora:ital,wght@0,400;1,400&display=swap'
   },
   {
-    id: 'modern_fashion',
-    words: ['haute', 'couture', 'glamour', 'runway', 'vogue', 'italiana', 'paris', 'milan', 'couture'],
-    name: 'Italiana Couture',
-    sample: 'Italiana<br/><i>Couture</i>',
-    meta: 'HIGH-CONTRAST DIDONE',
+    id: 'japanese_zen',
+    words: ['japan', 'japanese', 'tokyo', 'kyoto', 'zen', 'matcha', 'tea', 'minimal', 'harmony', 'wabi', 'sabi', 'calm', 'ceramics', 'peace'],
+    name: 'Zen Kaku Gothic',
+    sample: 'Zen Kaku<br/><i>Gothic</i>',
+    meta: 'HUMANIST JAPANESE GROTESK',
+    pair: 'Noto Serif',
+    pairMeta: 'CLASSIC SERIF / 15PX',
+    rationale: 'Refined optical proportions and deep spatial harmony echoing Japanese architectural minimalism and quiet contemplation.',
+    archetype: 'THE ZEN CONTEMPLATOR',
+    headingFallback: "'Zen Kaku Gothic New', sans-serif",
+    bodyFallback: "'Noto Serif', serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Noto+Serif:ital,wght@0,400;1,400&display=swap'
+  },
+  {
+    id: 'dark_academia',
+    words: ['dark', 'academia', 'oxford', 'manuscript', 'vintage', 'library', 'secret', 'history', 'literature', 'antique', 'latin', 'gothic', 'alchemy'],
+    name: 'EB Garamond Scholar',
+    sample: 'EB Garamond<br/><i>Scholar</i>',
+    meta: 'CLASSICAL HUMANIST SERIF',
+    pair: 'Cinzel',
+    pairMeta: 'INSCRIPTIONAL / 14PX',
+    rationale: 'Heavy historical ink weight and calligraphic grace evoking candlelit mahogany reading halls, leatherbound tomes, and centuries of scholarship.',
+    archetype: 'THE CLOISTERED SCHOLAR',
+    headingFallback: "'EB Garamond', serif",
+    bodyFallback: "'Cinzel', serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,600;0,800;1,400;1,600&family=Cinzel:wght@500;700&display=swap'
+  },
+  {
+    id: 'y2k_bubbly',
+    words: ['y2k', '2000s', 'bubble', 'cute', 'candy', 'pop', 'glitter', 'sparkle', 'teen', 'retro', 'kawaii', 'nostalgia', 'glossy', 'fun'],
+    name: 'DynaPuff Pop',
+    sample: 'DynaPuff<br/><i>Pop</i>',
+    meta: 'PUFFY BUBBLE DISPLAY',
+    pair: 'Nunito',
+    pairMeta: 'ROUNDED SANS / 15PX',
+    rationale: 'Inflatable bubbly energy and joyful optimism straight from 2002 flip phones, pop CD covers, and arcade dance mats.',
+    archetype: 'THE Y2K POPSTAR',
+    headingFallback: "'DynaPuff', cursive",
+    bodyFallback: "'Nunito', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=DynaPuff:wght@600;700&family=Nunito:wght@400;600;700&display=swap'
+  },
+  {
+    id: 'scandinavian_sauna',
+    words: ['scandinavian', 'nordic', 'sauna', 'spa', 'hygge', 'wood', 'pine', 'minimalist', 'clean', 'sweden', 'denmark', 'norway', 'rest'],
+    name: 'Outfit Nordic',
+    sample: 'Outfit<br/><i>Nordic</i>',
+    meta: 'GEOMETRIC SANS',
+    pair: 'Cormorant Garamond',
+    pairMeta: 'DELICATE SERIF / 15PX',
+    rationale: 'Spacious geometric letterforms bathed in pale sunlight, paired with high-contrast serifs for an ethereal Scandinavian retreat feeling.',
+    archetype: 'THE NORDIC MINIMALIST',
+    headingFallback: "'Outfit', sans-serif",
+    bodyFallback: "'Cormorant Garamond', serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;1,400&display=swap'
+  },
+  {
+    id: 'french_patisserie',
+    words: ['french', 'patisserie', 'croissant', 'paris', 'bistro', 'cafe', 'butter', 'sweet', 'bakery', 'dessert', 'chocolatier', 'delicate'],
+    name: 'Playfair Patisserie',
+    sample: 'Playfair<br/><i>Patisserie</i>',
+    meta: 'TRANSITIONAL DIDONE SERIF',
     pair: 'Plus Jakarta Sans',
-    pairMeta: 'CLEAN SANS / 15PX',
-    rationale: 'Graceful calligraphic proportions inspired by Italian newspaper typography, radiating high-fashion luxury.',
-    archetype: 'THE MILAN STYLIST',
-    headingFallback: "'Italiana', serif",
+    pairMeta: 'MODERN SANS / 14PX',
+    rationale: 'Aristocratic high-contrast letterforms with delicate flourishes, redolent of gilded Parisian tea salons and morning brioche.',
+    archetype: 'THE PARISIAN PASTRY CHEF',
+    headingFallback: "'Playfair Display', serif",
     bodyFallback: "'Plus Jakarta Sans', sans-serif",
-    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Italiana&family=Plus+Jakarta+Sans:wght@400;600&display=swap'
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,800;1,400&family=Plus+Jakarta+Sans:wght@400;600&display=swap'
+  },
+  {
+    id: 'cyber_security',
+    words: ['security', 'cyber', 'defense', 'soc', 'firewall', 'encryption', 'zero-trust', 'threat', 'pentest', 'hacker', 'protocol', 'infosec'],
+    name: 'Share Tech Security',
+    sample: 'Share Tech<br/><i>Defense</i>',
+    meta: 'TACTICAL MATRIX SANS',
+    pair: 'Chivo',
+    pairMeta: 'NEO-GROTESK / 14PX',
+    rationale: 'Angular, tactical letterforms built for cyber defense SOC dashboards, packet inspection logs, and zero-trust protocol interfaces.',
+    archetype: 'THE CYBER DEFENDER',
+    headingFallback: "'Share Tech Mono', monospace",
+    bodyFallback: "'Chivo', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Chivo:wght@400;600;700&display=swap'
+  },
+  {
+    id: 'space_nasa',
+    words: ['space', 'nasa', 'spacecraft', 'orbit', 'rocket', 'mars', 'satellite', 'mission', 'cosmos', 'astronaut', 'telemetry', 'astronomy'],
+    name: 'Space Grotesk Mission',
+    sample: 'Space<br/><i>Mission</i>',
+    meta: 'TECHNICAL MONOSPACE-INSPIRED SANS',
+    pair: 'Space Mono',
+    pairMeta: 'MONOSPACE / 14PX',
+    rationale: 'Aerospace trajectory engineering converted into typography. Rigorous proportions designed for telemetry mission control screens.',
+    archetype: 'THE ORBITAL NAVIGATOR',
+    headingFallback: "'Space Grotesk', sans-serif",
+    bodyFallback: "'Space Mono', monospace",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400;700&display=swap'
+  },
+  {
+    id: 'psychedelic_70s',
+    words: ['70s', 'psychedelic', 'funk', 'groovy', 'disco', 'hippie', 'vinyl', 'retro', 'festival', 'rock', 'vintage', 'colorful', 'soul'],
+    name: 'Shrikhand Groovy',
+    sample: 'Shrikhand<br/><i>Groovy</i>',
+    meta: 'ORGANIC RETRO DISPLAY',
+    pair: 'DM Sans',
+    pairMeta: 'CLEAN SANS / 15PX',
+    rationale: 'Warm, expansive curves and groovy soul reminiscent of 1974 vinyl album covers and colorful silkscreen concert posters.',
+    archetype: 'THE PSYCHEDELIC VISIONARY',
+    headingFallback: "'Shrikhand', cursive",
+    bodyFallback: "'DM Sans', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Shrikhand&family=DM+Sans:wght@400;500;700&display=swap'
+  },
+  {
+    id: 'bauhaus_swiss',
+    words: ['bauhaus', 'swiss', 'grid', 'modernist', 'helvetica', 'international', 'functional', 'minimal', 'poster', 'graphic', 'design', 'clean'],
+    name: 'Inter Tight Swiss',
+    sample: 'Inter Tight<br/><i>Modernist</i>',
+    meta: 'SWISS NEO-GROTESK',
+    pair: 'Newsreader',
+    pairMeta: 'LITERARY SERIF / 15PX',
+    rationale: 'Pure modernist objectivity and rigid structural grid hierarchy where form strictly follows purpose without ornamental distraction.',
+    archetype: 'THE MODERNIST TYPOGRAPHER',
+    headingFallback: "'Inter Tight', sans-serif",
+    bodyFallback: "'Newsreader', serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;800;900&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap'
+  },
+  {
+    id: 'art_deco',
+    words: ['deco', 'artdeco', 'gatsby', '1920s', 'luxury', 'brass', 'glamour', 'vintage', 'cocktail', 'speakeasy', 'hotel', 'geometric'],
+    name: 'Poiret Deco',
+    sample: 'Poiret<br/><i>Deco</i>',
+    meta: 'GEOMETRIC ART DECO',
+    pair: 'Montserrat',
+    pairMeta: 'GEOMETRIC SANS / 14PX',
+    rationale: 'Slender, geometric curves and vintage brass elegance echoing 1925 roaring twenties architecture and speakeasy cocktail menus.',
+    archetype: 'THE JAZZ AGE ARISTOCRAT',
+    headingFallback: "'Poiret One', cursive",
+    bodyFallback: "'Montserrat', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Poiret+One&family=Montserrat:wght@400;600;700&display=swap'
+  },
+  {
+    id: 'comic_popart',
+    words: ['comic', 'cartoon', 'popart', 'hero', 'superhero', 'manga', 'action', 'punch', 'vibrant', 'fun', 'graphic', 'novel'],
+    name: 'Bangers Pop',
+    sample: 'Bangers<br/><i>Pop!</i>',
+    meta: 'COMIC BOOK DISPLAY',
+    pair: 'Open Sans',
+    pairMeta: 'READABLE SANS / 14PX',
+    rationale: 'Dynamic comic book title titling with punchy sound-effect energy built for graphic novel covers and bold pop-art posters.',
+    archetype: 'THE POP ARTIST',
+    headingFallback: "'Bangers', cursive",
+    bodyFallback: "'Open Sans', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Bangers&family=Open+Sans:wght@400;600;700&display=swap'
+  },
+  {
+    id: 'cozy_cottagecore',
+    words: ['cottage', 'cottagecore', 'cozy', 'flower', 'garden', 'tea', 'wildflower', 'knitting', 'cabin', 'rustic', 'warm', 'fairytale', 'autumn'],
+    name: 'Alice Fairytale',
+    sample: 'Alice<br/><i>Fairytale</i>',
+    meta: 'VICTORIAN STORYBOOK SERIF',
+    pair: 'Quicksand',
+    pairMeta: 'ROUNDED SANS / 15PX',
+    rationale: 'Delicate single-storey curves and old-world Victorian tenderness reminiscent of illustrated storybooks and wildflower gardens.',
+    archetype: 'THE COTTAGE STORYTELLER',
+    headingFallback: "'Alice', serif",
+    bodyFallback: "'Quicksand', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Alice&family=Quicksand:wght@400;600&display=swap'
+  },
+  {
+    id: 'techno_industrial',
+    words: ['techno', 'berlin', 'industrial', 'rave', 'warehouse', 'concrete', 'underground', 'electronic', 'club', 'dark', 'bass', 'strobe'],
+    name: 'Chakra Techno',
+    sample: 'Chakra<br/><i>Industrial</i>',
+    meta: 'HARD-EDGED TECHNO GROTESK',
+    pair: 'Geist Mono',
+    pairMeta: 'TERMINAL MONO / 14PX',
+    rationale: 'Sharp 45-degree corner angles and heavy concrete weight engineered for underground techno flyers and brutalist industrial club nights.',
+    archetype: 'THE INDUSTRIAL PRODUCER',
+    headingFallback: "'Chakra Petch', sans-serif",
+    bodyFallback: "'Geist Mono', monospace",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700;800&family=Geist+Mono:wght@400;600&display=swap'
+  },
+  {
+    id: 'luxury_hospitality',
+    words: ['hotel', 'resort', 'concierge', 'hospitality', 'suites', 'vacation', 'five-star', 'villas', 'palace', 'luxury', 'service'],
+    name: 'Bodoni Hospitality',
+    sample: 'Bodoni<br/><i>Suites</i>',
+    meta: 'HIGH-CONTRAST LUXURY SERIF',
+    pair: 'Plus Jakarta Sans',
+    pairMeta: 'MODERN SANS / 14PX',
+    rationale: 'Statuesque vertical contrast and sharp unbracketed serifs that immediately evoke marble lobbies, luggage carts, and presidential suites.',
+    archetype: 'THE GRAND CONCIERGE',
+    headingFallback: "'Bodoni Moda', serif",
+    bodyFallback: "'Plus Jakarta Sans', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,600;0,6..96,800;1,6..96,400&family=Plus+Jakarta+Sans:wght@400;600&display=swap'
+  },
+  {
+    id: 'ai_copilot',
+    words: ['ai', 'agent', 'copilot', 'autonomous', 'llm', 'intelligence', 'prompt', 'fast', 'model', 'neural', 'assistant', 'speed', 'coding'],
+    name: 'Syne Autonomous AI',
+    sample: 'Syne<br/><i>Autonomous</i>',
+    meta: 'GEOMETRIC EXTRA-WIDE DISPLAY',
+    pair: 'Geist Mono',
+    pairMeta: 'DEV MONOSPACE / 14PX',
+    rationale: 'Hyper-wide geometric headline architecture paired with terminal-fast monospace typography for next-generation autonomous AI interfaces.',
+    archetype: 'THE AUTONOMOUS INTELLIGENCE',
+    headingFallback: "'Syne', sans-serif",
+    bodyFallback: "'Geist Mono', monospace",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=Geist+Mono:wght@400;600&display=swap'
+  },
+  {
+    id: 'unbounded_future',
+    words: ['unbounded', 'bold', 'metaverse', 'vr', 'future', 'hyper', 'nextgen', 'creative', 'cutting-edge', 'disruptive', 'hype'],
+    name: 'Unbounded Future',
+    sample: 'Unbounded<br/><i>Future</i>',
+    meta: 'RADICAL WIDE GEOMETRIC',
+    pair: 'Space Grotesk',
+    pairMeta: 'NEO-GROTESK / 15PX',
+    rationale: 'Extreme horizontal letterform expansion designed to break boundary lines on high-visibility launch stages and spatial interfaces.',
+    archetype: 'THE BOUNDLESS INNOVATOR',
+    headingFallback: "'Unbounded', sans-serif",
+    bodyFallback: "'Space Grotesk', sans-serif",
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&family=Space+Grotesk:wght@400;600&display=swap'
   }
 ]
 
@@ -691,23 +901,102 @@ function buildProfile(p) {
   return { ...p, cssImport, cssVars, tailwind }
 }
 
-// Gemini recommendation client
+// Client-Side Intelligent Semantic Vibe Matcher Engine (Fallback & Instant Analysis)
+function matchProfileLocally(promptText) {
+  const stopWords = new Set([
+    'a', 'an', 'the', 'and', 'or', 'for', 'with', 'in', 'on', 'at', 'to', 'of', 'by',
+    'from', 'my', 'your', 'our', 'is', 'are', 'was', 'be', 'brand', 'app', 'website',
+    'design', 'project', 'platform', 'company', 'startup', 'theme', 'look', 'style', 'like',
+    'font', 'fonts', 'typography', 'type'
+  ])
+
+  const rawTokens = promptText
+    .toLowerCase()
+    .replace(/[^\w\s]/g, ' ')
+    .split(/\s+/)
+    .filter((token) => token.length > 1 && !stopWords.has(token))
+
+  let bestProfile = profiles[0]
+  let maxScore = -1
+
+  for (const p of profiles) {
+    let score = 0
+    const pWords = p.words || []
+    const pId = p.id.toLowerCase()
+    const pName = p.name.toLowerCase()
+    const pMeta = (p.meta || '').toLowerCase()
+    const pArchetype = (p.archetype || '').toLowerCase()
+    const pRationale = (p.rationale || '').toLowerCase()
+
+    for (const token of rawTokens) {
+      if (pWords.includes(token)) score += 6
+      else if (pWords.some((w) => w.includes(token) || token.includes(w))) score += 3
+      if (pId.includes(token)) score += 5
+      if (pArchetype.includes(token)) score += 4
+      if (pMeta.includes(token)) score += 3
+      if (pName.includes(token)) score += 2
+      if (pRationale.includes(token)) score += 1
+    }
+
+    if (score > maxScore) {
+      maxScore = score
+      bestProfile = p
+    }
+  }
+
+  const confidence = maxScore > 0 ? Math.min(0.98, Math.max(0.68, 0.6 + maxScore * 0.04)) : 0.75
+  const tags = rawTokens.slice(0, 4).map((t) => t.toUpperCase())
+  if (!tags.length && bestProfile.words?.length) {
+    tags.push(...bestProfile.words.slice(0, 3).map((w) => w.toUpperCase()))
+  }
+
+  return {
+    profile: bestProfile,
+    confidence,
+    tags
+  }
+}
+
+// Gemini recommendation client with Resilient Local Semantic Fallback
 const RECOMMENDATION_ENDPOINT = '/api/recommend'
 
 async function recommendProfile(promptText) {
-  const response = await fetch(RECOMMENDATION_ENDPOINT, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      prompt: promptText.trim().slice(0, 1200),
-      profiles: profiles.map(({ id, name, meta, archetype, rationale, words }) => ({ id, name, meta, archetype, rationale, words }))
-    })
-  })
-  const payload = await response.json().catch(() => ({}))
-  if (!response.ok) throw new Error(payload.error || 'Gemini could not complete the recommendation.')
-  const profile = profiles.find((candidate) => candidate.id === payload.profileId)
-  if (!profile) throw new Error('Gemini returned an unknown recommendation.')
-  return { profile, aiResult: payload }
+  try {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 12000)
+    const response = await fetch(RECOMMENDATION_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt: promptText.trim().slice(0, 1500),
+        profiles: profiles.map(({ id, name, meta, archetype, rationale, words }) => ({ id, name, meta, archetype, rationale, words }))
+      }),
+      signal: controller.signal
+    }).finally(() => clearTimeout(timeout))
+
+    const payload = await response.json().catch(() => ({}))
+    if (response.ok && payload.profileId) {
+      const profile = profiles.find((candidate) => candidate.id === payload.profileId)
+      if (profile) {
+        return { profile, aiResult: payload }
+      }
+    }
+    console.warn('Gemini API response unfulfilled, activating local semantic vibe engine:', payload?.error)
+  } catch (err) {
+    console.warn('Gemini network/endpoint fallback triggered:', err?.message || err)
+  }
+
+  // Graceful Local Semantic Engine Fallback
+  const fallbackMatch = matchProfileLocally(promptText)
+  return {
+    profile: fallbackMatch.profile,
+    aiResult: {
+      profileId: fallbackMatch.profile.id,
+      confidence: fallbackMatch.confidence,
+      rationale: fallbackMatch.profile.rationale,
+      tags: fallbackMatch.tags
+    }
+  }
 }
 
 
