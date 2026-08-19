@@ -14,7 +14,8 @@ main { max-width:1440px; margin:auto; border-inline:1px solid #242424; }
 
 /* Header & Topbar */
 .topbar { height:74px; padding:0 35px; display:flex; align-items:center; border-bottom:1px solid #2a2a2a; font:10px 'DM Mono',monospace; letter-spacing:.07em; }
-.wordmark { color:var(--ink); text-decoration:none; font-family:'Instrument Serif'; font-size:31px; letter-spacing:-.06em; }
+.wordmark { display:inline-flex; align-items:center; gap:11px; color:var(--ink); text-decoration:none; font-family:'Instrument Serif'; font-size:31px; letter-spacing:-.06em; }
+.wordmark-icon { width:30px; height:30px; object-fit:contain; border-radius:4px; }
 
 .hero { min-height:calc(100svh - 74px); position:relative; overflow:hidden; padding:0 5.7%; border-bottom:1px solid #282828; display:flex; flex-direction:column; justify-content:center; }
 .hero h1 { margin:0; font-size:clamp(88px,11vw,158px); font-weight:500; letter-spacing:-.045em; line-height:.75; position:relative; z-index:2; }
