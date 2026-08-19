@@ -9,7 +9,6 @@ const displaySample = $('#displaySample')
 const displayMeta = $('#displayMeta')
 const pairName = $('#pairName')
 const pairMeta = $('#pairMeta')
-const rationale = $('#rationale')
 const archetype = $('#archetype')
 const analyse = $('#analyse')
 const toast = $('#toast')
@@ -32,9 +31,7 @@ const specimenPresetChips = document.querySelectorAll('.specimen-preset-chip')
 
 // Export Handles
 const copyCssBtn = $('#copyCssBtn')
-const copyTailwindBtn = $('#copyTailwindBtn')
-const copyGoogleFontsBtn = $('#copyGoogleFontsBtn')
-const shareBtn = $("#shareBtn")
+const openGoogleFontsBtn = $('#openGoogleFontsBtn')
 const recommendationStatus = $("#recommendationStatus")
 
 // Google Fonts Explorer Handles
@@ -1493,14 +1490,6 @@ const state = {
   }
 };
 
-function getShareUrl() {
-  const url = new URL(window.location.href)
-  if (state.activeProfile) url.searchParams.set("vibe", state.activeProfile.id)
-  return url.toString()
-}
-shareBtn.addEventListener("click", (event) => {
-  copyToClipboard(getShareUrl(), event.currentTarget)
-})
 window.addEventListener("popstate", () => {
   const vibeId = new URLSearchParams(window.location.search).get("vibe")
   const profile = profiles.find((candidate) => candidate.id === vibeId)
@@ -1581,11 +1570,10 @@ state.subscribe((profile) => {
     : profile.meta
   pairName.textContent = profile.pair
   pairMeta.textContent = profile.pairMeta
-  rationale.textContent = aiResult?.rationale || profile.rationale
   archetype.textContent = profile.archetype
   recommendationStatus.textContent = aiResult
-    ? `${profile.name} selected by Gemini. ${aiResult.rationale}`
-    : `${profile.name} selected. ${profile.rationale}`
+    ? `${profile.name} selected by Gemini.`
+    : `${profile.name} selected.`
 
   // Font licensing disclaimer verification
   const disclaimer = document.getElementById('licenseDisclaimer')
@@ -1730,17 +1718,22 @@ if (specimenColorPicker) {
 }
 
 // Developer Code Exporter Handlers
-copyCssBtn.addEventListener('click', (e) => {
-  copyToClipboard(state.activeProfile.cssImport + '\n\n' + state.activeProfile.cssVars, e.currentTarget)
-})
+if (copyCssBtn) {
+  copyCssBtn.addEventListener('click', (e) => {
+    copyToClipboard(state.activeProfile.cssImport + '\n\n' + state.activeProfile.cssVars, e.currentTarget)
+  })
+}
 
-copyTailwindBtn.addEventListener('click', (e) => {
-  copyToClipboard(state.activeProfile.tailwind, e.currentTarget)
-})
-
-copyGoogleFontsBtn.addEventListener('click', (e) => {
-  copyToClipboard(state.activeProfile.googleFontsUrl, e.currentTarget)
-})
+if (openGoogleFontsBtn) {
+  openGoogleFontsBtn.addEventListener('click', () => {
+    if (!state.activeProfile) return
+    const family = state.activeProfile.headingFallback
+      ? state.activeProfile.headingFallback.split(',')[0].replace(/['"]/g, '').trim()
+      : state.activeProfile.name
+    const googleFontsUrl = `https://fonts.google.com/specimen/${encodeURIComponent(family).replace(/%20/g, '+')}`
+    window.open(googleFontsUrl, '_blank', 'noopener,noreferrer')
+  })
+}
 
 
 // Interactive Preset Prompt Chips
