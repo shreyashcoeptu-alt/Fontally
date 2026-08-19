@@ -12,7 +12,7 @@
 [![Google Fonts](https://img.shields.io/badge/Fonts-Google%20Fonts-EA4335?style=for-the-badge&logo=googlefonts&logoColor=white)](https://fonts.google.com/)
 [![Tests](https://img.shields.io/badge/Tests-Vitest-6E9F18?style=for-the-badge&logo=vitest&logoColor=white)](https://vitest.dev/)
 
-[**🚀 Visit Live App**](https://fontally.vercel.app/) · [**GitHub Repository**](https://github.com/shreyashcoeptu-alt/Fontally) · [**Run Locally**](#run-locally) · [**API Endpoints**](#api-architecture)
+[** Visit Live App**](https://fontally.vercel.app/) · [**GitHub Repository**](https://github.com/shreyashcoeptu-alt/Fontally) · [**Run Locally**](#run-locally) · [**API Endpoints**](#api-architecture)
 
 </div>
 
