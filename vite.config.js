@@ -1,27 +1,29 @@
 import { defineConfig, loadEnv } from 'vite'
-import { createGeminiRecommendationHandler } from './server/gemini-recommendation.mjs'
-import { createGoogleFontsHandler } from './server/google-fonts.mjs'
+import { handle } from 'hono/vercel'
+import app from './server/app.mjs'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  const createRecommendationHandler = () => createGeminiRecommendationHandler({
-    apiKey: env.GEMINI_API_KEY,
-    model: env.GEMINI_MODEL
-  })
-  const createFontsHandler = () => createGoogleFontsHandler({
-    apiKey: env.GOOGLE_FONTS_API_KEY
-  })
+  // Inject loaded env variables into process.env for server modules
+  Object.assign(process.env, env)
+
+  const honoHandler = handle(app)
+
+  const apiMiddleware = (req, res, next) => {
+    if (req.url && req.url.startsWith('/api')) {
+      return honoHandler(req, res)
+    }
+    next()
+  }
 
   return {
     plugins: [{
-      name: 'fontally-api-endpoints',
+      name: 'fontally-hono-api-middleware',
       configureServer(server) {
-        server.middlewares.use('/api/recommend', createRecommendationHandler())
-        server.middlewares.use('/api/fonts', createFontsHandler())
+        server.middlewares.use(apiMiddleware)
       },
       configurePreviewServer(server) {
-        server.middlewares.use('/api/recommend', createRecommendationHandler())
-        server.middlewares.use('/api/fonts', createFontsHandler())
+        server.middlewares.use(apiMiddleware)
       }
     }]
   }
