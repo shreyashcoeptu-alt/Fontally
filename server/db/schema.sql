@@ -1,5 +1,7 @@
 -- Fontally: Supabase PostgreSQL + pgvector Schema
--- Run this in the Supabase SQL Editor to initialize your database.
+-- Run this in the Supabase SQL Editor to initialize your database schema.
+-- After running this schema, run server/db/seed.sql to populate 130+ enriched Google Fonts,
+-- or run `npm run seed` to generate AI vector embeddings and seed via Node.js.
 
 -- 1. Enable the pgvector extension for AI embeddings
 CREATE EXTENSION IF NOT EXISTS vector;

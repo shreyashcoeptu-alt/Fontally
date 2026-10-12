@@ -129,11 +129,13 @@ SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key_here
 
 ### 4. Database Setup & Seeding (Optional)
 If using Supabase:
-1. Run [`server/db/schema.sql`](server/db/schema.sql) in your Supabase **SQL Editor**.
-2. Seed the font catalog and generate vector embeddings:
-   ```bash
-   npm run seed
-   ```
+1. Run [`server/db/schema.sql`](server/db/schema.sql) in your Supabase **SQL Editor** to initialize the tables, indexes, and stored procedures.
+2. Populate the font catalogue (130+ enriched Google Fonts):
+   - **Option A (Instant SQL):** Run [`server/db/seed.sql`](server/db/seed.sql) directly in your Supabase **SQL Editor**.
+   - **Option B (Node.js with Gemini Embeddings):** Run the seeding script to automatically generate 768-dimensional AI vector embeddings:
+     ```bash
+     npm run seed
+     ```
 
 ### 5. Start Development Server
 ```bash

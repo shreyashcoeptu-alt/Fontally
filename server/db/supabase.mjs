@@ -8,6 +8,7 @@ const inMemoryHistory = []
 const inMemoryFavourites = []
 
 export function getSupabaseClient() {
+  if (process.env.NODE_ENV === 'test') return null
   if (supabaseClient) return supabaseClient
 
   const supabaseUrl = process.env.SUPABASE_URL
