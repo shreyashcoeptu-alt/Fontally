@@ -110,6 +110,104 @@ function normalizeCacheKey(prompt) {
   return String(prompt || '').toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim()
 }
 
+function isGibberishPrompt(prompt) {
+  if (!prompt || typeof prompt !== 'string') return true
+  const trimmed = prompt.trim()
+  if (trimmed.length < 2) return true
+
+  // Strip punctuation and special characters
+  const clean = trimmed.replace(/[^\w\s]/g, ' ').trim()
+  if (!clean) return true
+
+  const words = clean.split(/\s+/).filter(Boolean)
+  if (!words.length) return true
+
+  // Reject pure numbers
+  if (/^\d+$/.test(clean.replace(/\s+/g, ''))) return true
+
+  // Common valid creative/short acronyms
+  const validShortAcronyms = new Set(['ai', 'ui', 'ux', '3d', 'vr', 'ar', 'b2b', 'it', 'os', 'ip', 'pr', 'hr', 'hq', 'ad'])
+
+  // Check keyboard row patterns (QWERTY layout walks)
+  const keyboardRows = [
+    'qwertyuiop',
+    'asdfghjkl',
+    'zxcvbnm',
+    '1234567890'
+  ]
+  const normalizedLower = clean.toLowerCase().replace(/\s+/g, '')
+  for (const row of keyboardRows) {
+    if (row.includes(normalizedLower) && normalizedLower.length >= 4) {
+      return true
+    }
+  }
+
+  // Check repeated characters: e.g. "aaaaa", "zzzzz", "11111"
+  if (/^(.)\1{3,}$/.test(normalizedLower)) {
+    return true
+  }
+
+  // Common vowels in English/Latin
+  const vowels = new Set(['a', 'e', 'i', 'o', 'u', 'y'])
+
+  let recognizedWordCount = 0
+  let suspiciousWordCount = 0
+
+  for (const word of words) {
+    const lower = word.toLowerCase()
+    if (validShortAcronyms.has(lower)) {
+      recognizedWordCount++
+      continue
+    }
+
+    // Numbers interleaved in letters (e.g. afrvq1r1)
+    if (/[a-z]+\d+[a-z]+|\d+[a-z]+\d+/.test(lower)) {
+      suspiciousWordCount++
+      continue
+    }
+
+    // Very short single non-vowel letters (e.g. 'q', 'z', 'x')
+    if (lower.length === 1 && !vowels.has(lower)) {
+      suspiciousWordCount++
+      continue
+    }
+
+    // Letters only check for vowel distribution and unnatural clusters
+    const letters = lower.replace(/[^a-z]/g, '')
+    if (letters.length >= 3) {
+      let vowelCount = 0
+      for (const char of letters) {
+        if (vowels.has(char)) vowelCount++
+      }
+
+      if (vowelCount === 0) {
+        suspiciousWordCount++
+        continue
+      }
+
+      const vowelRatio = vowelCount / letters.length
+      if (vowelRatio < 0.16 && letters.length >= 6) {
+        suspiciousWordCount++
+        continue
+      }
+
+      // Check for impossible consonant clusters
+      if (/[bcdfghjklmnpqrstvwxz]{5,}/i.test(letters) || /vq|qx|zx|qj|xk|vj|dxj|frvq/i.test(letters)) {
+        suspiciousWordCount++
+        continue
+      }
+    }
+
+    recognizedWordCount++
+  }
+
+  if (recognizedWordCount === 0 && suspiciousWordCount > 0) {
+    return true
+  }
+
+  return false
+}
+
 function buildGeminiPrompt(prompt, profiles) {
   // Compress profile representation to reduce token count and latency by 75%
   const compactCatalog = profiles.map((p) => ({
@@ -207,6 +305,10 @@ export function createGeminiRecommendationHandler({
         sendJson(res, 400, { error: 'A design brief is required.' })
         return
       }
+      if (isGibberishPrompt(prompt)) {
+        sendJson(res, 400, { error: 'The provided brief appears to be random characters or gibberish. Please describe your project, brand, or desired aesthetic vibe (e.g., "cyberpunk gaming studio", "warm artisan bakery").' })
+        return
+      }
       if (!profiles.length) {
         sendJson(res, 400, { error: 'A valid profile catalog is required.' })
         return
@@ -279,5 +381,5 @@ export function createGeminiRecommendationHandler({
   }
 }
 
-export { buildGeminiPrompt, extractGeminiText, normalizeProfiles, parseRecommendation, recommendationSchema }
+export { buildGeminiPrompt, extractGeminiText, normalizeProfiles, parseRecommendation, recommendationSchema, isGibberishPrompt }
 

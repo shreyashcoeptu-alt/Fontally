@@ -160,4 +160,20 @@ describe('Fontally Hono Backend API', () => {
       expect(verifyData.favourites.length).toBe(0)
     })
   })
+
+  describe('POST /api/recommend validation', () => {
+    it('rejects gibberish like afrvq1r1 with a 400 error', async () => {
+      const res = await app.request('/api/recommend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: 'afrvq1r1',
+          profiles: [{ id: 'test', name: 'Test', meta: 'SERIF', archetype: 'TEST', words: ['test'] }]
+        })
+      })
+      expect(res.status).toBe(400)
+      const data = await res.json()
+      expect(data.error).toMatch(/gibberish|random characters/i)
+    })
+  })
 })

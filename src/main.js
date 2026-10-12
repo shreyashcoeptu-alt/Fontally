@@ -1278,7 +1278,526 @@ const profiles = [
     bodyFallback: "'Playfair Display', serif",
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Pinyon+Script&family=Playfair+Display:ital,wght@0,400;1,400&display=swap'
   }
-]
+,
+  {
+    "id": "developer_first_precision",
+    "words": [
+      "developer",
+      "code",
+      "devtools",
+      "tech",
+      "vercel",
+      "cli",
+      "terminal",
+      "software",
+      "api",
+      "engineering",
+      "programming",
+      "compiler",
+      "git",
+      "rust",
+      "typescript",
+      "backend",
+      "linux"
+    ],
+    "name": "Geist Sans",
+    "sample": "Geist<br/><i>Precision</i>",
+    "meta": "SYSTEM GROTESK / VARIABLE",
+    "pair": "Geist Mono",
+    "pairMeta": "MONOSPACE / 14PX",
+    "rationale": "Engineered for developer platforms and software interfaces, balancing Swiss neutrality with razor-sharp code clarity.",
+    "archetype": "THE SYSTEM OPTIMIZER",
+    "headingFallback": "'Geist Sans', 'Inter', sans-serif",
+    "bodyFallback": "'Geist Mono', monospace",
+    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Geist:wght@400;600;800&family=Geist+Mono:wght@400;600&display=swap"
+  },
+  {
+    "id": "wonky_craft_artisan",
+    "words": [
+      "wonky",
+      "craft",
+      "70s",
+      "artisan",
+      "sourdough",
+      "pottery",
+      "ceramics",
+      "natural",
+      "handmade",
+      "rustic",
+      "organic",
+      "tactile",
+      "cozy",
+      "vintage",
+      "bakery",
+      "farm"
+    ],
+    "name": "Fraunces",
+    "sample": "Fraunces<br/><i>Artisan</i>",
+    "meta": "WONKY SOFT SERIF",
+    "pair": "DM Sans",
+    "pairMeta": "GEOMETRIC SANS / 15PX",
+    "rationale": "Warm, tactile oldstyle curves designed for sourdough bakeries, artisanal ceramic studios, and slow-living craft brands.",
+    "archetype": "THE TACTILE POTTER",
+    "headingFallback": "'Fraunces', serif",
+    "bodyFallback": "'DM Sans', sans-serif",
+    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;1,9..144,400&family=DM+Sans:wght@400;500&display=swap"
+  },
+  {
+    "id": "neo_brutalist_web3",
+    "words": [
+      "space",
+      "crypto",
+      "web3",
+      "blockchain",
+      "brutalist",
+      "dao",
+      "defi",
+      "token",
+      "zine",
+      "experimental",
+      "monochrome",
+      "raw",
+      "acid",
+      "underground",
+      "idiosyncratic"
+    ],
+    "name": "Space Grotesk",
+    "sample": "Space<br/><i>Grotesk</i>",
+    "meta": "PROPORTIONAL BRUTALIST",
+    "pair": "Space Mono",
+    "pairMeta": "RAW MONO / 14PX",
+    "rationale": "Sharp idiosyncratic angular glyphs inspired by deep space telemetry and brutalist web3 developer zines.",
+    "archetype": "THE CIPHERPUNK ANARCHIST",
+    "headingFallback": "'Space Grotesk', sans-serif",
+    "bodyFallback": "'Space Mono', monospace",
+    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400;700&display=swap"
+  },
+  {
+    "id": "imperial_roman_heritage",
+    "words": [
+      "roman",
+      "classical",
+      "imperial",
+      "heritage",
+      "monumental",
+      "epic",
+      "empire",
+      "museum",
+      "architecture",
+      "ancient",
+      "history",
+      "marble",
+      "majesty",
+      "cinematic"
+    ],
+    "name": "Cinzel",
+    "sample": "Cinzel<br/><i>Monumental</i>",
+    "meta": "ROMAN INSCRIPTIONAL SERIF",
+    "pair": "Montserrat",
+    "pairMeta": "GEOMETRIC CAPS / 14PX",
+    "rationale": "All-caps proportions based on ancient Roman lapidary inscriptions, commanding epic cinematic gravity.",
+    "archetype": "THE IMPERIAL ARCHIVIST",
+    "headingFallback": "'Cinzel', serif",
+    "bodyFallback": "'Montserrat', sans-serif",
+    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Montserrat:wght@400;600&display=swap"
+  },
+  {
+    "id": "arcade_8bit_pixel",
+    "words": [
+      "pixel",
+      "8bit",
+      "arcade",
+      "retro",
+      "gameboy",
+      "chiptune",
+      "pixelart",
+      "nes",
+      "nintendo",
+      "nostalgic",
+      "16bit",
+      "gaming",
+      "atari"
+    ],
+    "name": "Silkscreen",
+    "sample": "Silkscreen<br/><i>8-Bit</i>",
+    "meta": "AUTHENTIC ARCADE PIXEL",
+    "pair": "Press Start 2P",
+    "pairMeta": "BITMAPPED DISPLAY / 12PX",
+    "rationale": "Authentic 8-bit arcade screen rasterization designed for retro gaming tributes, chiptune albums, and pixel art showcases.",
+    "archetype": "THE RETRO SPEEDRUNNER",
+    "headingFallback": "'Silkscreen', monospace",
+    "bodyFallback": "'Press Start 2P', monospace",
+    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Press+Start+2P&display=swap"
+  },
+  {
+    "id": "italian_couture_vogue",
+    "words": [
+      "couture",
+      "italiana",
+      "italian",
+      "vogue",
+      "fashion",
+      "runway",
+      "milan",
+      "haute",
+      "luxury",
+      "glamour",
+      "supermodel",
+      "editorial",
+      "designer",
+      "elegance"
+    ],
+    "name": "Italiana",
+    "sample": "Italiana<br/><i>Haute</i>",
+    "meta": "MILANESE FASHION SERIF",
+    "pair": "Albert Sans",
+    "pairMeta": "CLEAN GROTESK / 14PX",
+    "rationale": "Slender, high-contrast Didone strokes evoking Italian fashion publishing, Paris Fashion Week, and fine fragrance packaging.",
+    "archetype": "THE RUNWAY CURATOR",
+    "headingFallback": "'Italiana', serif",
+    "bodyFallback": "'Albert Sans', sans-serif",
+    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Italiana&family=Albert+Sans:wght@400;500;600&display=swap"
+  },
+  {
+    "id": "gothic_blackletter_metal",
+    "words": [
+      "blackletter",
+      "gothic",
+      "medieval",
+      "metal",
+      "heavy",
+      "rock",
+      "tattoo",
+      "dark",
+      "occult",
+      "band",
+      "motorcycle",
+      "vintage",
+      "underground",
+      "fraktur"
+    ],
+    "name": "UnifrakturMaguntia",
+    "sample": "Unifraktur<br/><i>Maguntia</i>",
+    "meta": "AUTHENTIC BLACKLETTER",
+    "pair": "Work Sans",
+    "pairMeta": "STURDY GROTESK / 15PX",
+    "rationale": "Historical German Fraktur calligraphy with sharp barbed flourishes for doom metal records, tattoo parlors, and gothic apparel.",
+    "archetype": "THE OCCULT ILLUMINATOR",
+    "headingFallback": "'UnifrakturMaguntia', display",
+    "bodyFallback": "'Work Sans', sans-serif",
+    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Work+Sans:wght@400;600&display=swap"
+  },
+  {
+    "id": "americana_heavy_slab",
+    "words": [
+      "slab",
+      "heavy",
+      "burger",
+      "bbq",
+      "diner",
+      "kraft",
+      "steakhouse",
+      "sports",
+      "loud",
+      "bold",
+      "thick",
+      "rodeo",
+      "americana",
+      "chunky",
+      "alfa"
+    ],
+    "name": "Alfa Slab One",
+    "sample": "Alfa Slab<br/><i>Heavy</i>",
+    "meta": "ULTRA FAT EGYPTIAN SLAB",
+    "pair": "Roboto",
+    "pairMeta": "WORKHORSE SANS / 15PX",
+    "rationale": "Immense slab weight inspired by 19th-century billboard wood types, commanding attention for craft burger joints and sports merch.",
+    "archetype": "THE PITMASTER TITAN",
+    "headingFallback": "'Alfa Slab One', serif",
+    "bodyFallback": "'Roboto', sans-serif",
+    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Roboto:wght@400;500;700&display=swap"
+  },
+  {
+    "id": "casual_retro_diner_script",
+    "words": [
+      "satisfy",
+      "casual",
+      "script",
+      "diner",
+      "milkshake",
+      "icecream",
+      "bakery",
+      "friendly",
+      "sweet",
+      "50s",
+      "handwritten",
+      "cafe",
+      "recipe",
+      "brunch"
+    ],
+    "name": "Satisfy",
+    "sample": "Satisfy<br/><i>Cursive</i>",
+    "meta": "BRUSHED DINER SCRIPT",
+    "pair": "Lato",
+    "pairMeta": "HUMANIST SANS / 15PX",
+    "rationale": "Bouncy mid-century American diner brush script tailored for ice cream parlors, casual food packaging, and vintage signs.",
+    "archetype": "THE SODA FOUNTAIN CHEF",
+    "headingFallback": "'Satisfy', cursive",
+    "bodyFallback": "'Lato', sans-serif",
+    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Satisfy&family=Lato:wght@400;700&display=swap"
+  },
+  {
+    "id": "pop_art_comic_action",
+    "words": [
+      "comic",
+      "bangers",
+      "popart",
+      "superhero",
+      "cartoon",
+      "youtube",
+      "thumbnail",
+      "action",
+      "boom",
+      "pow",
+      "energetic",
+      "loud",
+      "gaming",
+      "explosive"
+    ],
+    "name": "Bangers",
+    "sample": "Bangers<br/><i>Pop!</i>",
+    "meta": "MID-CENTURY COMIC TITLING",
+    "pair": "Rubik",
+    "pairMeta": "ROUNDED SANS / 16PX",
+    "rationale": "Explosive superhero comic book cover typography designed for viral content creators, gaming tournaments, and action posters.",
+    "archetype": "THE COMIC STRIP CREATOR",
+    "headingFallback": "'Bangers', display",
+    "bodyFallback": "'Rubik', sans-serif",
+    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Bangers&family=Rubik:wght@500;700;800&display=swap"
+  },
+  {
+    "id": "hollywood_screenplay_script",
+    "words": [
+      "screenplay",
+      "script",
+      "cinema",
+      "movie",
+      "writer",
+      "hollywood",
+      "manuscript",
+      "typewriter",
+      "story",
+      "film",
+      "scriptwriting",
+      "stage"
+    ],
+    "name": "Courier Prime",
+    "sample": "Courier<br/><i>Prime</i>",
+    "meta": "HOLLYWOOD SCREENPLAY MONO",
+    "pair": "Libre Baskerville",
+    "pairMeta": "LITERARY SERIF / 16PX",
+    "rationale": "Calibrated specifically for industry-standard feature film screenplays, pairing authentic typewriter texture with literary elegance.",
+    "archetype": "THE STUDIO SCREENWRITER",
+    "headingFallback": "'Courier Prime', monospace",
+    "bodyFallback": "'Libre Baskerville', serif",
+    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Libre+Baskerville:ital,wght@0,400;1,400&display=swap"
+  },
+  {
+    "id": "hypermodern_startup_fintech",
+    "words": [
+      "outfit",
+      "fintech",
+      "startup",
+      "modern",
+      "neobank",
+      "app",
+      "wallet",
+      "investment",
+      "banking",
+      "card",
+      "payment",
+      "clean",
+      "growth"
+    ],
+    "name": "Outfit",
+    "sample": "Outfit<br/><i>FinTech</i>",
+    "meta": "GEOMETRIC DISPLAY SANS",
+    "pair": "Plus Jakarta Sans",
+    "pairMeta": "CONTEMPORARY SANS / 15PX",
+    "rationale": "Pristine geometric circles and dynamic letterform curves designed for high-growth consumer apps and digital wallets.",
+    "archetype": "THE VENTURE FOUNDER",
+    "headingFallback": "'Outfit', sans-serif",
+    "bodyFallback": "'Plus Jakarta Sans', sans-serif",
+    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;900&family=Plus+Jakarta+Sans:wght@400;600&display=swap"
+  },
+  {
+    "id": "quiet_bookish_scholar",
+    "words": [
+      "bookish",
+      "scholar",
+      "academic",
+      "essays",
+      "literature",
+      "philosophy",
+      "library",
+      "book",
+      "publishing",
+      "author",
+      "reading",
+      "university",
+      "vollkorn"
+    ],
+    "name": "Vollkorn",
+    "sample": "Vollkorn<br/><i>Scholar</i>",
+    "meta": "HEARTY GERMAN BOOK SERIF",
+    "pair": "Crimson Pro",
+    "pairMeta": "OLDSTYLE SERIF / 17PX",
+    "rationale": "Deep dark ink texture and sturdy serifs crafted for philosophical journals, literary book publishing, and deep essays.",
+    "archetype": "THE TENURED PHILOSOPHER",
+    "headingFallback": "'Vollkorn', serif",
+    "bodyFallback": "'Crimson Pro', serif",
+    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Vollkorn:ital,wght@0,500;0,700;1,400&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap"
+  },
+  {
+    "id": "inflatable_bubble_y2k",
+    "words": [
+      "bubble",
+      "y2k",
+      "inflatable",
+      "cute",
+      "marshmallow",
+      "stickers",
+      "bubbly",
+      "candy",
+      "playful",
+      "pastel",
+      "anime",
+      "kawaii",
+      "bouncy"
+    ],
+    "name": "DynaPuff",
+    "sample": "DynaPuff<br/><i>Bubble</i>",
+    "meta": "INFLATABLE PUFFY DISPLAY",
+    "pair": "Quicksand",
+    "pairMeta": "ROUNDED GEOMETRIC / 15PX",
+    "rationale": "Marshmallow-inflated bubble curves reminiscent of early 2000s sticker albums, bubble tea cafes, and cute mobile games.",
+    "archetype": "THE HARAJUKU DREAMER",
+    "headingFallback": "'DynaPuff', display",
+    "bodyFallback": "'Quicksand', sans-serif",
+    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=DynaPuff:wght@600;700&family=Quicksand:wght@500;700&display=swap"
+  },
+  {
+    "id": "street_skate_marker",
+    "words": [
+      "marker",
+      "sharpie",
+      "skate",
+      "skateboarding",
+      "street",
+      "graffiti",
+      "punk",
+      "stickers",
+      "underground",
+      "protest",
+      "rebel",
+      "grunge",
+      "raw",
+      "permanent"
+    ],
+    "name": "Permanent Marker",
+    "sample": "Permanent<br/><i>Marker</i>",
+    "meta": "CHISEL TIP RAW MARKER",
+    "pair": "Archivo",
+    "pairMeta": "PUNCHY GROTESK / 15PX",
+    "rationale": "Chisel-tip permanent ink strokes with unvarnished street swagger for skate decks, punk concert flyers, and streetwear.",
+    "archetype": "THE SKATEPARK RIOTEER",
+    "headingFallback": "'Permanent Marker', cursive",
+    "bodyFallback": "'Archivo', sans-serif",
+    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Archivo:wght@500;700;900&display=swap"
+  },
+  {
+    "id": "scandinavian_nordic_clean",
+    "words": [
+      "scandinavian",
+      "nordic",
+      "copenhagen",
+      "furniture",
+      "minimal",
+      "hygge",
+      "clean",
+      "interior",
+      "calm",
+      "wood",
+      "simple",
+      "airy",
+      "albert"
+    ],
+    "name": "Albert Sans",
+    "sample": "Albert<br/><i>Nordic</i>",
+    "meta": "DANISH MODERN GROTESK",
+    "pair": "Instrument Serif",
+    "pairMeta": "POETIC SERIF / 18PX",
+    "rationale": "Clean geometric proportions inspired by Danish modernist architecture, paired with quiet high-fashion editorial grace.",
+    "archetype": "THE NORDIC MINIMALIST",
+    "headingFallback": "'Albert Sans', sans-serif",
+    "bodyFallback": "'Instrument Serif', serif",
+    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Albert+Sans:wght@400;600;700&family=Instrument+Serif:ital@0;1&display=swap"
+  },
+  {
+    "id": "wild_west_saloon_whiskey",
+    "words": [
+      "rye",
+      "western",
+      "saloon",
+      "cowboy",
+      "whiskey",
+      "bourbon",
+      "distillery",
+      "spurs",
+      "rustic",
+      "woodtype",
+      "vintage",
+      "texas",
+      "rodeo"
+    ],
+    "name": "Rye",
+    "sample": "Rye<br/><i>Saloon</i>",
+    "meta": "WOOD TYPE SPUR SERIF",
+    "pair": "Bitter",
+    "pairMeta": "STURDY SLAB / 15PX",
+    "rationale": "Center-spurred wood type letterforms inspired by Wild West saloon posters, craft bourbon bottles, and smokehouse menus.",
+    "archetype": "THE FRONTIER DISTILLER",
+    "headingFallback": "'Rye', display",
+    "bodyFallback": "'Bitter', serif",
+    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Rye&family=Bitter:wght@400;600;700&display=swap"
+  },
+  {
+    "id": "accessible_educational_clarity",
+    "words": [
+      "lexend",
+      "educational",
+      "accessible",
+      "readability",
+      "dyslexia",
+      "learning",
+      "school",
+      "literacy",
+      "clear",
+      "simple",
+      "edtech",
+      "children"
+    ],
+    "name": "Lexend",
+    "sample": "Lexend<br/><i>Legible</i>",
+    "meta": "HYPER-LEGIBLE COGNITIVE SANS",
+    "pair": "Nunito",
+    "pairMeta": "FRIENDLY SANS / 16PX",
+    "rationale": "Scientifically spaced letterforms designed to reduce reading stress and improve reading speed across digital education tools.",
+    "archetype": "THE ACCESSIBLE EDUCATOR",
+    "headingFallback": "'Lexend', sans-serif",
+    "bodyFallback": "'Nunito', sans-serif",
+    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700&family=Nunito:wght@400;600&display=swap"
+  }]
 
 // Dynamic Google Font Loader via standard Google Fonts Web API
 function loadGoogleFont(url) {
@@ -1313,8 +1832,102 @@ function buildProfile(p) {
   return { ...p, cssImport, cssVars, tailwind }
 }
 
+// Client-Side Gibberish & Low-Information Prompt Detector
+function isGibberishPrompt(prompt) {
+  if (!prompt || typeof prompt !== 'string') return true
+  const trimmed = prompt.trim()
+  if (trimmed.length < 2) return true
+
+  const clean = trimmed.replace(/[^\w\s]/g, ' ').trim()
+  if (!clean) return true
+
+  const words = clean.split(/\s+/).filter(Boolean)
+  if (!words.length) return true
+
+  // Pure numbers check
+  if (/^\d+$/.test(clean.replace(/\s+/g, ''))) return true
+
+  // Valid short design/tech acronyms
+  const validShortAcronyms = new Set(['ai', 'ui', 'ux', '3d', 'vr', 'ar', 'b2b', 'it', 'os', 'ip', 'pr', 'hr', 'hq', 'ad'])
+
+  // Check keyboard row patterns (QWERTY walks)
+  const keyboardRows = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm', '1234567890']
+  const normalizedLower = clean.toLowerCase().replace(/\s+/g, '')
+  for (const row of keyboardRows) {
+    if (row.includes(normalizedLower) && normalizedLower.length >= 4) {
+      return true
+    }
+  }
+
+  // Check repeated characters e.g. "aaaa", "zzzz"
+  if (/^(.)\1{3,}$/.test(normalizedLower)) {
+    return true
+  }
+
+  const vowels = new Set(['a', 'e', 'i', 'o', 'u', 'y'])
+  let recognizedWordCount = 0
+  let suspiciousWordCount = 0
+
+  for (const word of words) {
+    const lower = word.toLowerCase()
+    if (validShortAcronyms.has(lower)) {
+      recognizedWordCount++
+      continue
+    }
+
+    // Numbers interleaved inside letters (e.g. afrvq1r1)
+    if (/[a-z]+\d+[a-z]+|\d+[a-z]+\d+/.test(lower)) {
+      suspiciousWordCount++
+      continue
+    }
+
+    // Single non-vowel consonant
+    if (lower.length === 1 && !vowels.has(lower)) {
+      suspiciousWordCount++
+      continue
+    }
+
+    const letters = lower.replace(/[^a-z]/g, '')
+    if (letters.length >= 3) {
+      let vowelCount = 0
+      for (const char of letters) {
+        if (vowels.has(char)) vowelCount++
+      }
+
+      if (vowelCount === 0) {
+        suspiciousWordCount++
+        continue
+      }
+
+      const vowelRatio = vowelCount / letters.length
+      if (vowelRatio < 0.16 && letters.length >= 6) {
+        suspiciousWordCount++
+        continue
+      }
+
+      // Check for impossible consonant clusters
+      if (/[bcdfghjklmnpqrstvwxz]{5,}/i.test(letters) || /vq|qx|zx|qj|xk|vj|dxj|frvq/i.test(letters)) {
+        suspiciousWordCount++
+        continue
+      }
+    }
+
+    recognizedWordCount++
+  }
+
+  if (recognizedWordCount === 0 && suspiciousWordCount > 0) {
+    return true
+  }
+
+  return false
+}
+
 // Client-Side Intelligent Semantic Vibe Matcher Engine (Fallback & Instant Analysis)
 function matchProfileLocally(promptText) {
+  if (isGibberishPrompt(promptText)) {
+    return { error: 'The input appears to be random characters or gibberish. Please describe your project, brand, or desired aesthetic vibe (e.g., "cyberpunk gaming studio", "warm artisan bakery").' }
+  }
+
   const stopWords = new Set([
     'a', 'an', 'the', 'and', 'or', 'for', 'with', 'in', 'on', 'at', 'to', 'of', 'by',
     'from', 'my', 'your', 'our', 'is', 'are', 'was', 'be', 'brand', 'app', 'website',
@@ -1328,7 +1941,11 @@ function matchProfileLocally(promptText) {
     .split(/\s+/)
     .filter((token) => token.length > 1 && !stopWords.has(token))
 
-  let bestProfile = profiles[0]
+  if (!rawTokens.length) {
+    return { error: 'Please enter a more descriptive design brief.' }
+  }
+
+  let bestProfile = null
   let maxScore = -1
 
   for (const p of profiles) {
@@ -1341,13 +1958,14 @@ function matchProfileLocally(promptText) {
     const pRationale = (p.rationale || '').toLowerCase()
 
     for (const token of rawTokens) {
-      if (pWords.includes(token)) score += 6
-      else if (pWords.some((w) => w.includes(token) || token.includes(w))) score += 3
-      if (pId.includes(token)) score += 5
-      if (pArchetype.includes(token)) score += 4
-      if (pMeta.includes(token)) score += 3
-      if (pName.includes(token)) score += 2
-      if (pRationale.includes(token)) score += 1
+      // Direct font name exact match bonus (+25)
+      if (pName.includes(token)) score += 25
+      if (pWords.includes(token)) score += 8
+      else if (pWords.some((w) => w.includes(token) || token.includes(w))) score += 4
+      if (pId.includes(token)) score += 6
+      if (pArchetype.includes(token)) score += 5
+      if (pMeta.includes(token)) score += 4
+      if (pRationale.includes(token)) score += 2
     }
 
     if (score > maxScore) {
@@ -1356,7 +1974,14 @@ function matchProfileLocally(promptText) {
     }
   }
 
-  const confidence = maxScore > 0 ? Math.min(0.98, Math.max(0.68, 0.6 + maxScore * 0.04)) : 0.75
+  // If absolutely no tokens matched any profile, return an error rather than random guess
+  if (maxScore <= 0 || !bestProfile) {
+    return {
+      error: `No matching typography vibe found for "${promptText.slice(0, 40)}". Try describing your project with more descriptive style or mood words (e.g. "quiet luxury", "brutalist architecture", "retro diner").`
+    }
+  }
+
+  const confidence = Math.min(0.98, Math.max(0.72, 0.65 + maxScore * 0.03))
   const tags = rawTokens.slice(0, 4).map((t) => t.toUpperCase())
   if (!tags.length && bestProfile.words?.length) {
     tags.push(...bestProfile.words.slice(0, 3).map((w) => w.toUpperCase()))
@@ -1376,6 +2001,10 @@ const clientRecommendationCache = new Map()
 const RECOMMENDATION_ENDPOINT = '/api/recommend'
 
 async function recommendProfile(promptText) {
+  if (isGibberishPrompt(promptText)) {
+    throw new Error('The input appears to be random characters or gibberish. Please describe your project, brand, or desired aesthetic vibe (e.g., "cyberpunk gaming studio", "warm artisan bakery").')
+  }
+
   const cacheKey = promptText.trim().toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, ' ')
   if (clientRecommendationCache.has(cacheKey)) {
     return clientRecommendationCache.get(cacheKey)
@@ -1395,6 +2024,12 @@ async function recommendProfile(promptText) {
     }).finally(() => clearTimeout(timeout))
 
     const payload = await response.json().catch(() => ({}))
+
+    // If server specifically returned 400 with validation error, do not silence it!
+    if (!response.ok && response.status === 400 && payload?.error) {
+      throw new Error(payload.error)
+    }
+
     if (response.ok && payload.profileId) {
       const profile = profiles.find((candidate) => candidate.id === payload.profileId)
       if (profile) {
@@ -1405,11 +2040,19 @@ async function recommendProfile(promptText) {
     }
     console.warn('Gemini API response unfulfilled, activating local semantic vibe engine:', payload?.error)
   } catch (err) {
+    // Re-throw our explicit validation errors (e.g., gibberish rejection)
+    if (err.message && (err.message.includes('gibberish') || err.message.includes('random characters') || err.message.includes('design brief is required'))) {
+      throw err
+    }
     console.warn('Gemini network/endpoint fallback triggered:', err?.message || err)
   }
 
   // Graceful Local Semantic Engine Fallback
   const fallbackMatch = matchProfileLocally(promptText)
+  if (fallbackMatch.error) {
+    throw new Error(fallbackMatch.error)
+  }
+
   const result = {
     profile: fallbackMatch.profile,
     aiResult: {
@@ -1423,12 +2066,29 @@ async function recommendProfile(promptText) {
   return result
 }
 
-
 // Toast Alert
-function showToast(message) {
+function triggerTerminalError() {
+  const terminalEl = document.querySelector('.terminal')
+  if (terminalEl) {
+    terminalEl.classList.remove('has-error')
+    void terminalEl.offsetWidth
+    terminalEl.classList.add('has-error')
+    setTimeout(() => terminalEl.classList.remove('has-error'), 1800)
+  }
+}
+
+function showToast(message, isError = false) {
   toast.textContent = message
+  if (isError) {
+    toast.classList.add('toast-error')
+  } else {
+    toast.classList.remove('toast-error')
+  }
   toast.classList.add('show')
-  setTimeout(() => toast.classList.remove('show'), 2600)
+  setTimeout(() => {
+    toast.classList.remove('show')
+    toast.classList.remove('toast-error')
+  }, 3600)
 }
 
 // Robust Async & Fallback Clipboard Copy Helper
@@ -1596,10 +2256,19 @@ function init() {
 async function updateRecommendation() {
   const prompt = brief.value.trim()
   if (!prompt) {
-    showToast('Describe your project first.')
+    triggerTerminalError()
+    showToast('Describe your project first.', true)
     brief.focus()
     return
   }
+
+  if (isGibberishPrompt(prompt)) {
+    triggerTerminalError()
+    showToast('⚠️ Random characters detected. Please describe your project, brand, or desired aesthetic vibe (e.g. "cyberpunk RPG", "warm bakery").', true)
+    brief.focus()
+    return
+  }
+
   analyse.disabled = true
   analyse.classList.add('loading')
   analyse.innerHTML = 'ASKING GEMINI <span>◌</span>'
@@ -1608,9 +2277,10 @@ async function updateRecommendation() {
     state.setActiveProfile(recommendation.profile, { aiResult: recommendation.aiResult })
     document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' })
   } catch (error) {
-    console.error('Gemini recommendation failed:', error)
-    recommendationStatus.textContent = `Gemini recommendation failed. ${error.message}`
-    showToast(error.message || 'Gemini recommendation failed.')
+    console.error('Recommendation failed:', error)
+    triggerTerminalError()
+    recommendationStatus.textContent = error.message
+    showToast(error.message || 'Recommendation failed.', true)
   } finally {
     analyse.disabled = false
     analyse.classList.remove('loading')

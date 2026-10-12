@@ -4,7 +4,8 @@ import {
   extractGeminiText,
   normalizeProfiles,
   parseRecommendation,
-  recommendationSchema
+  recommendationSchema,
+  isGibberishPrompt
 } from '../gemini-recommendation.mjs'
 import {
   getRecommendationCache,
@@ -60,6 +61,11 @@ recommendRoute.post('/', async (c) => {
 
   if (!prompt) {
     return c.json({ error: 'A design brief is required.' }, 400)
+  }
+  if (isGibberishPrompt(prompt)) {
+    return c.json({
+      error: 'The provided brief appears to be random characters or gibberish. Please describe your project, brand, or desired aesthetic vibe (e.g., "cyberpunk gaming studio", "warm artisan bakery").'
+    }, 400)
   }
   if (!profiles.length) {
     return c.json({ error: 'A valid profile catalog is required.' }, 400)

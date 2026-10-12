@@ -110,6 +110,14 @@ describe('Gemini recommendation service', () => {
     expect(response.statusCode).toBe(503)
     expect(JSON.parse(response.body).error).toMatch(/GEMINI_API_KEY/)
   })
+
+  it('rejects gibberish input with a 400 error', async () => {
+    const handler = createGeminiRecommendationHandler({ apiKey: 'test-key' })
+    const response = makeResponse()
+    await handler(makeRequest({ prompt: 'afrvq1r1', profiles }), response)
+    expect(response.statusCode).toBe(400)
+    expect(JSON.parse(response.body).error).toMatch(/gibberish|random characters/i)
+  })
 })
 
 describe('Google Fonts API service', () => {
