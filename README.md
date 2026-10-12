@@ -31,24 +31,27 @@
 ## ⚡ Key Features
 
 - 🧠 **Gemini-Powered Typography Engine**: Sends creative design briefs to a serverless Gemini endpoint with fast token sampling, compressed prompt payloads, and persistent response caching across deployments.
+- 🛡️ **Intelligent Gibberish & Quality Guardrails**: Detects and rejects nonsensical keystroke smashes, interleaved numbers/letters (e.g. `"afrvq1r1"`), vowel-less clusters, and low-entropy inputs with responsive terminal shake animations and actionable error guidance, preventing hallucinated pairings.
+- 🎯 **Direct Font Name Recognition (+25 Match Boost)**: Type any specific font name (e.g. *"Space Grotesk"*, *"Fraunces"*, *"Cinzel"*, *"Playfair"*, *"Geist"*) directly into the design brief to immediately inspect and showcase that exact typeface and its optimal pairing.
 - 🗄️ **Supabase & pgvector Persistence**:
   - Persistent recommendation cache in PostgreSQL with hit count metrics (survives cold starts and redeployments).
   - High-dimensional vector embeddings (`gemini-embedding-001` with 768 dimensions) for semantic font similarity search.
-  - Zero-config graceful in-memory fallback during local development or offline mode.
+  - Zero-config graceful in-memory fallback during local development or offline test environments.
+  - Ready-to-run [`server/db/seed.sql`](server/db/seed.sql) with 130+ pre-formatted font definitions.
 - 🔍 **Three-Tier Search Architecture (Fuzzy + Filters + Vector Semantic)**:
   - **Typo-Tolerant Search (Fuse.js)**: Handles typos and partial names (e.g. `"playfar"` instantly matches `"Playfair Display"`).
   - **Vibe & Tag Discovery**: Query by aesthetic mood tags (*"cyberpunk"*, *"quiet-luxury"*, *"editorial"*, *"warm"*), designers, and use cases.
   - **Granular Typographic Filters**: Filter by classification, variable font support (`variable=true`), and custom weight ranges (`min_weight`, `max_weight`).
 - 🧬 **Font Similarity Engine**: Find stylistically and structurally similar fonts to any family in the catalog (`GET /api/fonts/similar/:family`).
 - 🔖 **User History & Favourites**: Anonymous session-based history tracking and bookmarks for saved pairings (`/api/history`, `/api/favourites`).
-- 🔤 **90+ Curated Typographic Archetypes**: Complete aesthetic taxonomy spanning *Swiss Bauhaus, Cyberpunk Neon, Quiet Luxury, 90s Grunge Zine, Dark Academia, Japanese Minimalist, Y2K Pop, 8-Bit Pixel RPG, Geneva Horology, Nordic Sauna*, and more.
+- 🔤 **106+ Curated Typographic Archetypes**: Complete aesthetic taxonomy spanning *Developer Precision (Geist), 70s Wonky Craft (Fraunces), Imperial Roman (Cinzel), 8-Bit Arcade (Silkscreen), Italian Haute Couture (Italiana), Americana Heavy Slab (Alfa Slab One), Comic Pop Action (Bangers), Hollywood Screenplay (Courier Prime), Hypermodern FinTech (Outfit), Y2K Inflatable Bubble (DynaPuff), Street Skate Marker (Permanent Marker)*, and more.
 - 🧪 **Interactive Type Lab Sandbox**:
   - Live editable specimen playground
-  - Real-time optical size slider (24px – 140px)
+  - Real-time optical size slider (20px – 120px)
   - Style modifiers (<kbd>Aa</kbd> Uppercase, <kbd>I</kbd> Italic, <kbd>B</kbd> Bold)
   - Color palette swatches and interactive hex color picker
   - One-click dummy copy presets (*Pangram, Headline, Alphabet, Numbers, Paragraph*)
-- 💻 **Developer Code Export**: One-click `@import` and CSS custom property export, plus direct links to font specimen pages on [fonts.google.com](https://fonts.google.com/).
+- 💻 **Developer Code Export**: One-click `@import` and CSS custom property export, Tailwind CSS family snippets, plus direct links to font specimen pages on [fonts.google.com](https://fonts.google.com/).
 - ☁️ **Vercel Edge & Serverless Ready**: Native Hono.js router for zero-config global deployment.
 
 ---
@@ -68,24 +71,25 @@ Fontally/
 │   ├── app.mjs                   # Unified Hono router with CORS, timing & error handling
 │   ├── db/
 │   │   ├── schema.sql            # Supabase PostgreSQL + pgvector schema & RLS policies
-│   │   └── supabase.mjs          # Database client with in-memory fallback
+│   │   ├── seed.sql              # 130+ fonts instant SQL seed dataset with conflict handling
+│   │   └── supabase.mjs          # Database client with test & offline in-memory fallback
 │   ├── lib/
 │   │   ├── embeddings.mjs        # Gemini gemini-embedding-001 vector generator
-│   │   ├── font-catalog.mjs      # Enriched font catalogue dataset
+│   │   ├── font-catalog.mjs      # 130+ enriched font catalogue dataset with metadata
 │   │   └── fuzzy.mjs             # Fuse.js typo-tolerant multi-key search index
 │   └── routes/
-│       ├── recommend.mjs         # Recommendation route with persistent caching
+│       ├── recommend.mjs         # Recommendation route with gibberish detection & caching
 │       ├── fonts.mjs             # Multi-mode search & similarity route
 │       ├── history.mjs           # User history route
 │       └── favourites.mjs        # User favourites bookmark route
 ├── scripts/
 │   └── seed-fonts.mjs            # Seeding script with Gemini vector embeddings
 ├── src/
-│   ├── main.js                   # Client state, Type Lab controller, local semantic engine
+│   ├── main.js                   # Client state, 106 archetypes, Type Lab, gibberish detector
 │   └── style.css                 # Vanilla CSS design system, dark mode & layout
 ├── tests/
-│   ├── backend.test.js           # Vitest suite for Hono backend routes & search
-│   └── scorer.test.js            # Vitest suite for Gemini response validation
+│   ├── backend.test.js           # Vitest suite for Hono backend routes, search & validation
+│   └── scorer.test.js            # Vitest suite for Gemini response & gibberish validation
 ├── vite.config.js                # Vite development server with Hono API middleware
 ├── vercel.json                   # Vercel deployment configuration
 └── package.json                  # Dependencies, scripts, and metadata
@@ -177,13 +181,20 @@ Generates typography recommendations based on natural-language briefs.
 }
 ```
 
-**Response:**
+**Response (200 OK):**
 ```json
 {
   "profileId": "pastry-shop",
   "confidence": 0.94,
   "rationale": "Fluid retro curves evoke handcrafted dough and warm ovens.",
   "tags": ["NOSTALGIC", "WARM", "ARTISAN", "RETRO"]
+}
+```
+
+**Response (400 Bad Request — Gibberish / Malformed Input):**
+```json
+{
+  "error": "The provided brief appears to be random characters or gibberish. Please describe your project, brand, or desired aesthetic vibe (e.g., \"cyberpunk gaming studio\", \"warm artisan bakery\")."
 }
 ```
 
