@@ -2271,7 +2271,7 @@ async function updateRecommendation() {
 
   analyse.disabled = true
   analyse.classList.add('loading')
-  analyse.innerHTML = 'ASKING GEMINI <span>◌</span>'
+  analyse.innerHTML = 'ASKING <span>◌</span>'
   try {
     const recommendation = await recommendProfile(prompt)
     state.setActiveProfile(recommendation.profile, { aiResult: recommendation.aiResult })
@@ -2284,7 +2284,7 @@ async function updateRecommendation() {
   } finally {
     analyse.disabled = false
     analyse.classList.remove('loading')
-    analyse.innerHTML = 'ANALYSE <span>→</span>'
+    analyse.innerHTML = 'ASK <span>→</span>'
   }
 }
 
