@@ -37,13 +37,6 @@ const copyCssBtn = $('#copyCssBtn')
 const openGoogleFontsBtn = $('#openGoogleFontsBtn')
 const recommendationStatus = $("#recommendationStatus")
 
-// Google Fonts Explorer Handles
-const fontSearchInput = $('#fontSearchInput')
-const clearFontSearch = $('#clearFontSearch')
-const fontSearchDropdown = $('#fontSearchDropdown')
-const fontResultsCount = $('#fontResultsCount')
-const fontResultsList = $('#fontResultsList')
-const categoryFilterBtns = document.querySelectorAll('.category-filter-btn')
 
 
 
@@ -1802,17 +1795,22 @@ const profiles = [
     "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700&family=Nunito:wght@400;600&display=swap"
   }]
 
-// Dynamic Google Font Loader via standard Google Fonts Web API
+// Dynamic Google Font Loader via dedicated <link id="fontally-active-font"> & Set tracking
+const loadedFontUrls = new Set()
 function loadGoogleFont(url) {
   if (!url) return
-  let link = document.getElementById('dynamicFontLink')
+  if (loadedFontUrls.has(url)) return
+  let link = document.getElementById('fontally-active-font') || document.getElementById('dynamicFontLink')
   if (!link) {
     link = document.createElement('link')
-    link.id = 'dynamicFontLink'
+    link.id = 'fontally-active-font'
     link.rel = 'stylesheet'
     document.head.appendChild(link)
   }
-  link.href = url
+  if (link.href !== url) {
+    link.href = url
+  }
+  loadedFontUrls.add(url)
 }
 
 // Data Profile Builder (Reduces duplication)
@@ -1850,8 +1848,15 @@ function isGibberishPrompt(prompt) {
   // Pure numbers check
   if (/^\d+$/.test(clean.replace(/\s+/g, ''))) return true
 
-  // Valid short design/tech acronyms
-  const validShortAcronyms = new Set(['ai', 'ui', 'ux', '3d', 'vr', 'ar', 'b2b', 'it', 'os', 'ip', 'pr', 'hr', 'hq', 'ad'])
+  // Common valid creative/short design terms, acronyms, and font abbreviations
+  const validTerms = new Set([
+    'ai', 'ui', 'ux', '3d', '2d', '4d', 'vr', 'ar', 'xr', 'mr',
+    'b2b', 'b2c', 'd2c', 'p2p', 'web3', 'y2k',
+    'it', 'os', 'ip', 'pr', 'hr', 'hq', 'ad', 'id', 'io', 'fx',
+    'ibm', 'rpg', 'mmo', 'fps', 'dev', 'app', 'cli', 'sdk', 'api',
+    '80s', '90s', '70s', '60s', '50s', '00s',
+    'pt', 'dm', 'pp'
+  ])
 
   // Check keyboard row patterns (QWERTY walks)
   const keyboardRows = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm', '1234567890']
@@ -1873,7 +1878,7 @@ function isGibberishPrompt(prompt) {
 
   for (const word of words) {
     const lower = word.toLowerCase()
-    if (validShortAcronyms.has(lower)) {
+    if (validTerms.has(lower) || /^\d{2,4}s$/.test(lower)) {
       recognizedWordCount++
       continue
     }
@@ -1884,8 +1889,8 @@ function isGibberishPrompt(prompt) {
       continue
     }
 
-    // Single non-vowel consonant
-    if (lower.length === 1 && !vowels.has(lower)) {
+    // Single non-vowel consonant (e.g. 'q', 'z', 'x')
+    if (lower.length === 1 && /[a-z]/i.test(lower) && !vowels.has(lower)) {
       suspiciousWordCount++
       continue
     }
@@ -2002,6 +2007,8 @@ const clientRecommendationCache = new Map()
 
 // Gemini recommendation client with Resilient Local Semantic Fallback & Instant Cache
 const RECOMMENDATION_ENDPOINT = '/api/recommend'
+let recommendationAbortController = null
+let isAnalyzing = false
 
 async function recommendProfile(promptText) {
   if (isGibberishPrompt(promptText)) {
@@ -2013,15 +2020,30 @@ async function recommendProfile(promptText) {
     return clientRecommendationCache.get(cacheKey)
   }
 
+  // Cancel any previous in-flight recommendation request
+  if (recommendationAbortController) {
+    recommendationAbortController.abort()
+  }
+  recommendationAbortController = new AbortController()
+  const controller = recommendationAbortController
+  const timeout = setTimeout(() => controller.abort(), 8000)
+
   try {
-    const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 8000)
+    const trimmedProfiles = profiles.map(({ id, name, meta, archetype, rationale, words }) => ({
+      id,
+      name,
+      meta,
+      archetype,
+      rationale,
+      words
+    }))
+
     const response = await fetch(RECOMMENDATION_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         prompt: promptText.trim().slice(0, 1500),
-        profiles: profiles.map(({ id, name, meta, archetype, rationale, words }) => ({ id, name, meta, archetype, rationale, words }))
+        profiles: trimmedProfiles
       }),
       signal: controller.signal
     }).finally(() => clearTimeout(timeout))
@@ -2043,6 +2065,9 @@ async function recommendProfile(promptText) {
     }
     console.warn('Gemini API response unfulfilled, activating local semantic vibe engine:', payload?.error)
   } catch (err) {
+    if (err.name === 'AbortError' && recommendationAbortController !== controller) {
+      throw err
+    }
     // Re-throw our explicit validation errors (e.g., gibberish rejection)
     if (err.message && (err.message.includes('gibberish') || err.message.includes('random characters') || err.message.includes('design brief is required'))) {
       throw err
@@ -2081,6 +2106,7 @@ function triggerTerminalError() {
 }
 
 function showToast(message, isError = false) {
+  if (!toast) return
   toast.textContent = message
   if (isError) {
     toast.classList.add('toast-error')
@@ -2089,29 +2115,43 @@ function showToast(message, isError = false) {
   }
   toast.classList.add('show')
   setTimeout(() => {
-    toast.classList.remove('show')
-    toast.classList.remove('toast-error')
+    toast?.classList.remove('show')
+    toast?.classList.remove('toast-error')
   }, 3600)
 }
 
 // Robust Async & Fallback Clipboard Copy Helper
-async function copyToClipboard(text, button) {
+async function copyToClipboard(text, button, successMessage = '✓ Copied to clipboard!') {
+  let copied = false
   try {
     if (navigator.clipboard && window.isSecureContext) {
       await navigator.clipboard.writeText(text)
+      copied = true
     } else {
+      throw new Error('Clipboard API unavailable')
+    }
+  } catch {
+    // Fallback using textarea + execCommand
+    try {
       const textArea = document.createElement('textarea')
       textArea.value = text
       textArea.style.position = 'fixed'
       textArea.style.left = '-999999px'
       textArea.style.top = '-999999px'
+      textArea.setAttribute('readonly', '')
       document.body.appendChild(textArea)
       textArea.focus()
       textArea.select()
-      document.execCommand('copy')
+      copied = document.execCommand('copy')
       textArea.remove()
+    } catch (fallbackErr) {
+      console.warn('Fallback copy error:', fallbackErr)
+      copied = false
     }
-    showToast('✓ Copied to clipboard!')
+  }
+
+  if (copied) {
+    showToast(successMessage)
     if (button) {
       const originalText = button.textContent
       button.textContent = 'COPIED! ✓'
@@ -2125,9 +2165,8 @@ async function copyToClipboard(text, button) {
         button.style.borderColor = ''
       }, 1600)
     }
-  } catch (err) {
-    console.error('Copying failed:', err)
-    showToast('Copy failed. Please copy manually.')
+  } else {
+    showToast('Copy failed. Please copy manually.', true)
   }
 }
 
@@ -2170,7 +2209,7 @@ const specimenState = {
 
 function renderSpecimenContent() {
   const content = specimenState.text.trim() || 'Type something to preview...'
-  if (testerPreview) {
+  if (testerPreview && document.activeElement !== testerPreview) {
     testerPreview.textContent = content
   }
 }
@@ -2211,116 +2250,49 @@ function setSpecimenColor(color, isCustom = false) {
 state.subscribe((profile) => {
   const aiResult = profile.aiResult
   loadGoogleFont(profile.googleFontsUrl)
-  displayName.textContent = profile.name
-  displaySample.innerHTML = profile.sample
+  if (displayName) displayName.textContent = profile.name
+  if (displaySample) displaySample.innerHTML = profile.sample
 
   if (activeFontBadge) {
     activeFontBadge.textContent = profile.name
   }
   
   if (profile.headingFallback) {
-    displaySample.style.fontFamily = profile.headingFallback
-    displayName.style.fontFamily = profile.headingFallback
+    if (displaySample) displaySample.style.fontFamily = profile.headingFallback
+    if (displayName) displayName.style.fontFamily = profile.headingFallback
     if (testerPreview) testerPreview.style.fontFamily = profile.headingFallback
   }
-  if (profile.bodyFallback) pairName.style.fontFamily = profile.bodyFallback
+  if (profile.bodyFallback && pairName) pairName.style.fontFamily = profile.bodyFallback
 
   renderSpecimenContent()
   applySpecimenStyles()
 
-  displayMeta.textContent = aiResult?.tags?.length
-    ? `${profile.meta} · ${aiResult.tags.join(' · ').toUpperCase()}`
-    : profile.meta
-  pairName.textContent = profile.pair
-  pairMeta.textContent = profile.pairMeta
-  archetype.textContent = profile.archetype
-  recommendationStatus.textContent = aiResult
-    ? `${profile.name} selected by Gemini.`
-    : `${profile.name} selected.`
+  if (displayMeta) {
+    displayMeta.textContent = aiResult?.tags?.length
+      ? `${profile.meta} · ${aiResult.tags.join(' · ').toUpperCase()}`
+      : profile.meta
+  }
+  if (pairName) pairName.textContent = profile.pair
+  if (pairMeta) pairMeta.textContent = profile.pairMeta
+  if (archetype) archetype.textContent = profile.archetype
+  if (recommendationStatus) {
+    recommendationStatus.textContent = aiResult
+      ? `${profile.name} selected by Gemini.`
+      : `${profile.name} selected.`
+  }
 
   // Font licensing disclaimer verification
   const disclaimer = document.getElementById('licenseDisclaimer')
-  const fallbackFamily = profile.headingFallback.split(',')[0].replace(/['"]/g, '').trim()
-  if (profile.name.toLowerCase() !== fallbackFamily.toLowerCase()) {
-    disclaimer.textContent = `Preview rendered using free fallback: ${fallbackFamily}`
-    disclaimer.style.display = 'block'
-  } else {
-    disclaimer.style.display = 'none'
+  if (disclaimer && profile.headingFallback) {
+    const fallbackFamily = profile.headingFallback.split(',')[0].replace(/['"]/g, '').trim()
+    if (profile.name.toLowerCase() !== fallbackFamily.toLowerCase()) {
+      disclaimer.textContent = `Preview rendered using free fallback: ${fallbackFamily}`
+      disclaimer.style.display = 'block'
+    } else {
+      disclaimer.style.display = 'none'
+    }
   }
 })
-// Initialization
-function init() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const vibeId = urlParams.get('vibe');
-  const targetProfile = profiles.find(p => p.id === vibeId) || profiles[Math.floor(Math.random() * profiles.length)];
-  state.setActiveProfile(targetProfile);
-}
-
-async function updateRecommendation() {
-  const prompt = brief.value.trim()
-  if (!prompt) {
-    triggerTerminalError()
-    showToast('Describe your project first.', true)
-    brief.focus()
-    return
-  }
-
-  if (isGibberishPrompt(prompt)) {
-    triggerTerminalError()
-    showToast('⚠️ Random characters detected. Please describe your project, brand, or desired aesthetic vibe (e.g. "cyberpunk RPG", "warm bakery").', true)
-    brief.focus()
-    return
-  }
-
-  analyse.disabled = true
-  analyse.classList.add('loading')
-  analyse.innerHTML = 'ASKING <span>◌</span>'
-  try {
-    const recommendation = await recommendProfile(prompt)
-    state.setActiveProfile(recommendation.profile, { aiResult: recommendation.aiResult })
-    document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' })
-  } catch (error) {
-    console.error('Recommendation failed:', error)
-    triggerTerminalError()
-    recommendationStatus.textContent = error.message
-    showToast(error.message || 'Recommendation failed.', true)
-  } finally {
-    analyse.disabled = false
-    analyse.classList.remove('loading')
-    analyse.innerHTML = 'ASK <span>→</span>'
-  }
-}
-
-brief.addEventListener('input', () => {
-  brief.style.height = 'auto'
-  brief.style.height = brief.scrollHeight + 'px'
-})
-
-brief.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') {
-    e.preventDefault()
-    updateRecommendation()
-  }
-})
-
-analyse.addEventListener('click', updateRecommendation)
-
-// Specimen Customizer Handlers in Type Lab
-if (specimenTextInput) {
-  specimenTextInput.addEventListener('input', (e) => {
-    specimenState.text = e.target.value
-    renderSpecimenContent()
-  })
-}
-
-if (clearSpecimenText) {
-  clearSpecimenText.addEventListener('click', () => {
-    specimenState.text = ''
-    if (specimenTextInput) specimenTextInput.value = ''
-    renderSpecimenContent()
-    if (specimenTextInput) specimenTextInput.focus()
-  })
-}
 
 const dummyPresets = {
   pangram: 'The quick brown fox jumps over the lazy dog',
@@ -2330,6 +2302,136 @@ const dummyPresets = {
   paragraph: 'Typography is the art and technique of arranging type to make written language legible, readable, and appealing when displayed.'
 }
 
+function updateActivePresetChip(currentText) {
+  const trimmed = (currentText || '').trim()
+  specimenPresetChips.forEach((chip) => {
+    const key = chip.dataset.preset
+    const matches = dummyPresets[key] && dummyPresets[key].trim() === trimmed
+    chip.classList.toggle('active', Boolean(matches))
+  })
+}
+
+// Initialization
+function init() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const vibeId = urlParams.get('vibe');
+  const targetProfile = profiles.find(p => p.id === vibeId) || profiles[Math.floor(Math.random() * profiles.length)];
+  state.setActiveProfile(targetProfile);
+  updateActivePresetChip(specimenState.text);
+}
+
+async function updateRecommendation() {
+  if (isAnalyzing) return
+
+  const prompt = brief?.value?.trim()
+  if (!prompt) {
+    triggerTerminalError()
+    showToast('Describe your project first.', true)
+    brief?.focus()
+    return
+  }
+
+  if (isGibberishPrompt(prompt)) {
+    triggerTerminalError()
+    showToast('⚠️ Random characters detected. Please describe your project, brand, or desired aesthetic vibe (e.g. "cyberpunk RPG", "warm bakery").', true)
+    brief?.focus()
+    return
+  }
+
+  isAnalyzing = true
+  if (analyse) {
+    analyse.disabled = true
+    analyse.classList.add('loading')
+    analyse.innerHTML = 'ASKING <span>◌</span>'
+  }
+
+  try {
+    const recommendation = await recommendProfile(prompt)
+    state.setActiveProfile(recommendation.profile, { aiResult: recommendation.aiResult })
+    document.getElementById('results')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  } catch (error) {
+    if (error.name === 'AbortError') return
+    console.error('Recommendation failed:', error)
+    triggerTerminalError()
+    if (recommendationStatus) recommendationStatus.textContent = error.message
+    showToast(error.message || 'Recommendation failed.', true)
+  } finally {
+    isAnalyzing = false
+    if (analyse) {
+      analyse.disabled = false
+      analyse.classList.remove('loading')
+      analyse.innerHTML = 'ASK <span>→</span>'
+    }
+  }
+}
+
+brief?.addEventListener('input', () => {
+  brief.style.height = 'auto'
+  brief.style.height = brief.scrollHeight + 'px'
+})
+
+brief?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && ((e.metaKey || e.ctrlKey) || !e.shiftKey)) {
+    e.preventDefault()
+    updateRecommendation()
+  }
+})
+
+analyse?.addEventListener('click', updateRecommendation)
+
+// Specimen Customizer Handlers in Type Lab
+if (specimenTextInput) {
+  specimenTextInput.addEventListener('input', (e) => {
+    specimenState.text = e.target.value
+    renderSpecimenContent()
+    updateActivePresetChip(specimenState.text)
+  })
+}
+
+if (testerPreview) {
+  // Plain text paste handler to prevent external rich-text style pollution
+  testerPreview.addEventListener('paste', (e) => {
+    e.preventDefault()
+    const text = (e.clipboardData || window.clipboardData)?.getData('text/plain') || ''
+    if (document.queryCommandSupported && document.queryCommandSupported('insertText')) {
+      document.execCommand('insertText', false, text)
+    } else {
+      const selection = window.getSelection()
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0)
+        range.deleteContents()
+        const node = document.createTextNode(text)
+        range.insertNode(node)
+        range.setStartAfter(node)
+        range.setEndAfter(node)
+        selection.removeAllRanges()
+        selection.addRange(range)
+      } else {
+        testerPreview.textContent = text
+      }
+    }
+    specimenState.text = testerPreview.innerText || testerPreview.textContent || ''
+    if (specimenTextInput) specimenTextInput.value = specimenState.text
+    updateActivePresetChip(specimenState.text)
+  })
+
+  testerPreview.addEventListener('input', () => {
+    specimenState.text = testerPreview.innerText || testerPreview.textContent || ''
+    if (specimenTextInput) specimenTextInput.value = specimenState.text
+    updateActivePresetChip(specimenState.text)
+  })
+}
+
+if (clearSpecimenText) {
+  clearSpecimenText.addEventListener('click', () => {
+    specimenState.text = ''
+    if (specimenTextInput) specimenTextInput.value = ''
+    renderSpecimenContent()
+    updateActivePresetChip('')
+    if (specimenTextInput) specimenTextInput.focus()
+  })
+}
+
 specimenPresetChips.forEach(chip => {
   chip.addEventListener('click', () => {
     const presetKey = chip.dataset.preset
@@ -2337,6 +2439,7 @@ specimenPresetChips.forEach(chip => {
       specimenState.text = dummyPresets[presetKey]
       if (specimenTextInput) specimenTextInput.value = dummyPresets[presetKey]
       renderSpecimenContent()
+      updateActivePresetChip(dummyPresets[presetKey])
     }
   })
 })
@@ -2393,7 +2496,11 @@ if (specimenColorPicker) {
 // Developer Code Exporter Handlers
 if (copyCssBtn) {
   copyCssBtn.addEventListener('click', (e) => {
-    copyToClipboard(state.activeProfile.cssImport + '\n\n' + state.activeProfile.cssVars, e.currentTarget)
+    if (!state.activeProfile) return
+    const heading = state.activeProfile.name || 'Heading Font'
+    const body = state.activeProfile.pair || 'Body Font'
+    const cssCode = `${state.activeProfile.cssImport}\n\n${state.activeProfile.cssVars}`
+    copyToClipboard(cssCode, e.currentTarget, `✓ Copied CSS for ${heading} + ${body}!`)
   })
 }
 
@@ -2408,13 +2515,12 @@ if (openGoogleFontsBtn) {
   })
 }
 
-
 // Interactive Preset Prompt Chips
 document.querySelectorAll('.chips button').forEach((chip) => {
   chip.addEventListener('click', () => {
     const promptText = chip.dataset.prompt
     if (promptText) {
-      brief.value = promptText
+      if (brief) brief.value = promptText
       updateRecommendation()
     }
   })
@@ -2427,7 +2533,7 @@ document.querySelectorAll('.shelf-item').forEach((item) => {
     const p = profiles.find(p => p.id === pid);
     if (p) {
       state.setActiveProfile(p);
-      document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.getElementById('results')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
   item.addEventListener('click', handler);
@@ -2477,169 +2583,6 @@ document.querySelectorAll('.shelf-item').forEach((item) => {
     })
   })
 })()
-
-// Google Fonts Live Explorer Controller
-let currentSearchCategory = 'all'
-let searchDebounceTimer = null
-let currentFontResults = []
-let activeDropdownIndex = -1
-
-async function searchGoogleFonts(query = '', category = 'all') {
-  try {
-    const params = new URLSearchParams()
-    if (query) params.set('query', query)
-    if (category && category !== 'all') params.set('category', category)
-    params.set('limit', '250')
-
-    const res = await fetch(`/api/fonts?${params.toString()}`)
-    if (!res.ok) throw new Error('Failed to query fonts')
-    const data = await res.json()
-    return data.fonts || []
-  } catch (err) {
-    console.warn('Error fetching fonts from API:', err)
-    return []
-  }
-}
-
-function renderFontSearchResults(fonts) {
-  currentFontResults = fonts
-  activeDropdownIndex = -1
-  if (!fontResultsList) return
-  fontResultsList.innerHTML = ''
-
-  if (!fonts.length) {
-    fontResultsCount.textContent = 'No matching Google Fonts found'
-    fontSearchDropdown.style.display = 'block'
-    return
-  }
-
-  fontResultsCount.textContent = `${fonts.length} Google Font${fonts.length > 1 ? 's' : ''} available`
-
-  fonts.forEach((font, idx) => {
-    const li = document.createElement('li')
-    li.className = 'font-result-item'
-    li.dataset.index = idx
-    li.dataset.family = font.family
-    li.dataset.category = font.category
-
-    li.innerHTML = `
-      <div class="font-result-info">
-        <span class="font-result-name" style="font-family: '${font.family}', sans-serif;">${font.family}</span>
-        <span class="font-result-category">${font.category}</span>
-      </div>
-      <span class="font-result-badge">PREVIEW →</span>
-    `
-
-    li.addEventListener('click', () => {
-      selectGoogleFont(font)
-    })
-
-    fontResultsList.appendChild(li)
-  })
-
-  fontSearchDropdown.style.display = 'block'
-}
-
-function selectGoogleFont(font) {
-  const fontUrl = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(font.family).replace(/%20/g, '+')}:ital,wght@0,400;0,600;0,700;1,400&display=swap`
-  loadGoogleFont(fontUrl)
-
-  const fallback = font.category === 'serif' ? 'serif' : font.category === 'monospace' ? 'monospace' : font.category === 'handwriting' ? 'cursive' : 'sans-serif'
-
-  // Create a customized profile for state
-  const dynamicProfile = {
-    id: `gfont_${font.family.toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
-    name: font.family,
-    sample: `${font.family}<br/><i>Specimen</i>`,
-    meta: `${font.category.toUpperCase()} / GOOGLE FONT`,
-    pair: font.category === 'serif' ? 'Inter' : 'Newsreader',
-    pairMeta: font.category === 'serif' ? 'SANS / 14PX' : 'SERIF / 15PX',
-    rationale: `Directly loaded from the live Google Fonts catalog (${font.category}). Excellent typographical balance with versatile weights.`,
-    archetype: `GOOGLE FONT EXPLORER: ${font.family.toUpperCase()}`,
-    headingFallback: `'${font.family}', ${fallback}`,
-    bodyFallback: font.category === 'serif' ? "'Inter', sans-serif" : "'Newsreader', serif",
-    googleFontsUrl: fontUrl
-  }
-
-  state.setActiveProfile(dynamicProfile, { updateUrl: false })
-  if (fontSearchDropdown) fontSearchDropdown.style.display = 'none'
-  if (fontSearchInput) fontSearchInput.value = font.family
-  if (clearFontSearch) clearFontSearch.style.display = 'inline-flex'
-  showToast(`✓ Loaded Google Font: ${font.family}`)
-}
-
-if (fontSearchInput) {
-  const triggerSearch = () => {
-    const q = fontSearchInput.value.trim()
-    if (clearFontSearch) clearFontSearch.style.display = q ? 'inline-flex' : 'none'
-    clearTimeout(searchDebounceTimer)
-    searchDebounceTimer = setTimeout(async () => {
-      const fonts = await searchGoogleFonts(q, currentSearchCategory)
-      renderFontSearchResults(fonts)
-    }, 150)
-  }
-
-  fontSearchInput.addEventListener('input', triggerSearch)
-  fontSearchInput.addEventListener('focus', triggerSearch)
-
-  fontSearchInput.addEventListener('keydown', (e) => {
-    if (!fontSearchDropdown || fontSearchDropdown.style.display === 'none') return
-
-    const items = fontResultsList.querySelectorAll('.font-result-item')
-    if (!items.length) return
-
-    if (e.key === 'ArrowDown') {
-      e.preventDefault()
-      activeDropdownIndex = Math.min(items.length - 1, activeDropdownIndex + 1)
-      items.forEach((item, i) => item.classList.toggle('selected', i === activeDropdownIndex))
-      if (items[activeDropdownIndex]) items[activeDropdownIndex].scrollIntoView({ block: 'nearest' })
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault()
-      activeDropdownIndex = Math.max(0, activeDropdownIndex - 1)
-      items.forEach((item, i) => item.classList.toggle('selected', i === activeDropdownIndex))
-      if (items[activeDropdownIndex]) items[activeDropdownIndex].scrollIntoView({ block: 'nearest' })
-    } else if (e.key === 'Enter') {
-      if (activeDropdownIndex >= 0 && currentFontResults[activeDropdownIndex]) {
-        e.preventDefault()
-        selectGoogleFont(currentFontResults[activeDropdownIndex])
-      }
-    } else if (e.key === 'Escape') {
-      fontSearchDropdown.style.display = 'none'
-    }
-  })
-}
-
-if (clearFontSearch) {
-  clearFontSearch.addEventListener('click', () => {
-    fontSearchInput.value = ''
-    clearFontSearch.style.display = 'none'
-    if (fontSearchDropdown) fontSearchDropdown.style.display = 'none'
-    fontSearchInput.focus()
-  })
-}
-
-categoryFilterBtns.forEach((btn) => {
-  btn.addEventListener('click', async () => {
-    categoryFilterBtns.forEach((b) => {
-      b.classList.remove('active')
-      b.setAttribute('aria-checked', 'false')
-    })
-    btn.classList.add('active')
-    btn.setAttribute('aria-checked', 'true')
-    currentSearchCategory = btn.dataset.category || 'all'
-    const q = fontSearchInput ? fontSearchInput.value.trim() : ''
-    const fonts = await searchGoogleFonts(q, currentSearchCategory)
-    renderFontSearchResults(fonts)
-  })
-})
-
-// Close dropdown on outside click
-document.addEventListener('click', (e) => {
-  const explorer = document.querySelector('.font-explorer-section')
-  if (explorer && !explorer.contains(e.target)) {
-    if (fontSearchDropdown) fontSearchDropdown.style.display = 'none'
-  }
-})
 
 init();
 export { profiles, buildProfile };
