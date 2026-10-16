@@ -125,8 +125,15 @@ function isGibberishPrompt(prompt) {
   // Reject pure numbers
   if (/^\d+$/.test(clean.replace(/\s+/g, ''))) return true
 
-  // Common valid creative/short acronyms
-  const validShortAcronyms = new Set(['ai', 'ui', 'ux', '3d', 'vr', 'ar', 'b2b', 'it', 'os', 'ip', 'pr', 'hr', 'hq', 'ad'])
+  // Common valid creative/short design terms, acronyms, and font abbreviations
+  const validTerms = new Set([
+    'ai', 'ui', 'ux', '3d', '2d', '4d', 'vr', 'ar', 'xr', 'mr',
+    'b2b', 'b2c', 'd2c', 'p2p', 'web3', 'y2k',
+    'it', 'os', 'ip', 'pr', 'hr', 'hq', 'ad', 'id', 'io', 'fx',
+    'ibm', 'rpg', 'mmo', 'fps', 'dev', 'app', 'cli', 'sdk', 'api',
+    '80s', '90s', '70s', '60s', '50s', '00s',
+    'pt', 'dm', 'pp'
+  ])
 
   // Check keyboard row patterns (QWERTY layout walks)
   const keyboardRows = [
@@ -155,7 +162,7 @@ function isGibberishPrompt(prompt) {
 
   for (const word of words) {
     const lower = word.toLowerCase()
-    if (validShortAcronyms.has(lower)) {
+    if (validTerms.has(lower) || /^\d{2,4}s$/.test(lower)) {
       recognizedWordCount++
       continue
     }
@@ -166,8 +173,8 @@ function isGibberishPrompt(prompt) {
       continue
     }
 
-    // Very short single non-vowel letters (e.g. 'q', 'z', 'x')
-    if (lower.length === 1 && !vowels.has(lower)) {
+    // Very short single non-vowel consonant (e.g. 'q', 'z', 'x')
+    if (lower.length === 1 && /[a-z]/i.test(lower) && !vowels.has(lower)) {
       suspiciousWordCount++
       continue
     }

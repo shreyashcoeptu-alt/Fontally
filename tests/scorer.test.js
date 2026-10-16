@@ -6,7 +6,8 @@ import { Readable } from 'node:stream'
 import {
   createGeminiRecommendationHandler,
   parseRecommendation,
-  recommendationSchema
+  recommendationSchema,
+  isGibberishPrompt
 } from '../server/gemini-recommendation.mjs'
 import { createGoogleFontsHandler } from '../server/google-fonts.mjs'
 
@@ -117,6 +118,13 @@ describe('Gemini recommendation service', () => {
     await handler(makeRequest({ prompt: 'afrvq1r1', profiles }), response)
     expect(response.statusCode).toBe(400)
     expect(JSON.parse(response.body).error).toMatch(/gibberish|random characters/i)
+  })
+
+  it('does not falsely flag valid design terms or acronyms as gibberish', () => {
+    const terms = ['ui', 'ux', 'ai', 'ibm', '3d', 'y2k', '80s', 'y2k cyberpunk', '80s retro synth']
+    for (const term of terms) {
+      expect(isGibberishPrompt(term)).toBe(false)
+    }
   })
 })
 
