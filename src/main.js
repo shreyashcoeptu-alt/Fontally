@@ -1,6 +1,6 @@
 import './style.css'
 import { inject } from '@vercel/analytics'
-
+ main
 inject()
 
 const $ = (selector) => document.querySelector(selector)
