@@ -1,17 +1,20 @@
 import { defineConfig, loadEnv } from 'vite'
-import { handle } from 'hono/vercel'
-import app from './server/app.mjs'
+import { getRequestListener } from '@hono/node-server'
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(async ({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  // Inject loaded env variables into process.env for server modules
+  // Inject loaded env variables into process.env before server modules read them
   Object.assign(process.env, env)
 
-  const honoHandler = handle(app)
+  const { default: app } = await import('./server/app.mjs')
+
+  // Vite's dev server speaks Node (req, res); Hono speaks Web Request/Response.
+  // getRequestListener bridges the two (hono/vercel's handle() does not).
+  const honoListener = getRequestListener(app.fetch)
 
   const apiMiddleware = (req, res, next) => {
     if (req.url && req.url.startsWith('/api')) {
-      return honoHandler(req, res)
+      return honoListener(req, res)
     }
     next()
   }

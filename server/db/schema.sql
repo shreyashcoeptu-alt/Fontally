@@ -146,34 +146,18 @@ ALTER TABLE recommendation_cache ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_favourites ENABLE ROW LEVEL SECURITY;
 
--- Fonts: Public can read, only service_role can write
+-- The API server talks to Supabase with the SERVICE ROLE key, which bypasses RLS.
+-- So the only policy needed is public read access to the font catalog.
+-- Everything else (cache, history, favourites) is deliberately NOT reachable with
+-- the anon key: previous "USING (true)" policies let anyone holding the anon key
+-- read every user's briefs and rewrite the font catalog and cache.
 DROP POLICY IF EXISTS "Fonts are readable by all" ON fonts;
 CREATE POLICY "Fonts are readable by all" ON fonts
   FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Service role can modify fonts" ON fonts;
-CREATE POLICY "Service role can modify fonts" ON fonts
-  FOR ALL USING (true) WITH CHECK (true);
-
--- Recommendation Cache: Public read & upsert
 DROP POLICY IF EXISTS "Cache is readable by all" ON recommendation_cache;
-CREATE POLICY "Cache is readable by all" ON recommendation_cache
-  FOR SELECT USING (true);
-
 DROP POLICY IF EXISTS "Cache is modifiable by all" ON recommendation_cache;
-CREATE POLICY "Cache is modifiable by all" ON recommendation_cache
-  FOR ALL USING (true) WITH CHECK (true);
-
--- User History: Readable and insertable
 DROP POLICY IF EXISTS "History is readable by all" ON user_history;
-CREATE POLICY "History is readable by all" ON user_history
-  FOR SELECT USING (true);
-
 DROP POLICY IF EXISTS "History is insertable by all" ON user_history;
-CREATE POLICY "History is insertable by all" ON user_history
-  FOR INSERT WITH CHECK (true);
-
--- User Favourites: Readable and modifiable
 DROP POLICY IF EXISTS "Favourites are manageable by all" ON user_favourites;
-CREATE POLICY "Favourites are manageable by all" ON user_favourites
-  FOR ALL USING (true) WITH CHECK (true);

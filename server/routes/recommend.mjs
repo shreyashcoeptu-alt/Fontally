@@ -1,10 +1,9 @@
 import { Hono } from 'hono'
 import {
-  buildGeminiPrompt,
+  buildGeminiRequestBody,
   extractGeminiText,
   normalizeProfiles,
   parseRecommendation,
-  recommendationSchema,
   isGibberishPrompt
 } from '../gemini-recommendation.mjs'
 import {
@@ -12,17 +11,39 @@ import {
   setRecommendationCache,
   saveUserHistory
 } from '../db/supabase.mjs'
+import { profiles as PROFILE_CATALOG } from '../../shared/profiles.js'
 
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models'
 const DEFAULT_MODEL = 'gemini-2.5-flash'
 const MAX_PROMPT_CHARS = 1_500
 const MAX_REQUESTS_PER_WINDOW = 40
 const RATE_LIMIT_WINDOW_MS = 60_000
+const GEMINI_TIMEOUT_MS = 10_000
+
+// The server owns the catalog. Accepting it from the client let anyone inject
+// arbitrary "profiles" into the prompt and made cached answers inconsistent.
+const primaryFamily = (stack, fallback) => String(stack || '').split(',')[0].replace(/['"]/g, '').trim() || fallback
+// Give Gemini the real Google Fonts families (not editorial/commercial labels), so its
+// rationale names the fonts the user actually gets.
+const SERVER_PROFILES = normalizeProfiles(PROFILE_CATALOG.map((p) => ({
+  ...p,
+  name: primaryFamily(p.headingFallback, p.name),
+  pair: primaryFamily(p.bodyFallback, p.pair)
+})))
+const SERVER_PROFILE_IDS = new Set(SERVER_PROFILES.map((p) => p.id))
 
 const requestTimestamps = new Map()
+let lastRateLimitSweep = 0
 
 function isRateLimited(ip) {
   const now = Date.now()
+  // Periodically drop idle IPs so the map cannot grow without bound
+  if (now - lastRateLimitSweep > RATE_LIMIT_WINDOW_MS) {
+    lastRateLimitSweep = now
+    for (const [key, stamps] of requestTimestamps) {
+      if (!stamps.length || now - stamps[stamps.length - 1] >= RATE_LIMIT_WINDOW_MS) requestTimestamps.delete(key)
+    }
+  }
   const recent = (requestTimestamps.get(ip) || []).filter((timestamp) => now - timestamp < RATE_LIMIT_WINDOW_MS)
   recent.push(now)
   requestTimestamps.set(ip, recent)
@@ -56,7 +77,7 @@ recommendRoute.post('/', async (c) => {
   }
 
   const prompt = typeof body.prompt === 'string' ? body.prompt.trim().slice(0, MAX_PROMPT_CHARS) : ''
-  const profiles = normalizeProfiles(body.profiles)
+  const profiles = SERVER_PROFILES
   const sessionId = c.req.header('x-session-id') || body.sessionId
 
   if (!prompt) {
@@ -67,15 +88,12 @@ recommendRoute.post('/', async (c) => {
       error: 'The provided brief appears to be random characters or gibberish. Please describe your project, brand, or desired aesthetic vibe (e.g., "cyberpunk gaming studio", "warm artisan bakery").'
     }, 400)
   }
-  if (!profiles.length) {
-    return c.json({ error: 'A valid profile catalog is required.' }, 400)
-  }
-
   const cacheKey = normalizeCacheKey(prompt)
 
   // 1. Check persistent / in-memory cache
   const cached = await getRecommendationCache(cacheKey)
-  if (cached) {
+  // Ignore stale cache rows that point at a profile which no longer exists
+  if (cached && SERVER_PROFILE_IDS.has(cached.profileId)) {
     // Optionally record to session history
     if (sessionId) {
       saveUserHistory({
@@ -91,7 +109,7 @@ recommendRoute.post('/', async (c) => {
 
   // 2. Call Gemini
   const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 12_000)
+  const timeout = setTimeout(() => controller.abort(), GEMINI_TIMEOUT_MS)
 
   try {
     const geminiResponse = await fetch(`${GEMINI_API_BASE}/${encodeURIComponent(model)}:generateContent`, {
@@ -100,21 +118,7 @@ recommendRoute.post('/', async (c) => {
         'Content-Type': 'application/json',
         'x-goog-api-key': apiKey
       },
-      body: JSON.stringify({
-        systemInstruction: {
-          parts: [{ text: 'Respond only with valid JSON matching the supplied schema.' }]
-        },
-        contents: [{
-          role: 'user',
-          parts: [{ text: buildGeminiPrompt(prompt, profiles) }]
-        }],
-        generationConfig: {
-          temperature: 0.2,
-          maxOutputTokens: 256,
-          responseMimeType: 'application/json',
-          responseSchema: recommendationSchema
-        }
-      }),
+      body: JSON.stringify(buildGeminiRequestBody(prompt, profiles, model)),
       signal: controller.signal
     })
 
@@ -126,7 +130,7 @@ recommendRoute.post('/', async (c) => {
 
     const result = parseRecommendation(
       extractGeminiText(responsePayload),
-      new Set(profiles.map((p) => p.id))
+      SERVER_PROFILE_IDS
     )
 
     // 3. Save to persistent cache (async)

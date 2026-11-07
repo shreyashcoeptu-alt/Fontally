@@ -853,7 +853,7 @@ ON CONFLICT (family) DO UPDATE SET
 INSERT INTO fonts (
   family, category, variants, designer, is_variable, min_weight, max_weight, popularity, mood_tags, use_cases, description, google_fonts_url
 ) VALUES (
-  'Geist Sans', 'sans-serif', '["100","200","300","400","500","600","700","800","900"]'::jsonb, 'Vercel', TRUE, 100, 900, 96, ARRAY['developer', 'swiss', 'minimalist', 'high-tech', 'ultra-modern', 'precision'], ARRAY['developer-tools', 'ai-platforms', 'terminal-dashboards', 'tech-documentation'], 'Precision-engineered sans designed by Vercel for modern developer workflows, micro-clarity, and code interfaces.', 'https://fonts.google.com/specimen/Geist+Sans'
+  'Geist', 'sans-serif', '["100","200","300","400","500","600","700","800","900"]'::jsonb, 'Vercel', TRUE, 100, 900, 96, ARRAY['developer', 'swiss', 'minimalist', 'high-tech', 'ultra-modern', 'precision'], ARRAY['developer-tools', 'ai-platforms', 'terminal-dashboards', 'tech-documentation'], 'Precision-engineered sans designed by Vercel for modern developer workflows, micro-clarity, and code interfaces.', 'https://fonts.google.com/specimen/Geist'
 )
 ON CONFLICT (family) DO UPDATE SET
   category = EXCLUDED.category,

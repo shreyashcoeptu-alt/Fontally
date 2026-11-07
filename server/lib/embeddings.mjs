@@ -34,12 +34,15 @@ function normalizeTextKey(text) {
 export async function getGeminiEmbedding(text, {
   apiKey = process.env.GEMINI_API_KEY,
   model = DEFAULT_EMBED_MODEL,
+  // RETRIEVAL_QUERY for user searches, RETRIEVAL_DOCUMENT when embedding catalog fonts.
+  // Asymmetric task types noticeably improve query -> document matching.
+  taskType = 'RETRIEVAL_QUERY',
   fetchImpl = globalThis.fetch
 } = {}) {
   if (!text || typeof text !== 'string' || !text.trim()) return null
   if (!apiKey) return null
 
-  const key = `${model}::${normalizeTextKey(text)}`
+  const key = `${model}::${taskType}::${normalizeTextKey(text)}`
   if (embeddingCache.has(key)) {
     return embeddingCache.get(key)
   }
@@ -49,16 +52,19 @@ export async function getGeminiEmbedding(text, {
     const timeout = setTimeout(() => controller.abort(), 10000)
     let res
     try {
-      const url = `${GEMINI_EMBED_BASE}/${encodeURIComponent(model)}:embedContent?key=${encodeURIComponent(apiKey)}`
+      // Key goes in a header, not the query string, so it never lands in proxy/access logs
+      const url = `${GEMINI_EMBED_BASE}/${encodeURIComponent(model)}:embedContent`
       res = await fetchImpl(url, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'x-goog-api-key': apiKey
         },
         body: JSON.stringify({
           content: {
             parts: [{ text: text.trim().slice(0, 2000) }]
           },
+          taskType,
           outputDimensionality: 768
         }),
         signal: controller.signal
@@ -79,8 +85,11 @@ export async function getGeminiEmbedding(text, {
         const oldestKey = embeddingCache.keys().next().value
         embeddingCache.delete(oldestKey)
       }
-      embeddingCache.set(key, values)
-      return values
+      // Only full 3072-dim gemini-embedding-001 output is pre-normalized; normalize truncated vectors
+      const norm = Math.sqrt(values.reduce((sum, v) => sum + v * v, 0)) || 1
+      const normalized = values.map((v) => v / norm)
+      embeddingCache.set(key, normalized)
+      return normalized
     }
   } catch (err) {
     console.warn('Embedding request error:', err?.message || err)

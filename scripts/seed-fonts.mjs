@@ -28,7 +28,7 @@ async function main() {
   console.log(`📡 Connected to Supabase at: ${supabaseUrl}`)
   console.log(`📦 Found ${ENRICHED_FONT_CATALOG.length} fonts in enriched catalog to seed.`)
   if (geminiApiKey) {
-    console.log('🧠 Gemini API key detected. Vector embeddings will be generated via text-embedding-004.\n')
+    console.log('🧠 Gemini API key detected. Vector embeddings will be generated via gemini-embedding-001 (768 dims).\n')
   } else {
     console.log('⚠️  No GEMINI_API_KEY found. Seeding metadata without vector embeddings.\n')
   }
@@ -51,7 +51,7 @@ async function main() {
           font.use_cases ? `Use cases: ${font.use_cases.join(', ')}.` : ''
         ].filter(Boolean).join(' ')
 
-        embedding = await getGeminiEmbedding(textToEmbed, { apiKey: geminiApiKey })
+        embedding = await getGeminiEmbedding(textToEmbed, { apiKey: geminiApiKey, taskType: 'RETRIEVAL_DOCUMENT' })
       }
 
       const fontPayload = {

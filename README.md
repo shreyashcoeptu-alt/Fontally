@@ -61,12 +61,10 @@
 ```text
 Fontally/
 ├── api/
-│   ├── index.js                  # Hono Vercel catch-all serverless entrypoint
-│   ├── recommend.js              # Vercel Gemini recommendation endpoint
-│   ├── fonts.js                  # Vercel font catalogue & similarity endpoint
-│   ├── history.js                # Vercel session brief history endpoint
-│   ├── favourites.js             # Vercel saved pairings endpoint
-│   └── health.js                 # Vercel system health check endpoint
+│   └── index.js                  # Single Vercel function; vercel.json rewrites /api/* here
+├── shared/
+│   ├── profiles.js               # 106 curated pairing profiles (used by browser + API)
+│   └── gibberish.js              # Brief quality guard (used by browser + API)
 ├── server/
 │   ├── app.mjs                   # Unified Hono router with CORS, timing & error handling
 │   ├── db/

@@ -1445,7 +1445,7 @@ export const ENRICHED_FONT_CATALOG = [
     ]
   },
   {
-    "family": "Geist Sans",
+    "family": "Geist",
     "category": "sans-serif",
     "variants": [
       "100",

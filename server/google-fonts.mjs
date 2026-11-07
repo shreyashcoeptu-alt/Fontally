@@ -72,7 +72,7 @@ const DEFAULT_GOOGLE_FONTS = [
   { family: 'Schibsted Grotesk', category: 'sans-serif', variants: ['400', '600', '700'] },
   { family: 'Instrument Sans', category: 'sans-serif', variants: ['400', '600', '700'] },
   { family: 'Onest', category: 'sans-serif', variants: ['400', '600', '700'] },
-  { family: 'Geist Sans', category: 'sans-serif', variants: ['400', '600', '700'] },
+  { family: 'Geist', category: 'sans-serif', variants: ['400', '600', '700'] },
   { family: 'Anybody', category: 'sans-serif', variants: ['400', '700', '900'] },
 
   // Serif (60+)
