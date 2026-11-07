@@ -140,6 +140,19 @@ CREATE TABLE IF NOT EXISTS user_favourites (
 CREATE INDEX IF NOT EXISTS user_favourites_session_idx 
   ON user_favourites(session_id, created_at DESC);
 
+-- 6b. Recommendation feedback: which pick people actually used for a brief.
+-- Read back per brief to promote alternates that visitors consistently prefer.
+CREATE TABLE IF NOT EXISTS feedback_events (
+  id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  session_id  TEXT,
+  brief_key   TEXT NOT NULL,
+  profile_id  TEXT NOT NULL,
+  event       TEXT NOT NULL CHECK (event IN ('choose_alternate', 'copy_css', 'save', 'open_google_fonts')),
+  created_at  TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS feedback_events_brief_idx ON feedback_events(brief_key);
+
 -- =============================================================
 -- 7. Row Level Security (RLS) Configuration
 -- =============================================================
@@ -149,6 +162,7 @@ ALTER TABLE fonts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE recommendation_cache ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_favourites ENABLE ROW LEVEL SECURITY;
+ALTER TABLE feedback_events ENABLE ROW LEVEL SECURITY;
 
 -- The API server talks to Supabase with the SERVICE ROLE key, which bypasses RLS.
 -- So the only policy needed is public read access to the font catalog.

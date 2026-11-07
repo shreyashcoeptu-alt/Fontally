@@ -3,6 +3,12 @@ import { inject } from '@vercel/analytics'
 import { profiles } from '../shared/profiles.js'
 import { isGibberishPrompt } from '../shared/gibberish.js'
 import { matchProfilesLocally, extractBrandName } from '../shared/local-matcher.js'
+import { normalizeBriefKey } from '../shared/brief-key.js'
+import { detectScript, scriptSupport, suggestBodyFonts, cssStack, googleFontsCssUrl } from '../shared/pairing.js'
+import {
+  apiFetch, sendFeedback, loadSaved, getLocalSaved, savePairing, removePairing,
+  getRecentBriefs, rememberBrief
+} from './api.js'
 
 inject()
 
@@ -46,6 +52,12 @@ const briefPreview = $('#briefPreview')
 const previewBrand = $('#previewBrand')
 const previewBody = $('#previewBody')
 const alternatesEl = $('#alternates')
+const scriptNote = $('#scriptNote')
+const bodyOptionsEl = $('#bodyOptions')
+const savePairingBtn = $('#savePairingBtn')
+const savedSection = $('#savedSection')
+const savedList = $('#savedList')
+const recentList = $('#recentList')
 
 
 // Dynamic Google Font Loader: one <link> per stylesheet URL.
@@ -69,12 +81,17 @@ function primaryFamily(stack, fallback) {
 }
 
 // Data Profile Builder (Reduces duplication)
-function buildProfile(p) {
+// bodyOverride: a family chosen from the on-demand body suggestions
+function buildProfile(base, bodyOverride = null) {
+  const p = bodyOverride
+    ? { ...base, bodyFallback: cssStack(bodyOverride), bodyGoogleFontsUrl: googleFontsCssUrl(bodyOverride) }
+    : base
   // `name`/`pair` are editorial labels (some are commercial or invented names).
   // Everything the user copies must reference the real, free Google Fonts families.
   const headingFamily = primaryFamily(p.headingFallback, p.name)
   const bodyFamily = primaryFamily(p.bodyFallback, p.pair)
-  const cssImport = `@import url('${p.googleFontsUrl}');`
+  const imports = [p.googleFontsUrl, p.bodyGoogleFontsUrl].filter(Boolean)
+  const cssImport = imports.map((url) => `@import url('${url}');`).join('\n')
   const cssVars = `:root {\n  --font-heading: ${p.headingFallback};\n  --font-body: ${p.bodyFallback};\n}`
 
   // Tailwind expects each family as a quoted string. Generics (serif, sans-serif,
@@ -89,7 +106,7 @@ function buildProfile(p) {
 
   const tailwind = `fontFamily: {\n  heading: [${tailwindFamilies(p.headingFallback)}],\n  body: [${tailwindFamilies(p.bodyFallback)}]\n}`
 
-  return { ...p, headingFamily, bodyFamily, cssImport, cssVars, tailwind }
+  return { ...p, bodyOverride, headingFamily, bodyFamily, cssImport, cssVars, tailwind }
 }
 
 // Client-side Memory Cache for Instant <1ms repeated lookups
@@ -106,10 +123,12 @@ async function recommendProfile(promptText) {
     throw new Error('The input appears to be random characters or gibberish. Please describe your project, brand, or desired aesthetic vibe (e.g., "cyberpunk gaming studio", "warm artisan bakery").')
   }
 
-  const cacheKey = promptText.trim().toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, ' ')
+  const cacheKey = normalizeBriefKey(promptText)
   if (clientRecommendationCache.has(cacheKey)) {
     return clientRecommendationCache.get(cacheKey)
   }
+
+  let busyNotice = null
 
   // Cancel any previous in-flight recommendation request
   if (recommendationAbortController) {
@@ -123,9 +142,8 @@ async function recommendProfile(promptText) {
 
   try {
     // The server owns the profile catalog (shared/profiles.js); only the brief is sent.
-    const response = await fetch(RECOMMENDATION_ENDPOINT, {
+    const response = await apiFetch(RECOMMENDATION_ENDPOINT, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         prompt: promptText.trim().slice(0, 1500)
       }),
@@ -149,12 +167,16 @@ async function recommendProfile(promptText) {
         const result = {
           picks,
           brandName: payload.brandName || extractBrandName(promptText),
+          briefKey: payload.briefKey || cacheKey,
+          script: payload.script || null,
+          model: payload.model || null,
           source: 'gemini'
         }
         clientRecommendationCache.set(cacheKey, result)
         return result
       }
     }
+    if (payload?.reason === 'quota') busyNotice = payload.error
     console.warn('Gemini API response unfulfilled, activating local semantic vibe engine:', payload?.error)
   } catch (err) {
     if (err.name === 'AbortError' && recommendationAbortController !== controller) {
@@ -174,12 +196,19 @@ async function recommendProfile(promptText) {
   }
 
   // Offline matches are not cached, so the next attempt can still reach Gemini.
+  const script = detectScript(promptText)
   return {
     picks: fallbackMatch.picks.map(({ profile, confidence, rationale, tags }) => ({
       profile,
-      aiResult: { profileId: profile.id, confidence, rationale, tags, source: 'local' }
+      aiResult: {
+        profileId: profile.id, confidence, rationale, tags, source: 'local',
+        ...(script ? { scriptSupport: scriptSupport(profile, script) } : {})
+      }
     })),
     brandName: extractBrandName(promptText),
+    briefKey: cacheKey,
+    script: script ? { id: script.id, label: script.label } : null,
+    notice: busyNotice,
     source: 'local'
   }
 }
@@ -269,8 +298,8 @@ const state = {
   recommendation: null,
   listeners: [],
   // updateUrl: 'push' adds a history entry, 'replace' rewrites the current one, false leaves the URL alone
-  setActiveProfile(profile, { updateUrl = 'push', aiResult = null, recommendation = null } = {}) {
-    this.activeProfile = { ...buildProfile(profile), aiResult };
+  setActiveProfile(profile, { updateUrl = 'push', aiResult = null, recommendation = null, bodyOverride = null } = {}) {
+    this.activeProfile = { ...buildProfile(profile, bodyOverride), aiResult };
     this.recommendation = recommendation;
     this.notify();
 
@@ -364,6 +393,7 @@ function setSpecimenColor(color, isCustom = false) {
 state.subscribe((profile) => {
   const aiResult = profile.aiResult
   loadGoogleFont(profile.googleFontsUrl)
+  loadGoogleFont(profile.bodyGoogleFontsUrl)
   // Show the real Google Fonts family the user will actually get and export.
   if (displayName) displayName.textContent = profile.headingFamily
   // The user's own brand name beats the canned sample. textContent: user input is never HTML.
@@ -407,6 +437,9 @@ state.subscribe((profile) => {
 
   renderBriefPreview(profile)
   renderAlternates()
+  renderScriptNote(profile)
+  renderBodyOptions(profile)
+  renderSaveButton(profile)
 
   // Editorial label vs. real font: say where the look comes from, honestly.
   const disclaimer = document.getElementById('licenseDisclaimer')
@@ -479,6 +512,7 @@ function renderAlternates() {
     card.append(sample, families, reason)
     card.addEventListener('click', () => {
       showPick(promotePick(state.recommendation, offset + 1))
+      reportChoice('choose_alternate')
       document.getElementById('results')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     })
     list.append(card)
@@ -508,6 +542,183 @@ previewBrand?.addEventListener('paste', (e) => {
   document.execCommand('insertText', false, text)
 })
 
+// Warn when the chosen fonts can't render the brief's writing system
+function renderScriptNote(profile) {
+  if (!scriptNote) return
+  const script = state.recommendation?.script
+  const support = profile.aiResult?.scriptSupport
+  if (!script || !support) {
+    scriptNote.hidden = true
+    return
+  }
+  const missing = [!support.heading && profile.headingFamily, !support.body && !profile.bodyOverride && profile.bodyFamily].filter(Boolean)
+  const bodyOk = profile.bodyOverride ? true : support.body
+  if (!missing.length && bodyOk) {
+    scriptNote.textContent = `✓ Both fonts include ${script.label} glyphs.`
+    scriptNote.classList.remove('is-warning')
+  } else {
+    scriptNote.textContent = `${missing.join(' and ')} ${missing.length > 1 ? 'have' : 'has'} no ${script.label} glyphs; ${script.label} text will fall back to a system font. Pick a body font below that supports it.`
+    scriptNote.classList.add('is-warning')
+  }
+  scriptNote.hidden = false
+}
+
+// On-demand body pairing: rule-based alternatives for the current heading
+function renderBodyOptions(profile) {
+  if (!bodyOptionsEl) return
+  const rawProfile = profileById.get(profile.id)
+  if (!rawProfile) return
+  const scriptId = state.recommendation?.script?.id
+  const script = scriptId ? detectScript(state.recommendation.brief) : null
+  const options = suggestBodyFonts(rawProfile, { script, brief: state.recommendation?.brief || '' })
+  bodyOptionsEl.replaceChildren()
+  if (!options.length) {
+    bodyOptionsEl.hidden = true
+    return
+  }
+
+  const label = document.createElement('span')
+  label.className = 'body-options-label'
+  label.textContent = 'OR SET BODY IN'
+  bodyOptionsEl.append(label)
+
+  const makeChip = (family, title, override) => {
+    const chip = document.createElement('button')
+    chip.type = 'button'
+    chip.className = 'body-option'
+    chip.textContent = family
+    chip.title = title
+    chip.style.fontFamily = cssStack(family)
+    const active = (profile.bodyOverride || null) === override
+    chip.classList.toggle('active', active)
+    chip.setAttribute('aria-pressed', String(active))
+    chip.addEventListener('click', () => setBodyOverride(override))
+    return chip
+  }
+
+  // The curated pair is always one click away
+  const curated = primaryFamily(rawProfile.bodyFallback, rawProfile.pair)
+  bodyOptionsEl.append(makeChip(curated, 'The curated pairing for this profile', null))
+  for (const option of options) {
+    loadGoogleFont(googleFontsCssUrl(option.family))
+    bodyOptionsEl.append(makeChip(option.family, option.reason, option.family))
+  }
+  bodyOptionsEl.hidden = false
+}
+
+function setBodyOverride(family) {
+  const current = state.activeProfile
+  if (!current) return
+  const raw = profileById.get(current.id)
+  state.setActiveProfile(raw, {
+    aiResult: current.aiResult,
+    recommendation: state.recommendation,
+    bodyOverride: family,
+    updateUrl: false
+  })
+}
+
+// ---- Saved pairings & recent briefs ------------------------------------------
+
+function isSaved(profile) {
+  return getLocalSaved().some((f) => f.heading_font === profile.headingFamily && f.body_font === profile.bodyFamily)
+}
+
+function renderSaveButton(profile) {
+  if (!savePairingBtn) return
+  const saved = isSaved(profile)
+  savePairingBtn.textContent = saved ? 'SAVED ✓' : 'SAVE'
+  savePairingBtn.setAttribute('aria-pressed', String(saved))
+}
+
+function renderSavedPanel(saved = getLocalSaved()) {
+  if (!savedSection) return
+  const recent = getRecentBriefs()
+  savedSection.hidden = !saved.length && !recent.length
+
+  if (savedList) {
+    savedList.replaceChildren()
+    if (!saved.length) {
+      const empty = document.createElement('li')
+      empty.className = 'saved-empty'
+      empty.textContent = 'Nothing saved yet. Hit SAVE on a pairing you like.'
+      savedList.append(empty)
+    }
+    for (const entry of saved) {
+      const li = document.createElement('li')
+      const open = document.createElement('button')
+      open.type = 'button'
+      open.className = 'saved-open'
+      open.style.fontFamily = cssStack(entry.heading_font)
+      open.textContent = `${entry.heading_font} + ${entry.body_font}`
+      loadGoogleFont(googleFontsCssUrl(entry.heading_font))
+      open.addEventListener('click', () => {
+        const profile = profileById.get(entry.profile_id) ||
+          profiles.find((p) => primaryFamily(p.headingFallback) === entry.heading_font)
+        if (!profile) return
+        const curatedBody = primaryFamily(profile.bodyFallback, profile.pair)
+        state.setActiveProfile(profile, { bodyOverride: entry.body_font === curatedBody ? null : entry.body_font })
+        document.getElementById('results')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      })
+      const remove = document.createElement('button')
+      remove.type = 'button'
+      remove.className = 'saved-remove'
+      remove.textContent = '✕'
+      remove.setAttribute('aria-label', `Remove ${entry.heading_font} + ${entry.body_font}`)
+      remove.addEventListener('click', async () => {
+        renderSavedPanel(await removePairing(entry))
+        if (state.activeProfile) renderSaveButton(state.activeProfile)
+      })
+      li.append(open, remove)
+      savedList.append(li)
+    }
+  }
+
+  if (recentList) {
+    recentList.replaceChildren()
+    for (const item of recent) {
+      const li = document.createElement('li')
+      const again = document.createElement('button')
+      again.type = 'button'
+      again.className = 'recent-brief'
+      again.textContent = item.brief
+      again.addEventListener('click', () => {
+        if (brief) brief.value = item.brief
+        updateRecommendation()
+      })
+      li.append(again)
+      recentList.append(li)
+    }
+  }
+}
+
+savePairingBtn?.addEventListener('click', async () => {
+  const profile = state.activeProfile
+  if (!profile) return
+  if (isSaved(profile)) {
+    const entry = getLocalSaved().find((f) => f.heading_font === profile.headingFamily && f.body_font === profile.bodyFamily)
+    renderSavedPanel(await removePairing(entry))
+    showToast('Removed from saved pairings.')
+  } else {
+    renderSavedPanel(await savePairing({
+      profileId: profile.id,
+      headingFont: profile.headingFamily,
+      bodyFont: profile.bodyFamily,
+      label: state.recommendation?.brandName || profile.archetype
+    }))
+    reportChoice('save')
+    showToast(`✓ Saved ${profile.headingFamily} + ${profile.bodyFamily}`)
+  }
+  renderSaveButton(profile)
+})
+
+// Tell the server which pick for this brief the visitor actually used
+function reportChoice(event) {
+  const rec = state.recommendation
+  if (!rec?.briefKey || !state.activeProfile) return
+  sendFeedback({ briefKey: rec.briefKey, profileId: state.activeProfile.id, event })
+}
+
 const dummyPresets = {
   pangram: 'The quick brown fox jumps over the lazy dog',
   headline: 'Design with intention, build with character.',
@@ -533,6 +744,11 @@ function init() {
   // Initial render must not push a history entry, or the Back button just reloads the same page.
   state.setActiveProfile(targetProfile, { updateUrl: 'replace' });
   updateActivePresetChip(specimenState.text);
+  renderSavedPanel();
+  loadSaved().then((saved) => {
+    renderSavedPanel(saved);
+    if (state.activeProfile) renderSaveButton(state.activeProfile);
+  });
 }
 
 async function updateRecommendation() {
@@ -563,6 +779,9 @@ async function updateRecommendation() {
   try {
     const result = await recommendProfile(prompt)
     showPick({ ...result, brief: prompt })
+    rememberBrief(prompt, result.picks[0].profile.id)
+    renderSavedPanel()
+    if (result.notice) showToast(result.notice)
     document.getElementById('results')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   } catch (error) {
     if (error.name === 'AbortError') return
@@ -716,6 +935,7 @@ if (copyCssBtn) {
     const body = state.activeProfile.bodyFamily || 'Body Font'
     const cssCode = `${state.activeProfile.cssImport}\n\n${state.activeProfile.cssVars}`
     copyToClipboard(cssCode, e.currentTarget, `✓ Copied CSS for ${heading} + ${body}!`)
+    reportChoice('copy_css')
   })
 }
 
@@ -725,6 +945,7 @@ if (openGoogleFontsBtn) {
     const family = state.activeProfile.headingFamily
     const googleFontsUrl = `https://fonts.google.com/specimen/${encodeURIComponent(family).replace(/%20/g, '+')}`
     window.open(googleFontsUrl, '_blank', 'noopener,noreferrer')
+    reportChoice('open_google_fonts')
   })
 }
 

@@ -1,8 +1,13 @@
 import { Hono } from 'hono'
 import { ENRICHED_FONT_CATALOG, FONT_MAP } from '../lib/font-catalog.mjs'
 import { createFontSearchIndex } from '../lib/fuzzy.mjs'
-import { getGeminiEmbedding, cosineSimilarity } from '../lib/embeddings.mjs'
-import { searchFontsWithVector, getSupabaseClient } from '../db/supabase.mjs'
+import { getGeminiEmbedding } from '../lib/embeddings.mjs'
+import { searchFontsWithVector } from '../db/supabase.mjs'
+import { clientIp, createRateLimiter } from '../lib/rate-limit.mjs'
+
+// Semantic search costs a Gemini embedding call per query; cap it per client.
+// Over the limit, the request quietly uses free fuzzy search instead.
+const isSemanticLimited = createRateLimiter({ limit: 10, windowMs: 60_000 })
 
 // Import base fonts list for full 250+ font coverage
 let allFontsCatalog = []
@@ -98,7 +103,7 @@ fontsRoute.get('/', async (c) => {
   // Case 2: Semantic / Vector search requested or detected (e.g. multi-word mood prompt)
   const isSemanticIntent = mode === 'semantic' || (mode === 'auto' && query.split(/\s+/).length >= 2 && !catalog.some((f) => f.family.toLowerCase() === query.toLowerCase()))
   
-  if (isSemanticIntent) {
+  if (isSemanticIntent && !isSemanticLimited(clientIp(c))) {
     try {
       const embedding = await getGeminiEmbedding(query)
       if (embedding) {
@@ -110,10 +115,16 @@ fontsRoute.get('/', async (c) => {
         })
 
         if (dbResults && dbResults.length > 0) {
+          // match_fonts returns a subset of columns; merge with the catalog entry
+          // so every search mode returns the same font shape
+          const fonts = dbResults.slice(0, limit).map((row) => {
+            const base = catalog.find((f) => f.family.toLowerCase() === String(row.family).toLowerCase())
+            return { ...(base || {}), ...row, searchScore: Number(Number(row.similarity || 0).toFixed(3)) }
+          })
           return c.json({
-            total: dbResults.length,
+            total: fonts.length,
             searchMode: 'vector_pgvector',
-            fonts: dbResults.slice(0, limit)
+            fonts
           })
         }
       }

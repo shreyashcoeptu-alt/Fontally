@@ -8,31 +8,64 @@ const STOP_WORDS = new Set([
   'a', 'an', 'the', 'and', 'or', 'for', 'with', 'in', 'on', 'at', 'to', 'of', 'by',
   'from', 'my', 'your', 'our', 'is', 'are', 'was', 'be', 'brand', 'app', 'website',
   'design', 'project', 'platform', 'company', 'startup', 'theme', 'look', 'style', 'like',
-  'font', 'fonts', 'typography', 'type'
+  'font', 'fonts', 'typography', 'type',
+  // Filler that carries no style signal ("make it feel...", "I want something...")
+  'it', 'its', 'make', 'feel', 'feels', 'want', 'need', 'something', 'very', 'really', 'use',
+  'using', 'love', 'we', 'me', 'this', 'that', 'should', 'would', 'bit', 'kind', 'sort',
+  'new', 'some', 'more', 'less', 'but', 'not', 'just', 'also', 'into', 'as'
 ])
+
+const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+// Token appears at the start of a word: "bake" matches "bakery", but "it" does not
+// match "Italiana" or "digital". Short tokens (<4 chars) must be whole words.
+function hasWordStart(text, token, { wholeWord = token.length < 4 } = {}) {
+  const tail = wholeWord ? '(?![\\p{L}\\p{N}])' : ''
+  return new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRegExp(token)}${tail}`, 'u').test(text)
+}
 
 function scoreProfile(profile, tokens) {
   let score = 0
   const pWords = profile.words || []
-  const pId = profile.id.toLowerCase()
-  const pName = profile.name.toLowerCase()
+  const pId = profile.id.toLowerCase().replace(/_/g, ' ')
   const pMeta = (profile.meta || '').toLowerCase()
   const pArchetype = (profile.archetype || '').toLowerCase()
   const pRationale = (profile.rationale || '').toLowerCase()
-  // Real Google Fonts family names, so "Fraunces" or "Cinzel" match directly
-  const pFamilies = `${profile.headingFallback || ''} ${profile.bodyFallback || ''}`.toLowerCase()
+  // Editorial name + real Google Fonts families, so "Fraunces" or "Cinzel" match directly
+  const pNames = [profile.name, profile.pair, profile.headingFallback, profile.bodyFallback]
+    .filter(Boolean).join(' ').toLowerCase()
 
   for (const token of tokens) {
     // Direct font name match bonus (+25)
-    if (pName.includes(token) || pFamilies.includes(token)) score += 25
+    if (token.length >= 3 && hasWordStart(pNames, token, { wholeWord: true })) score += 25
     if (pWords.includes(token)) score += 8
-    else if (pWords.some((w) => w.includes(token) || token.includes(w))) score += 4
-    if (pId.includes(token)) score += 6
-    if (pArchetype.includes(token)) score += 5
-    if (pMeta.includes(token)) score += 4
-    if (pRationale.includes(token)) score += 2
+    else if (token.length >= 4 && pWords.some((w) => w.length >= 4 && (w.startsWith(token) || token.startsWith(w)))) score += 4
+    if (hasWordStart(pId, token)) score += 6
+    if (hasWordStart(pArchetype, token)) score += 5
+    if (hasWordStart(pMeta, token)) score += 4
+    if (hasWordStart(pRationale, token)) score += 2
   }
   return score
+}
+
+export function tokenizeBrief(promptText) {
+  return String(promptText || '')
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .split(/\s+/)
+    .filter((token) => token.length > 1 && !STOP_WORDS.has(token))
+}
+
+function rankTokens(tokens, profiles) {
+  return profiles
+    .map((profile, index) => ({ profile, index, score: scoreProfile(profile, tokens) }))
+    // Stable: ties keep catalog order
+    .sort((a, b) => b.score - a.score || a.index - b.index)
+}
+
+/** Every profile with its keyword score, best first (used to shortlist for Gemini). */
+export function rankProfiles(promptText, profiles) {
+  return rankTokens(tokenizeBrief(promptText), profiles)
 }
 
 /**
@@ -44,22 +77,13 @@ export function matchProfilesLocally(promptText, profiles, { limit = 3 } = {}) {
     return { error: GIBBERISH_ERROR }
   }
 
-  const tokens = promptText
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
-    .split(/\s+/)
-    .filter((token) => token.length > 1 && !STOP_WORDS.has(token))
+  const tokens = tokenizeBrief(promptText)
 
   if (!tokens.length) {
     return { error: 'Please enter a more descriptive design brief.' }
   }
 
-  const ranked = profiles
-    .map((profile, index) => ({ profile, index, score: scoreProfile(profile, tokens) }))
-    .filter((entry) => entry.score > 0)
-    // Stable: ties keep catalog order, matching the previous single-pick behaviour
-    .sort((a, b) => b.score - a.score || a.index - b.index)
-    .slice(0, limit)
+  const ranked = rankTokens(tokens, profiles).filter((entry) => entry.score > 0).slice(0, limit)
 
   if (!ranked.length) {
     return {

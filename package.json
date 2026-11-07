@@ -8,7 +8,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest",
-    "seed": "node scripts/seed-fonts.mjs"
+    "seed": "node scripts/seed-fonts.mjs",
+    "eval": "node scripts/eval-recommendations.mjs",
+    "sync-fonts": "node scripts/sync-font-metadata.mjs"
   },
   "devDependencies": {
     "@hono/node-server": "^2.1.6",

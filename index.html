@@ -82,6 +82,7 @@
               <p id="licenseDisclaimer" class="license-disclaimer" style="display: none;"></p>
               <p id="archetype" class="archetype"></p>
               <p id="aiRationale" class="ai-rationale" hidden></p>
+              <p id="scriptNote" class="script-note" role="note" hidden></p>
             </div>
           </div>
 
@@ -90,6 +91,7 @@
             <strong id="pairName">Neue Montreal</strong>
             <span id="pairMeta">GROTESK / 18PX</span>
           </div>
+          <div class="body-options" id="bodyOptions" hidden aria-label="Other body fonts for this heading"></div>
 
           <!-- Live preview with the user's own brand name and brief -->
           <div class="brief-preview" id="briefPreview" hidden>
@@ -108,6 +110,7 @@
             <div class="export-buttons">
               <button id="copyCssBtn" class="btn-export">COPY CSS</button>
               <button id="openGoogleFontsBtn" class="btn-export">GOOGLE FONTS ↗</button>
+              <button id="savePairingBtn" class="btn-export" type="button" aria-pressed="false">SAVE</button>
               <span id="recommendationStatus" class="sr-only" role="status" aria-live="polite"
                 aria-atomic="true"></span>
             </div>
@@ -181,6 +184,20 @@
         </aside>
       </div>
 
+    <section class="saved-section" id="savedSection" hidden aria-labelledby="savedHeading">
+      <h2 id="savedHeading" class="sr-only">Your saved pairings and recent briefs</h2>
+      <div class="saved-grid">
+        <div>
+          <p class="saved-label">SAVED PAIRINGS</p>
+          <ul class="saved-list" id="savedList"></ul>
+        </div>
+        <div>
+          <p class="saved-label">RECENT BRIEFS</p>
+          <ul class="recent-list" id="recentList"></ul>
+        </div>
+      </div>
+    </section>
+
     <section class="library">
       <div class="library-heading">
         <span class="library-heading-rule" aria-hidden="true"></span>
@@ -189,10 +206,10 @@
       </div>
       <div class="font-shelf">
         <div class="shelf-item shelf-serif" data-profile-id="coffee" role="button" tabindex="0">
-          <span>01</span><strong>Windsor &amp; Söhne</strong><em>for charming<br />eccentrics &amp; warmth</em>
+          <span>01</span><strong>Newsreader &amp; DM Sans</strong><em>for charming<br />eccentrics &amp; warmth</em>
         </div>
         <div class="shelf-item shelf-grotesk" data-profile-id="architect" role="button" tabindex="0">
-          <span>02</span><strong>Helvetica Now &amp; Times</strong><em>for brutalist<br />architects</em>
+          <span>02</span><strong>Inter &amp; Newsreader</strong><em>for brutalist<br />architects</em>
         </div>
         <div class="shelf-item shelf-display" data-profile-id="luxury" role="button" tabindex="0">
           <span>03</span><strong>Cormorant &amp; Jakarta</strong><em>for soft<br />power moves</em>

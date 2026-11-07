@@ -7,8 +7,39 @@ const inMemoryCache = new Map()
 const inMemoryHistory = []
 const inMemoryFavourites = []
 
+// Circuit breaker. An unreachable Supabase (paused project, DNS failure) used to
+// add ~7s to every request while each call failed. Now each call is capped at
+// 2.5s, and after a network failure Supabase is skipped for 60s and every
+// function below uses its in-memory fallback instead.
+const SUPABASE_TIMEOUT_MS = 2_500
+const SUPABASE_COOLDOWN_MS = 60_000
+let supabaseDownUntil = 0
+
+export function isSupabaseAvailable() {
+  return Date.now() >= supabaseDownUntil
+}
+
+async function guardedFetch(input, init = {}) {
+  if (!isSupabaseAvailable()) {
+    throw new Error('Supabase temporarily skipped after a network failure')
+  }
+  const timeout = AbortSignal.timeout(SUPABASE_TIMEOUT_MS)
+  const signal = init.signal ? AbortSignal.any([init.signal, timeout]) : timeout
+  try {
+    return await fetch(input, { ...init, signal })
+  } catch (err) {
+    // Network-level failure or timeout (HTTP errors resolve normally and don't trip it)
+    if (isSupabaseAvailable()) {
+      console.warn(`Supabase unreachable (${err?.cause?.code || err?.name || err?.message}); using in-memory storage for ${SUPABASE_COOLDOWN_MS / 1000}s`)
+    }
+    supabaseDownUntil = Date.now() + SUPABASE_COOLDOWN_MS
+    throw err
+  }
+}
+
 export function getSupabaseClient() {
   if (process.env.NODE_ENV === 'test') return null
+  if (!isSupabaseAvailable()) return null
   if (supabaseClient) return supabaseClient
 
   const supabaseUrl = process.env.SUPABASE_URL
@@ -17,7 +48,11 @@ export function getSupabaseClient() {
   if (supabaseUrl && supabaseKey) {
     try {
       supabaseClient = createClient(supabaseUrl, supabaseKey, {
-        auth: { persistSession: false }
+        auth: { persistSession: false },
+        // supabase-js retries failed reads 3x with 1s/2s/4s backoff (7s). Every
+        // caller here has an in-memory fallback, so fail fast instead.
+        db: { retry: false },
+        global: { fetch: guardedFetch }
       })
     } catch (err) {
       console.warn('Failed to initialize Supabase client:', err.message)
@@ -48,7 +83,7 @@ export async function getRecommendationCache(cacheKey) {
       .eq('cache_key', cacheKey)
       .maybeSingle()
 
-    if (error || !data) return null
+    if (error || !data) return inMemoryCache.get(cacheKey) || null
 
     // Increment hit counter asynchronously
     client
@@ -288,5 +323,70 @@ export async function deleteUserFavourite(sessionId, id) {
   } catch (err) {
     console.warn('Error deleting favourite from Supabase:', err.message)
     return false
+  }
+}
+
+// -------------------------------------------------------------
+// Recommendation Feedback (learning which pick people actually use)
+// -------------------------------------------------------------
+
+// Events that mean "this pairing was the one I wanted"
+export const CHOICE_EVENTS = new Set(['choose_alternate', 'copy_css', 'save', 'open_google_fonts'])
+const inMemoryFeedback = []
+
+export async function recordFeedback({ sessionId, briefKey, profileId, event }) {
+  if (!briefKey || !profileId || !CHOICE_EVENTS.has(event)) return false
+  inMemoryFeedback.push({ sessionId, briefKey, profileId, event, created_at: Date.now() })
+  if (inMemoryFeedback.length > 2000) inMemoryFeedback.shift()
+
+  const client = getSupabaseClient()
+  if (!client) return true
+  try {
+    const { error } = await client.from('feedback_events').insert({
+      session_id: sessionId || null,
+      brief_key: briefKey,
+      profile_id: profileId,
+      event
+    })
+    if (error) throw error
+    return true
+  } catch (err) {
+    console.warn('Error saving feedback to Supabase:', err.message)
+    return true
+  }
+}
+
+/**
+ * { profileId: votes } for a brief. One vote per session per profile, so a
+ * single visitor clicking "copy" ten times cannot reorder results for everyone.
+ */
+export async function getPickPreferences(briefKey) {
+  if (!briefKey) return null
+  const tally = (rows) => {
+    const seen = new Set()
+    const votes = {}
+    for (const row of rows) {
+      const voter = `${row.session_id || row.sessionId || 'anon'}|${row.profile_id || row.profileId}`
+      if (seen.has(voter)) continue
+      seen.add(voter)
+      const id = row.profile_id || row.profileId
+      votes[id] = (votes[id] || 0) + 1
+    }
+    return votes
+  }
+
+  const client = getSupabaseClient()
+  if (!client) return tally(inMemoryFeedback.filter((f) => f.briefKey === briefKey))
+  try {
+    const { data, error } = await client
+      .from('feedback_events')
+      .select('session_id, profile_id')
+      .eq('brief_key', briefKey)
+      .limit(500)
+    if (error) throw error
+    return tally(data || [])
+  } catch (err) {
+    console.warn('Error reading feedback from Supabase:', err.message)
+    return tally(inMemoryFeedback.filter((f) => f.briefKey === briefKey))
   }
 }

@@ -1,58 +1,11 @@
 /**
  * @vitest-environment node
  */
-import { describe, expect, it } from 'vitest'
-import { Readable } from 'node:stream'
-import {
-  createGeminiRecommendationHandler,
-  parseRecommendation,
-  recommendationSchema,
-  isGibberishPrompt
-} from '../server/gemini-recommendation.mjs'
-import { createGoogleFontsHandler } from '../server/google-fonts.mjs'
+import { beforeEach, describe, expect, it } from 'vitest'
+import { parseRecommendation, isGibberishPrompt } from '../server/gemini-recommendation.mjs'
+import { recommendWithGemini, getModelChain, resetGeminiCooldowns } from '../server/lib/gemini-client.mjs'
 
-function makeRequest(body, remoteAddress = `test-${Math.random()}`) {
-  const request = Readable.from([JSON.stringify(body)])
-  request.method = 'POST'
-  request.headers = { 'content-type': 'application/json' }
-  request.socket = { remoteAddress }
-  return request
-}
-
-function makeResponse() {
-  return {
-    statusCode: 200,
-    headers: {},
-    body: '',
-    setHeader(name, value) {
-      this.headers[name] = value
-    },
-    end(body = '') {
-      this.body = body
-    }
-  }
-}
-
-const profiles = [
-  {
-    id: 'architect',
-    name: 'Helvetica Now Display',
-    meta: 'GROTESK / DISPLAY',
-    archetype: 'THE BEAUTIFUL MENACE',
-    rationale: 'An architectural grotesk with editorial tension.',
-    words: ['architect', 'brutal', 'portfolio']
-  },
-  {
-    id: 'fintech',
-    name: 'PP Neue Montreal',
-    meta: 'GROTESK / VARIABLE',
-    archetype: 'THE OPTIMISTIC OPERATOR',
-    rationale: 'A calm precision-first system for finance.',
-    words: ['fintech', 'wealth', 'finance']
-  }
-]
-
-describe('Gemini recommendation service', () => {
+describe('Gemini recommendation parsing', () => {
   it('validates profile IDs and clamps confidence', () => {
     const result = parseRecommendation(
       JSON.stringify({ profileId: 'architect', confidence: 1.4, rationale: 'Strong fit.', tags: ['brutalist'] }),
@@ -63,61 +16,38 @@ describe('Gemini recommendation service', () => {
     expect(result.tags).toEqual(['brutalist'])
   })
 
+  it('parses top-3 picks, dropping unknown and duplicate ids and clamping each confidence', () => {
+    const result = parseRecommendation(
+      JSON.stringify({
+        brandName: '  Crumb & Co  ',
+        picks: [
+          { profileId: 'fintech', confidence: 1.7, rationale: 'Calm precision.', tags: ['calm'] },
+          { profileId: 'invented', confidence: 0.9, rationale: 'Nope.', tags: [] },
+          { profileId: 'fintech', confidence: 0.5, rationale: 'Duplicate.', tags: [] },
+          { profileId: 'architect', confidence: -2, rationale: 'Tension.', tags: ['raw'] }
+        ]
+      }),
+      new Set(['architect', 'fintech'])
+    )
+    expect(result.picks.map((p) => p.profileId)).toEqual(['fintech', 'architect'])
+    expect(result.picks.map((p) => p.confidence)).toEqual([1, 0])
+    expect(result.profileId).toBe('fintech')
+    expect(result.rationale).toBe('Calm precision.')
+    expect(result.brandName).toBe('Crumb & Co')
+  })
+
+  it('rejects picks when every id is unknown', () => {
+    expect(() => parseRecommendation(
+      JSON.stringify({ brandName: '', picks: [{ profileId: 'nope', confidence: 1, rationale: '', tags: [] }] }),
+      new Set(['architect'])
+    )).toThrow('unknown profileId')
+  })
+
   it('rejects a model response that invents a profile ID', () => {
     expect(() => parseRecommendation(
       JSON.stringify({ profileId: 'invented', confidence: 0.8, rationale: 'No.', tags: [] }),
       new Set(['architect', 'fintech'])
     )).toThrow('unknown profileId')
-  })
-
-  it('sends the catalog to Gemini and returns the validated recommendation', async () => {
-    let captured
-    const handler = createGeminiRecommendationHandler({
-      apiKey: 'test-secret',
-      model: 'gemini-test',
-      fetchImpl: async (url, options) => {
-        captured = { url, options }
-        return new Response(JSON.stringify({
-          candidates: [{
-            content: {
-              parts: [{ text: JSON.stringify({
-                profileId: 'architect',
-                confidence: 0.91,
-                rationale: 'The brief calls for brutalist editorial tension.',
-                tags: ['brutalist', 'editorial']
-              }) }]
-            }
-          }]
-        }), { status: 200, headers: { 'content-type': 'application/json' } })
-      }
-    })
-    const request = makeRequest({ prompt: 'A brutalist architecture portfolio.', profiles })
-    const response = makeResponse()
-
-    await handler(request, response)
-
-    expect(response.statusCode).toBe(200)
-    expect(JSON.parse(response.body).profileId).toBe('architect')
-    expect(captured.url).toContain('/models/gemini-test:generateContent')
-    expect(captured.options.headers['x-goog-api-key']).toBe('test-secret')
-    expect(JSON.parse(captured.options.body).generationConfig.responseMimeType).toBe('application/json')
-    expect(JSON.parse(captured.options.body).generationConfig.responseSchema).toEqual(recommendationSchema)
-  })
-
-  it('returns a configuration error without an API key', async () => {
-    const handler = createGeminiRecommendationHandler({ apiKey: '' })
-    const response = makeResponse()
-    await handler(makeRequest({ prompt: 'A quiet editorial coffee brand.', profiles }), response)
-    expect(response.statusCode).toBe(503)
-    expect(JSON.parse(response.body).error).toMatch(/GEMINI_API_KEY/)
-  })
-
-  it('rejects gibberish input with a 400 error', async () => {
-    const handler = createGeminiRecommendationHandler({ apiKey: 'test-key' })
-    const response = makeResponse()
-    await handler(makeRequest({ prompt: 'afrvq1r1', profiles }), response)
-    expect(response.statusCode).toBe(400)
-    expect(JSON.parse(response.body).error).toMatch(/gibberish|random characters/i)
   })
 
   it('does not falsely flag valid design terms or acronyms as gibberish', () => {
@@ -128,44 +58,71 @@ describe('Gemini recommendation service', () => {
   })
 })
 
-describe('Google Fonts API service', () => {
-  it('returns default catalog with category and query filtering', async () => {
-    const handler = createGoogleFontsHandler()
-    const req = { method: 'GET', url: '/api/fonts?query=inter&category=sans-serif' }
-    const res = makeResponse()
+const profiles = [
+  { id: 'architect', name: 'Inter', meta: 'GROTESK', archetype: 'THE BEAUTIFUL MENACE', rationale: 'Editorial tension.', words: ['architect'] },
+  { id: 'fintech', name: 'Plus Jakarta Sans', meta: 'GROTESK', archetype: 'THE OPTIMISTIC OPERATOR', rationale: 'Calm precision.', words: ['finance'] }
+]
+const allowedIds = new Set(['architect', 'fintech'])
 
-    await handler(req, res)
+const okPayload = (profileId = 'architect') => ({
+  candidates: [{ content: { parts: [{ text: JSON.stringify({
+    brandName: '',
+    picks: [{ profileId, confidence: 0.9, rationale: 'Fits.', tags: ['raw'] }]
+  }) }] } }]
+})
+const reply = (status, body) => new Response(JSON.stringify(body), { status })
 
-    expect(res.statusCode).toBe(200)
-    const body = JSON.parse(res.body)
-    expect(body.fonts.length).toBeGreaterThan(0)
-    expect(body.fonts.some((f) => f.family.toLowerCase().includes('inter'))).toBe(true)
+describe('Gemini model fallback chain', () => {
+  beforeEach(() => resetGeminiCooldowns())
+
+  it('answers from the first model and sends the key in a header', async () => {
+    const calls = []
+    const { result, model } = await recommendWithGemini({
+      prompt: 'brutalist portfolio', profiles, allowedIds, apiKey: 'k', models: ['m-a', 'm-b'],
+      fetchImpl: async (url, opts) => { calls.push({ url, opts }); return reply(200, okPayload()) }
+    })
+    expect(model).toBe('m-a')
+    expect(result.picks[0].profileId).toBe('architect')
+    expect(calls).toHaveLength(1)
+    expect(calls[0].url).toContain('/models/m-a:generateContent')
+    expect(calls[0].opts.headers['x-goog-api-key']).toBe('k')
   })
 
-  it('fetches from live Google Fonts API if API key is provided', async () => {
-    let requestedUrl
-    const handler = createGoogleFontsHandler({
-      apiKey: 'test-gfonts-key',
-      fetchImpl: async (url) => {
-        requestedUrl = url
-        return new Response(JSON.stringify({
-          items: [
-            { family: 'Custom Test Sans', category: 'sans-serif', variants: ['400'] },
-            { family: 'Custom Test Serif', category: 'serif', variants: ['400'] }
-          ]
-        }), { status: 200, headers: { 'content-type': 'application/json' } })
-      }
+  it('falls through 429, 503 and invalid answers to the next model', async () => {
+    const seq = [
+      reply(429, { error: { message: 'Quota exceeded. Please retry in 30s.' } }),
+      reply(503, { error: { message: 'high demand' } }),
+      reply(200, { candidates: [{ content: { parts: [{ text: 'not json' }] } }] }),
+      reply(200, okPayload('fintech'))
+    ]
+    const { result, model, attempts } = await recommendWithGemini({
+      prompt: 'bank', profiles, allowedIds, apiKey: 'k', models: ['a', 'b', 'c', 'd'],
+      fetchImpl: async () => seq.shift()
     })
+    expect(model).toBe('d')
+    expect(result.profileId).toBe('fintech')
+    expect(attempts.map((a) => a.outcome)).toEqual(['http_429', 'http_503', 'invalid_response', 'ok'])
+  })
 
-    const req = { method: 'GET', url: '/api/fonts?category=serif' }
-    const res = makeResponse()
+  it('skips a model that recently ran out of quota', async () => {
+    let calls = 0
+    const quota = async () => { calls++; return reply(429, { error: { message: 'retry in 60s' } }) }
+    await expect(recommendWithGemini({ prompt: 'x', profiles, allowedIds, apiKey: 'k', models: ['q'], fetchImpl: quota }))
+      .rejects.toMatchObject({ statusCode: 429 })
+    await expect(recommendWithGemini({ prompt: 'x', profiles, allowedIds, apiKey: 'k', models: ['q'], fetchImpl: quota }))
+      .rejects.toMatchObject({ statusCode: 429 })
+    expect(calls).toBe(1) // second request never hit the API
+  })
 
-    await handler(req, res)
+  it('reports a timeout as 504', async () => {
+    const hang = (_url, { signal }) => new Promise((_, reject) => signal.addEventListener('abort', () => reject(Object.assign(new Error('aborted'), { name: 'AbortError' }))))
+    await expect(recommendWithGemini({
+      prompt: 'x', profiles, allowedIds, apiKey: 'k', models: ['slow'], fetchImpl: hang, perModelTimeoutMs: 50, totalBudgetMs: 2_000
+    })).rejects.toMatchObject({ statusCode: 504 })
+  })
 
-    expect(res.statusCode).toBe(200)
-    expect(requestedUrl).toContain('key=test-gfonts-key')
-    const body = JSON.parse(res.body)
-    expect(body.fonts).toEqual([{ family: 'Custom Test Serif', category: 'serif', variants: ['400'] }])
+  it('builds the chain from GEMINI_MODEL then GEMINI_FALLBACK_MODELS, without duplicates', () => {
+    expect(getModelChain({ GEMINI_MODEL: 'x', GEMINI_FALLBACK_MODELS: 'y, x ,z' })).toEqual(['x', 'y', 'z'])
+    expect(getModelChain({}).length).toBeGreaterThan(1)
   })
 })
-

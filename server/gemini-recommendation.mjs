@@ -1,12 +1,9 @@
 import { isGibberishPrompt } from '../shared/gibberish.js'
 
-const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models'
-const DEFAULT_MODEL = 'gemini-2.5-flash'
-const MAX_BODY_BYTES = 160_000
-const MAX_PROMPT_CHARS = 1_500
+// Prompt, schema and response parsing for Gemini recommendations.
+// The HTTP call and model fallback chain live in server/lib/gemini-client.mjs.
+const DEFAULT_MODEL = 'gemini-3.1-flash-lite'
 const MAX_PROFILE_COUNT = 150
-const MAX_REQUESTS_PER_WINDOW = 40
-const RATE_LIMIT_WINDOW_MS = 60_000
 
 const pickSchema = {
   type: 'object',
@@ -51,64 +48,6 @@ const recommendationSchema = {
   required: ['brandName', 'picks']
 }
 
-const requestTimestamps = new Map()
-
-function sendJson(res, status, payload) {
-  res.statusCode = status
-  res.setHeader('Content-Type', 'application/json; charset=utf-8')
-  res.setHeader('Cache-Control', 'no-store')
-  res.setHeader('X-Content-Type-Options', 'nosniff')
-  res.end(JSON.stringify(payload))
-}
-
-function getClientKey(req) {
-  return req.headers?.['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'local'
-}
-
-function isRateLimited(req) {
-  const key = getClientKey(req)
-  const now = Date.now()
-  const recent = (requestTimestamps.get(key) || []).filter((timestamp) => now - timestamp < RATE_LIMIT_WINDOW_MS)
-  recent.push(now)
-  requestTimestamps.set(key, recent)
-  return recent.length > MAX_REQUESTS_PER_WINDOW
-}
-
-function readJsonBody(req) {
-  if (req.body && typeof req.body === 'object') {
-    return Promise.resolve(req.body)
-  }
-  if (typeof req.body === 'string') {
-    try {
-      return Promise.resolve(JSON.parse(req.body))
-    } catch {
-      return Promise.reject(Object.assign(new Error('Request body must be valid JSON.'), { statusCode: 400 }))
-    }
-  }
-  return new Promise((resolve, reject) => {
-    let size = 0
-    let body = ''
-    req.setEncoding?.('utf8')
-    req.on('data', (chunk) => {
-      size += Buffer.byteLength(chunk)
-      if (size > MAX_BODY_BYTES) {
-        reject(Object.assign(new Error('Request body is too large.'), { statusCode: 413 }))
-        req.destroy?.()
-        return
-      }
-      body += chunk
-    })
-    req.on('end', () => {
-      try {
-        resolve(body ? JSON.parse(body) : {})
-      } catch {
-        reject(Object.assign(new Error('Request body must be valid JSON.'), { statusCode: 400 }))
-      }
-    })
-    req.on('error', reject)
-  })
-}
-
 function normalizeProfiles(input) {
   if (!Array.isArray(input) || input.length === 0 || input.length > MAX_PROFILE_COUNT) return []
   return input
@@ -120,15 +59,9 @@ function normalizeProfiles(input) {
       archetype: String(profile.archetype || '').slice(0, 160),
       rationale: String(profile.rationale || '').slice(0, 500),
       pair: typeof profile.pair === 'string' ? profile.pair.slice(0, 120) : '',
-      words: Array.isArray(profile.words) ? profile.words.slice(0, 40).map((word) => String(word).slice(0, 50)) : []
+      words: Array.isArray(profile.words) ? profile.words.slice(0, 40).map((word) => String(word).slice(0, 50)) : [],
+      ...(typeof profile.lang === 'string' ? { lang: profile.lang.slice(0, 20) } : {})
     }))
-}
-
-const responseCache = new Map()
-const MAX_CACHE_ENTRIES = 200
-
-function normalizeCacheKey(prompt) {
-  return String(prompt || '').toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim()
 }
 
 function buildGeminiPrompt(prompt, profiles) {
@@ -139,8 +72,10 @@ function buildGeminiPrompt(prompt, profiles) {
     meta: p.meta,
     arch: p.archetype,
     pair: p.pair || undefined,
-    kw: (p.words || []).slice(0, 12).join(', ')
+    kw: (p.words || []).slice(0, 12).join(', '),
+    ...(p.lang ? { lang: p.lang } : {})
   }))
+  const hasLang = compactCatalog.some((p) => p.lang)
 
   return [
     'You are Fontally, an expert type director.',
@@ -152,6 +87,10 @@ function buildGeminiPrompt(prompt, profiles) {
     'For each pick write a concise rationale (under 25 words) that references concrete words from the brief.',
     'Confidence: 0.9+ only for a clear fit, around 0.5 when the brief is vague; later picks should not exceed the first.',
     'brandName: copy the brand/product name exactly if the brief states one, otherwise return an empty string. Never invent one.',
+    ...(hasLang ? [
+      'The brief contains non-Latin text. Each profile\'s `lang` says which of its fonts can render that script',
+      '("heading+body", "heading", "body" or "none"). Strongly prefer "heading+body" or "heading" so the brand name renders correctly.'
+    ] : []),
     '',
     'CATALOG:',
     JSON.stringify(compactCatalog),
@@ -161,19 +100,32 @@ function buildGeminiPrompt(prompt, profiles) {
   ].join('\n')
 }
 
-// Gemini 2.5 models "think" by default and those thinking tokens count against
-// maxOutputTokens. With a small budget the answer gets truncated (finishReason
-// MAX_TOKENS, empty text) and every request falls back to the offline matcher.
+// Gemini models "think" by default and those thinking tokens count against
+// maxOutputTokens, adding latency and truncating the JSON answer. Picking from a
+// catalog doesn't need deep reasoning, so thinking is turned down as far as each
+// model family allows. The two families use different, incompatible knobs:
+//   gemini-2.5-*  -> thinkingBudget (0 disables it on Flash; Pro needs >= 128)
+//   gemini-3+     -> thinkingLevel ('minimal' on Flash/Lite, 'low' on Pro);
+//                    sending thinkingBudget: 0 to some 3.x models is a 400 error.
+function thinkingConfigFor(model) {
+  const m = String(model).toLowerCase()
+  if (/gemini-2\.5-.*pro/.test(m)) return { thinkingBudget: 128 }
+  if (/gemini-2\.5-/.test(m)) return { thinkingBudget: 0 }
+  if (/gemini-(\d+)/.test(m) && Number(/gemini-(\d+)/.exec(m)[1]) >= 3) {
+    return { thinkingLevel: /pro/.test(m) ? 'low' : 'minimal' }
+  }
+  return null // unknown family (e.g. *-latest aliases): use the model's default
+}
+
 function buildGeminiRequestBody(prompt, profiles, model = DEFAULT_MODEL) {
   const generationConfig = {
     temperature: 0.2,
-    maxOutputTokens: 768,
+    maxOutputTokens: 1024,
     responseMimeType: 'application/json',
     responseSchema: recommendationSchema
   }
-  if (/flash/i.test(model)) {
-    generationConfig.thinkingConfig = { thinkingBudget: 0 }
-  }
+  const thinkingConfig = thinkingConfigFor(model)
+  if (thinkingConfig) generationConfig.thinkingConfig = thinkingConfig
   return {
     systemInstruction: {
       parts: [{ text: 'Respond only with valid JSON matching the supplied schema.' }]
@@ -246,99 +198,6 @@ function parseRecommendation(text, allowedIds) {
 
   const brandName = typeof parsed?.brandName === 'string' ? parsed.brandName.trim().slice(0, 60) : ''
   return { ...picks[0], brandName, picks }
-}
-
-export function createGeminiRecommendationHandler({
-  apiKey = process.env.GEMINI_API_KEY,
-  model = process.env.GEMINI_MODEL || DEFAULT_MODEL,
-  fetchImpl = globalThis.fetch
-} = {}) {
-  return async function geminiRecommendationHandler(req, res) {
-    if (req.method === 'OPTIONS') {
-      res.statusCode = 204
-      res.end()
-      return
-    }
-    if (req.method !== 'POST') {
-      sendJson(res, 405, { error: 'Method not allowed.' })
-      return
-    }
-    if (isRateLimited(req)) {
-      sendJson(res, 429, { error: 'Too many recommendation requests. Please try again shortly.' })
-      return
-    }
-    if (!apiKey) {
-      sendJson(res, 503, { error: 'Gemini is not configured. Set GEMINI_API_KEY on the server.' })
-      return
-    }
-    try {
-      const body = await readJsonBody(req)
-      const prompt = typeof body.prompt === 'string' ? body.prompt.trim().slice(0, MAX_PROMPT_CHARS) : ''
-      const profiles = normalizeProfiles(body.profiles)
-      if (!prompt) {
-        sendJson(res, 400, { error: 'A design brief is required.' })
-        return
-      }
-      if (isGibberishPrompt(prompt)) {
-        sendJson(res, 400, { error: 'The provided brief appears to be random characters or gibberish. Please describe your project, brand, or desired aesthetic vibe (e.g., "cyberpunk gaming studio", "warm artisan bakery").' })
-        return
-      }
-      if (!profiles.length) {
-        sendJson(res, 400, { error: 'A valid profile catalog is required.' })
-        return
-      }
-
-      // Check high-speed in-memory response cache (<1ms response)
-      const cacheKey = normalizeCacheKey(prompt)
-      if (responseCache.has(cacheKey)) {
-        const cached = responseCache.get(cacheKey)
-        sendJson(res, 200, { ...cached, cached: true })
-        return
-      }
-
-      const controller = new AbortController()
-      const timeout = setTimeout(() => controller.abort(), 12_000)
-      let geminiResponse
-      try {
-        geminiResponse = await fetchImpl(`${GEMINI_API_BASE}/${encodeURIComponent(model)}:generateContent`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-goog-api-key': apiKey
-          },
-          body: JSON.stringify(buildGeminiRequestBody(prompt, profiles, model)),
-          signal: controller.signal
-        })
-      } finally {
-        clearTimeout(timeout)
-      }
-
-      const responsePayload = await geminiResponse.json().catch(() => ({}))
-      if (!geminiResponse.ok) {
-        console.error('Gemini request failed:', geminiResponse.status, responsePayload?.error?.message || 'unknown error')
-        sendJson(res, geminiResponse.status === 429 ? 429 : 502, { error: 'Gemini could not complete the recommendation.' })
-        return
-      }
-      const result = parseRecommendation(extractGeminiText(responsePayload), new Set(profiles.map((profile) => profile.id)))
-      
-      // Store in memory cache
-      if (responseCache.size >= MAX_CACHE_ENTRIES) {
-        const firstKey = responseCache.keys().next().value
-        responseCache.delete(firstKey)
-      }
-      responseCache.set(cacheKey, result)
-
-      sendJson(res, 200, result)
-    } catch (error) {
-      if (error?.name === 'AbortError') {
-        sendJson(res, 504, { error: 'Gemini recommendation timed out.' })
-        return
-      }
-      const statusCode = Number.isInteger(error?.statusCode) ? error.statusCode : 500
-      console.error('Recommendation handler error:', error)
-      sendJson(res, statusCode, { error: statusCode >= 500 ? 'Recommendation service failed.' : error.message })
-    }
-  }
 }
 
 export { buildGeminiPrompt, buildGeminiRequestBody, extractGeminiText, normalizeProfiles, parseRecommendation, recommendationSchema, isGibberishPrompt }

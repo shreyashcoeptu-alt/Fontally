@@ -7,3 +7,8 @@ dist
 .env
 .env.*
 !.env.example
+
+# Live recommendation eval reports
+eval-results/
+.vercel
+.env*

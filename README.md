@@ -30,67 +30,34 @@
 
 ## ⚡ Key Features
 
-- 🧠 **Gemini-Powered Typography Engine**: Sends creative design briefs to a serverless Gemini endpoint with fast token sampling, compressed prompt payloads, and persistent response caching across deployments.
-- 🛡️ **Intelligent Gibberish & Quality Guardrails**: Detects and rejects nonsensical keystroke smashes, interleaved numbers/letters (e.g. `"afrvq1r1"`), vowel-less clusters, and low-entropy inputs with responsive terminal shake animations and actionable error guidance, preventing hallucinated pairings.
-- 🎯 **Direct Font Name Recognition (+25 Match Boost)**: Type any specific font name (e.g. *"Space Grotesk"*, *"Fraunces"*, *"Cinzel"*, *"Playfair"*, *"Geist"*) directly into the design brief to immediately inspect and showcase that exact typeface and its optimal pairing.
-- 🗄️ **Supabase & pgvector Persistence**:
-  - Persistent recommendation cache in PostgreSQL with hit count metrics (survives cold starts and redeployments).
-  - High-dimensional vector embeddings (`gemini-embedding-001` with 768 dimensions) for semantic font similarity search.
-  - Zero-config graceful in-memory fallback during local development or offline test environments.
-  - Ready-to-run [`server/db/seed.sql`](server/db/seed.sql) with 130+ pre-formatted font definitions.
-- 🔍 **Three-Tier Search Architecture (Fuzzy + Filters + Vector Semantic)**:
-  - **Typo-Tolerant Search (Fuse.js)**: Handles typos and partial names (e.g. `"playfar"` instantly matches `"Playfair Display"`).
-  - **Vibe & Tag Discovery**: Query by aesthetic mood tags (*"cyberpunk"*, *"quiet-luxury"*, *"editorial"*, *"warm"*), designers, and use cases.
-  - **Granular Typographic Filters**: Filter by classification, variable font support (`variable=true`), and custom weight ranges (`min_weight`, `max_weight`).
-- 🧬 **Font Similarity Engine**: Find stylistically and structurally similar fonts to any family in the catalog (`GET /api/fonts/similar/:family`).
-- 🔖 **User History & Favourites**: Anonymous session-based history tracking and bookmarks for saved pairings (`/api/history`, `/api/favourites`).
-- 🔤 **106+ Curated Typographic Archetypes**: Complete aesthetic taxonomy spanning *Developer Precision (Geist), 70s Wonky Craft (Fraunces), Imperial Roman (Cinzel), 8-Bit Arcade (Silkscreen), Italian Haute Couture (Italiana), Americana Heavy Slab (Alfa Slab One), Comic Pop Action (Bangers), Hollywood Screenplay (Courier Prime), Hypermodern FinTech (Outfit), Y2K Inflatable Bubble (DynaPuff), Street Skate Marker (Permanent Marker)*, and more.
-- 🧪 **Interactive Type Lab Sandbox**:
-  - Live editable specimen playground
-  - Real-time optical size slider (20px – 120px)
-  - Style modifiers (<kbd>Aa</kbd> Uppercase, <kbd>I</kbd> Italic, <kbd>B</kbd> Bold)
-  - Color palette swatches and interactive hex color picker
-  - One-click dummy copy presets (*Pangram, Headline, Alphabet, Numbers, Paragraph*)
-- 💻 **Developer Code Export**: One-click `@import` and CSS custom property export, Tailwind CSS family snippets, plus direct links to font specimen pages on [fonts.google.com](https://fonts.google.com/).
-- ☁️ **Vercel Edge & Serverless Ready**: Native Hono.js router for zero-config global deployment.
+- 🧠 **Top-3 Gemini recommendations, each with a reason**: three different-feeling pairings, best first. Pick #1 fills the main card; the two alternates swap in with one click.
+- ✍️ **Preview in your own words**: your brand name (detected from the brief, editable) is set in the heading font and your brief in the body font.
+- 🔁 **Resilient model chain**: if one Gemini model is out of quota or overloaded, the next one answers, and models that just hit quota are skipped. If all fail, an offline keyword matcher still returns three picks and says so.
+- 🌏 **Language-aware**: briefs in Hindi, Japanese, Korean, Greek, Cyrillic and more are accepted, and you're warned when a font has no glyphs for your script. Language data comes from Google Fonts' own metadata.
+- 🔤 **On-demand body pairing**: swap the body font for rule-based alternatives (contrast, readability at 16px, mood fit, glyph coverage). The CSS export follows.
+- 💾 **Saved pairings & recent briefs**: anonymous, per browser, synced to the server when a database is configured.
+- 📈 **Learns from use**: when visitors to the same brief keep choosing an alternate, it gets promoted.
+- 📏 **Measured, not guessed**: a 70-brief evaluation set scores the offline matcher on every `npm test` and live Gemini models with `npm run eval`. See [docs/RECOMMENDATION_ENGINE.md](docs/RECOMMENDATION_ENGINE.md).
+- 🛡️ **Gibberish guard** (shared by browser and server): rejects keyboard mashing like `afrvq1r1` without blocking acronyms (`CRM`, `BBQ`) or non-Latin text.
+- 🔍 **Catalog search API**: fuzzy (Fuse.js), filters, and pgvector semantic search over 130 enriched fonts, plus font similarity.
+- 🧪 **Type Lab**: live editable specimen, size slider, case/italic/bold toggles, colours, text presets.
+- 💻 **Developer export**: `@import` + CSS custom properties using the real Google Fonts families, and a link to each specimen.
 
 ---
 
 ## 🛠️ Project Structure
 
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the full code map, request flow, and which external API is used where.
+
 ```text
 Fontally/
-├── api/
-│   └── index.js                  # Single Vercel function; vercel.json rewrites /api/* here
-├── shared/
-│   ├── profiles.js               # 106 curated pairing profiles (used by browser + API)
-│   └── gibberish.js              # Brief quality guard (used by browser + API)
-├── server/
-│   ├── app.mjs                   # Unified Hono router with CORS, timing & error handling
-│   ├── db/
-│   │   ├── schema.sql            # Supabase PostgreSQL + pgvector schema & RLS policies
-│   │   ├── seed.sql              # 130+ fonts instant SQL seed dataset with conflict handling
-│   │   └── supabase.mjs          # Database client with test & offline in-memory fallback
-│   ├── lib/
-│   │   ├── embeddings.mjs        # Gemini gemini-embedding-001 vector generator
-│   │   ├── font-catalog.mjs      # 130+ enriched font catalogue dataset with metadata
-│   │   └── fuzzy.mjs             # Fuse.js typo-tolerant multi-key search index
-│   └── routes/
-│       ├── recommend.mjs         # Recommendation route with gibberish detection & caching
-│       ├── fonts.mjs             # Multi-mode search & similarity route
-│       ├── history.mjs           # User history route
-│       └── favourites.mjs        # User favourites bookmark route
-├── scripts/
-│   └── seed-fonts.mjs            # Seeding script with Gemini vector embeddings
-├── src/
-│   ├── main.js                   # Client state, 106 archetypes, Type Lab, gibberish detector
-│   └── style.css                 # Vanilla CSS design system, dark mode & layout
-├── tests/
-│   ├── backend.test.js           # Vitest suite for Hono backend routes, search & validation
-│   └── scorer.test.js            # Vitest suite for Gemini response & gibberish validation
-├── vite.config.js                # Vite development server with Hono API middleware
-├── vercel.json                   # Vercel deployment configuration
-└── package.json                  # Dependencies, scripts, and metadata
+├── api/index.js            # Single Vercel function; vercel.json rewrites /api/* here
+├── server/                 # Hono app: routes, Gemini client + model chain, candidates, Supabase
+├── shared/                 # Used by browser AND server: profiles, matcher, pairing, font metadata
+├── src/                    # Browser UI (main.js), API helpers (api.js), styles
+├── scripts/                # eval-recommendations · sync-font-metadata · seed-fonts
+├── tests/                  # Vitest suites + eval/briefs.json
+└── docs/RECOMMENDATION_ENGINE.md   # How the model was chosen, with measurements
 ```
 
 ---
@@ -114,20 +81,15 @@ Create a `.env` file in the root directory:
 cp .env.example .env
 ```
 
-Add your keys:
-```dotenv
-# Gemini API Configuration
-GEMINI_API_KEY=your_gemini_api_key_here
-GEMINI_MODEL=gemini-2.5-flash
+Only `GEMINI_API_KEY` is required; everything else is optional and documented in [`.env.example`](.env.example):
 
-# Optional: Google Fonts API
-GOOGLE_FONTS_API_KEY=optional_google_fonts_api_key_here
-
-# Supabase Persistence & pgvector (Optional, falls back to in-memory)
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your_supabase_anon_key_here
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key_here
-```
+| Variable | Purpose |
+|---|---|
+| `GEMINI_API_KEY` | Gemini key (server-side only) |
+| `GEMINI_MODEL` / `GEMINI_FALLBACK_MODELS` | Override the evaluated default model chain |
+| `RECOMMEND_CANDIDATES` | Shortlist size sent to Gemini (default `20`; `0` = whole catalog) |
+| `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` | Persistence for cache, feedback, history, favourites |
+| `ALLOWED_ORIGINS` | Extra browser origins allowed to call the API |
 
 ### 4. Database Setup & Seeding (Optional)
 If using Supabase:
@@ -147,92 +109,47 @@ Open `http://localhost:5173/` in your browser.
 
 ---
 
-## 🧪 Testing & Building
+## 🧪 Testing, Evaluation & Building
 
-Run the complete Vitest test suite:
 ```bash
-npm test -- --run
-```
-
-Build for production:
-```bash
-npm run build
-```
-
-Preview the production build locally:
-```bash
-npm run preview
+npm test -- --run        # 66 tests, including the offline recommendation eval and a jsdom UI suite
+npm run eval             # Score live Gemini on tests/eval/briefs.json (uses API quota)
+GEMINI_MODEL=gemini-3.5-flash-lite RECOMMEND_CANDIDATES=0 npm run eval    # compare setups
+npm run sync-fonts       # Refresh Google Fonts metadata (languages, axes, popularity)
+npm run build            # Production build
+npm run preview          # Preview the production build with the API
 ```
 
 ---
 
 ## 🌐 API Architecture
 
-### 1. `POST /api/recommend`
-Generates typography recommendations based on natural-language briefs.
+Full reference, including external services: [ARCHITECTURE.md §4–5](ARCHITECTURE.md#4-external-apis-and-services).
 
-**Request Payload:**
+### `POST /api/recommend`
+```json
+{ "prompt": "Crumb & Co, a warm sourdough bakery in Lisbon" }
+```
 ```json
 {
-  "prompt": "A warm artisanal bakery brand with nostalgic 70s typography.",
-  "profiles": [ /* catalog of archetype profiles */ ]
+  "profileId": "coffee", "confidence": 0.92, "rationale": "…", "tags": ["warm"],
+  "brandName": "Crumb & Co",
+  "picks": [ { "profileId": "coffee", "…": "…" }, { "profileId": "wonky_craft_artisan" }, { "profileId": "french_patisserie" } ],
+  "briefKey": "crumb co a warm sourdough bakery in lisbon",
+  "model": "gemini-3.1-flash-lite"
 }
 ```
+Errors: `400` (empty or gibberish brief), `429` (rate limit, or every Gemini model out of quota: `"reason": "quota"`), `502`/`504` (Gemini unavailable or timed out). The UI then falls back to offline picks.
 
-**Response (200 OK):**
-```json
-{
-  "profileId": "pastry-shop",
-  "confidence": 0.94,
-  "rationale": "Fluid retro curves evoke handcrafted dough and warm ovens.",
-  "tags": ["NOSTALGIC", "WARM", "ARTISAN", "RETRO"]
-}
-```
-
-**Response (400 Bad Request — Gibberish / Malformed Input):**
-```json
-{
-  "error": "The provided brief appears to be random characters or gibberish. Please describe your project, brand, or desired aesthetic vibe (e.g., \"cyberpunk gaming studio\", \"warm artisan bakery\")."
-}
-```
-
----
-
-### 2. `GET /api/fonts`
-Multi-mode font catalogue search combining typo-tolerant fuzzy matching, database filters, and vector semantic similarity.
-
-**Query Parameters:**
-- `q` / `query` *(optional)*: Search query (e.g. `roboto`, `playfar`, `cyberpunk`, `clean`)
-- `category` *(optional)*: `all` | `sans-serif` | `serif` | `display` | `monospace` | `handwriting`
-- `variable` *(optional)*: `true` | `false` (filter variable fonts)
-- `min_weight` / `max_weight` *(optional)*: Weight range filter (e.g. `300` to `800`)
-- `mode` *(optional)*: `auto` | `fuzzy` | `semantic`
-- `limit` *(optional)*: Maximum results (default: `250`)
-
----
-
-### 3. `GET /api/fonts/similar/:family`
-Finds fonts with the closest visual traits, classification, and mood vibes to a given font family.
-
-**Example:**
-```bash
-curl http://localhost:5173/api/fonts/similar/Playfair%20Display
-```
-
----
-
-### 4. `GET /api/history` & `POST /api/history`
-Anonymous session-based brief history tracking via `x-session-id` header or body parameter.
-
----
-
-### 5. `GET /api/favourites` & `POST /api/favourites` & `DELETE /api/favourites/:id`
-Save, retrieve, and delete bookmarked font pairings per session.
-
----
-
-### 6. `GET /api/health`
-System status and feature capability overview (Gemini, Supabase, vector search).
+### Other endpoints
+| Endpoint | Purpose |
+|---|---|
+| `POST /api/feedback` | `{ briefKey, profileId, event }`: which pick was used (`choose_alternate`, `copy_css`, `save`, `open_google_fonts`) |
+| `GET/POST /api/favourites`, `DELETE /api/favourites/:id` | Saved pairings (`x-session-id` header) |
+| `GET/POST /api/history` | Brief history (`x-session-id` header) |
+| `GET /api/fonts` | Catalog search: `q`, `category`, `variable`, `min_weight`, `max_weight`, `mode=auto\|fuzzy\|semantic`, `limit` |
+| `GET /api/fonts/similar/:family` | Similar fonts |
+| `GET /api/health` | Status, Gemini model chain, Supabase availability |
 
 ---
 
@@ -241,12 +158,9 @@ System status and feature capability overview (Gemini, Supabase, vector search).
 1. Push your repository to GitHub.
 2. Go to [vercel.com/new](https://vercel.com/new) and import `Fontally`.
 3. Add your Environment Variables in the Vercel Dashboard:
-   - `GEMINI_API_KEY`: Your Google Gemini API key
-   - `GEMINI_MODEL`: `gemini-2.5-flash`
-   - `SUPABASE_URL`: Your Supabase API URL *(optional)*
-   - `SUPABASE_ANON_KEY`: Your Supabase Anon Key *(optional)*
-   - `SUPABASE_SERVICE_ROLE_KEY`: Your Supabase Service Role Key *(optional)*
-4. Click **Deploy**.
+   - `GEMINI_API_KEY`: Your Google Gemini API key (enable billing for real traffic; the free tier allows only a few requests per minute per model)
+   - `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`: needed in production for the cache, feedback learning and cross-device favourites
+4. Click **Deploy**, then open `/api/health` to confirm `geminiConfigured: true`.
 
 ---
 
