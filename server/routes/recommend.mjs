@@ -88,12 +88,17 @@ recommendRoute.post('/', async (c) => {
       error: 'The provided brief appears to be random characters or gibberish. Please describe your project, brand, or desired aesthetic vibe (e.g., "cyberpunk gaming studio", "warm artisan bakery").'
     }, 400)
   }
-  const cacheKey = normalizeCacheKey(prompt)
+  // v2: responses carry top-3 picks; older single-pick cache rows are ignored
+  const cacheKey = `v2:${normalizeCacheKey(prompt)}`
 
   // 1. Check persistent / in-memory cache
-  const cached = await getRecommendationCache(cacheKey)
-  // Ignore stale cache rows that point at a profile which no longer exists
-  if (cached && SERVER_PROFILE_IDS.has(cached.profileId)) {
+  const cachedRow = await getRecommendationCache(cacheKey)
+  // Drop cached picks that point at profiles which no longer exist
+  const cachedPicks = (cachedRow?.picks || []).filter((pick) => SERVER_PROFILE_IDS.has(pick?.profileId))
+  const cached = cachedPicks.length
+    ? { ...cachedPicks[0], brandName: cachedRow.brandName || '', picks: cachedPicks }
+    : null
+  if (cached) {
     // Optionally record to session history
     if (sessionId) {
       saveUserHistory({

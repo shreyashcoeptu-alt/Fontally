@@ -104,6 +104,10 @@ CREATE TABLE IF NOT EXISTS recommendation_cache (
   last_hit_at  TIMESTAMPTZ DEFAULT now()
 );
 
+-- Top-3 recommendations (added in v2; safe to re-run on existing databases)
+ALTER TABLE recommendation_cache ADD COLUMN IF NOT EXISTS picks JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE recommendation_cache ADD COLUMN IF NOT EXISTS brand_name TEXT DEFAULT '';
+
 CREATE INDEX IF NOT EXISTS recommendation_cache_last_hit_idx 
   ON recommendation_cache(last_hit_at DESC);
 

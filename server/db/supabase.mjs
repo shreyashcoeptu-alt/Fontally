@@ -44,7 +44,7 @@ export async function getRecommendationCache(cacheKey) {
   try {
     const { data, error } = await client
       .from('recommendation_cache')
-      .select('profile_id, confidence, rationale, tags, hit_count')
+      .select('profile_id, confidence, rationale, tags, picks, brand_name, hit_count')
       .eq('cache_key', cacheKey)
       .maybeSingle()
 
@@ -62,7 +62,9 @@ export async function getRecommendationCache(cacheKey) {
       profileId: data.profile_id,
       confidence: data.confidence,
       rationale: data.rationale,
-      tags: data.tags || []
+      tags: data.tags || [],
+      brandName: data.brand_name || '',
+      picks: Array.isArray(data.picks) ? data.picks : []
     }
   } catch (err) {
     console.warn('Supabase cache lookup error:', err.message)
@@ -70,9 +72,9 @@ export async function getRecommendationCache(cacheKey) {
   }
 }
 
-export async function setRecommendationCache(cacheKey, { profileId, confidence, rationale, tags }) {
+export async function setRecommendationCache(cacheKey, { profileId, confidence, rationale, tags, brandName = '', picks = [] }) {
   // Always write to in-memory cache as immediate layer
-  inMemoryCache.set(cacheKey, { profileId, confidence, rationale, tags })
+  inMemoryCache.set(cacheKey, { profileId, confidence, rationale, tags, brandName, picks })
 
   const client = getSupabaseClient()
   if (!client) return
@@ -86,6 +88,8 @@ export async function setRecommendationCache(cacheKey, { profileId, confidence, 
         confidence,
         rationale,
         tags: tags || [],
+        picks,
+        brand_name: brandName,
         hit_count: 1,
         last_hit_at: new Date().toISOString()
       }, { onConflict: 'cache_key' })

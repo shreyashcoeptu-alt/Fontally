@@ -2,6 +2,7 @@ import './style.css'
 import { inject } from '@vercel/analytics'
 import { profiles } from '../shared/profiles.js'
 import { isGibberishPrompt } from '../shared/gibberish.js'
+import { matchProfilesLocally, extractBrandName } from '../shared/local-matcher.js'
 
 inject()
 
@@ -38,6 +39,13 @@ const specimenPresetChips = document.querySelectorAll('.specimen-preset-chip')
 const copyCssBtn = $('#copyCssBtn')
 const openGoogleFontsBtn = $('#openGoogleFontsBtn')
 const recommendationStatus = $("#recommendationStatus")
+
+// Top-3 recommendation & "your words" preview handles
+const aiRationale = $('#aiRationale')
+const briefPreview = $('#briefPreview')
+const previewBrand = $('#previewBrand')
+const previewBody = $('#previewBody')
+const alternatesEl = $('#alternates')
 
 
 // Dynamic Google Font Loader: one <link> per stylesheet URL.
@@ -84,80 +92,9 @@ function buildProfile(p) {
   return { ...p, headingFamily, bodyFamily, cssImport, cssVars, tailwind }
 }
 
-// Client-Side Intelligent Semantic Vibe Matcher Engine (Fallback & Instant Analysis)
-function matchProfileLocally(promptText) {
-  if (isGibberishPrompt(promptText)) {
-    return { error: 'The input appears to be random characters or gibberish. Please describe your project, brand, or desired aesthetic vibe (e.g., "cyberpunk gaming studio", "warm artisan bakery").' }
-  }
-
-  const stopWords = new Set([
-    'a', 'an', 'the', 'and', 'or', 'for', 'with', 'in', 'on', 'at', 'to', 'of', 'by',
-    'from', 'my', 'your', 'our', 'is', 'are', 'was', 'be', 'brand', 'app', 'website',
-    'design', 'project', 'platform', 'company', 'startup', 'theme', 'look', 'style', 'like',
-    'font', 'fonts', 'typography', 'type'
-  ])
-
-  const rawTokens = promptText
-    .toLowerCase()
-    .replace(/[^\w\s]/g, ' ')
-    .split(/\s+/)
-    .filter((token) => token.length > 1 && !stopWords.has(token))
-
-  if (!rawTokens.length) {
-    return { error: 'Please enter a more descriptive design brief.' }
-  }
-
-  let bestProfile = null
-  let maxScore = -1
-
-  for (const p of profiles) {
-    let score = 0
-    const pWords = p.words || []
-    const pId = p.id.toLowerCase()
-    const pName = p.name.toLowerCase()
-    const pMeta = (p.meta || '').toLowerCase()
-    const pArchetype = (p.archetype || '').toLowerCase()
-    const pRationale = (p.rationale || '').toLowerCase()
-
-    for (const token of rawTokens) {
-      // Direct font name exact match bonus (+25)
-      if (pName.includes(token)) score += 25
-      if (pWords.includes(token)) score += 8
-      else if (pWords.some((w) => w.includes(token) || token.includes(w))) score += 4
-      if (pId.includes(token)) score += 6
-      if (pArchetype.includes(token)) score += 5
-      if (pMeta.includes(token)) score += 4
-      if (pRationale.includes(token)) score += 2
-    }
-
-    if (score > maxScore) {
-      maxScore = score
-      bestProfile = p
-    }
-  }
-
-  // If absolutely no tokens matched any profile, return an error rather than random guess
-  if (maxScore <= 0 || !bestProfile) {
-    return {
-      error: `No matching typography vibe found for "${promptText.slice(0, 40)}". Try describing your project with more descriptive style or mood words (e.g. "quiet luxury", "brutalist architecture", "retro diner").`
-    }
-  }
-
-  const confidence = Math.min(0.98, Math.max(0.72, 0.65 + maxScore * 0.03))
-  const tags = rawTokens.slice(0, 4).map((t) => t.toUpperCase())
-  if (!tags.length && bestProfile.words?.length) {
-    tags.push(...bestProfile.words.slice(0, 3).map((w) => w.toUpperCase()))
-  }
-
-  return {
-    profile: bestProfile,
-    confidence,
-    tags
-  }
-}
-
 // Client-side Memory Cache for Instant <1ms repeated lookups
 const clientRecommendationCache = new Map()
+const profileById = new Map(profiles.map((p) => [p.id, p]))
 
 // Gemini recommendation client with Resilient Local Semantic Fallback & Instant Cache
 const RECOMMENDATION_ENDPOINT = '/api/recommend'
@@ -203,9 +140,17 @@ async function recommendProfile(promptText) {
     }
 
     if (response.ok && payload.profileId) {
-      const profile = profiles.find((candidate) => candidate.id === payload.profileId)
-      if (profile) {
-        const result = { profile, aiResult: { ...payload, source: 'gemini' } }
+      // Older API deployments return a single pick without `picks`
+      const rawPicks = Array.isArray(payload.picks) && payload.picks.length ? payload.picks : [payload]
+      const picks = rawPicks
+        .map((pick) => ({ profile: profileById.get(pick.profileId), aiResult: { ...pick, source: 'gemini' } }))
+        .filter((pick) => pick.profile)
+      if (picks.length) {
+        const result = {
+          picks,
+          brandName: payload.brandName || extractBrandName(promptText),
+          source: 'gemini'
+        }
         clientRecommendationCache.set(cacheKey, result)
         return result
       }
@@ -223,23 +168,20 @@ async function recommendProfile(promptText) {
   }
 
   // Graceful Local Semantic Engine Fallback
-  const fallbackMatch = matchProfileLocally(promptText)
+  const fallbackMatch = matchProfilesLocally(promptText, profiles)
   if (fallbackMatch.error) {
     throw new Error(fallbackMatch.error)
   }
 
-  const result = {
-    profile: fallbackMatch.profile,
-    aiResult: {
-      profileId: fallbackMatch.profile.id,
-      confidence: fallbackMatch.confidence,
-      rationale: fallbackMatch.profile.rationale,
-      tags: fallbackMatch.tags,
-      source: 'local'
-    }
-  }
   // Offline matches are not cached, so the next attempt can still reach Gemini.
-  return result
+  return {
+    picks: fallbackMatch.picks.map(({ profile, confidence, rationale, tags }) => ({
+      profile,
+      aiResult: { profileId: profile.id, confidence, rationale, tags, source: 'local' }
+    })),
+    brandName: extractBrandName(promptText),
+    source: 'local'
+  }
 }
 
 // Toast Alert
@@ -321,10 +263,15 @@ async function copyToClipboard(text, button, successMessage = '✓ Copied to cli
 // Componentized State
 const state = {
   activeProfile: null,
+  // Current brief result: { brief, brandName, source, picks: [{ profile, aiResult }] }.
+  // picks[0] is always the profile shown in the main card. null when the active
+  // profile came from the shelf, a shared ?vibe= link, or the initial random pick.
+  recommendation: null,
   listeners: [],
   // updateUrl: 'push' adds a history entry, 'replace' rewrites the current one, false leaves the URL alone
-  setActiveProfile(profile, { updateUrl = 'push', aiResult = null } = {}) {
+  setActiveProfile(profile, { updateUrl = 'push', aiResult = null, recommendation = null } = {}) {
     this.activeProfile = { ...buildProfile(profile), aiResult };
+    this.recommendation = recommendation;
     this.notify();
 
     // URL Persistence
@@ -343,10 +290,26 @@ const state = {
   }
 };
 
+// Make picks[index] the main pick, keeping the other picks as alternates
+function promotePick(recommendation, index) {
+  const picks = [...recommendation.picks]
+  ;[picks[0], picks[index]] = [picks[index], picks[0]]
+  return { ...recommendation, picks }
+}
+
+function showPick(recommendation, { updateUrl = 'push' } = {}) {
+  const [main] = recommendation.picks
+  state.setActiveProfile(main.profile, { aiResult: main.aiResult, recommendation, updateUrl })
+}
+
 window.addEventListener("popstate", () => {
   const vibeId = new URLSearchParams(window.location.search).get("vibe")
   const profile = profiles.find((candidate) => candidate.id === vibeId)
-  if (profile && state.activeProfile?.id !== profile.id) state.setActiveProfile(profile, { updateUrl: false })
+  if (!profile || state.activeProfile?.id === profile.id) return
+  // Back/forward between picks of the same brief keeps the alternates on screen
+  const index = state.recommendation?.picks.findIndex((pick) => pick.profile.id === vibeId) ?? -1
+  if (index > 0) showPick(promotePick(state.recommendation, index), { updateUrl: false })
+  else state.setActiveProfile(profile, { updateUrl: false })
 })
 // Interactive Specimen State for Type Lab
 const specimenState = {
@@ -403,7 +366,12 @@ state.subscribe((profile) => {
   loadGoogleFont(profile.googleFontsUrl)
   // Show the real Google Fonts family the user will actually get and export.
   if (displayName) displayName.textContent = profile.headingFamily
-  if (displaySample) displaySample.innerHTML = profile.sample
+  // The user's own brand name beats the canned sample. textContent: user input is never HTML.
+  const brandName = state.recommendation?.brandName
+  if (displaySample) {
+    if (brandName) displaySample.textContent = brandName
+    else displaySample.innerHTML = profile.sample
+  }
 
   if (activeFontBadge) {
     activeFontBadge.textContent = profile.headingFamily
@@ -432,6 +400,14 @@ state.subscribe((profile) => {
     recommendationStatus.textContent = `${profile.headingFamily} + ${profile.bodyFamily} selected${source}.`
   }
 
+  if (aiRationale) {
+    aiRationale.textContent = aiResult?.rationale || ''
+    aiRationale.hidden = !aiResult?.rationale
+  }
+
+  renderBriefPreview(profile)
+  renderAlternates()
+
   // Editorial label vs. real font: say where the look comes from, honestly.
   const disclaimer = document.getElementById('licenseDisclaimer')
   if (disclaimer) {
@@ -442,6 +418,94 @@ state.subscribe((profile) => {
       disclaimer.style.display = 'none'
     }
   }
+})
+
+// "In your words": brand name in the heading font, the brief in the body font
+function renderBriefPreview(profile) {
+  if (!briefPreview) return
+  const rec = state.recommendation
+  briefPreview.hidden = !rec
+  if (!rec) return
+  if (previewBrand) {
+    if (document.activeElement !== previewBrand) {
+      previewBrand.textContent = rec.brandName || rec.brief.split(/[,.;:—–-]/)[0].trim().slice(0, 60)
+    }
+    previewBrand.style.fontFamily = profile.headingFallback
+  }
+  if (previewBody) {
+    previewBody.textContent = rec.brief
+    previewBody.style.fontFamily = profile.bodyFallback
+  }
+}
+
+function renderAlternates() {
+  if (!alternatesEl) return
+  const rec = state.recommendation
+  const alternates = rec ? rec.picks.slice(1) : []
+  alternatesEl.hidden = alternates.length === 0
+  alternatesEl.replaceChildren()
+  if (!alternates.length) return
+
+  const label = document.createElement('p')
+  label.className = 'alternates-label'
+  label.textContent = 'OR TRY'
+  alternatesEl.append(label)
+
+  const list = document.createElement('div')
+  list.className = 'alternates-list'
+  alternates.forEach(({ profile: raw, aiResult }, offset) => {
+    const alt = buildProfile(raw)
+    loadGoogleFont(alt.googleFontsUrl)
+
+    const card = document.createElement('button')
+    card.type = 'button'
+    card.className = 'alternate-card'
+    card.setAttribute('aria-label', `Use ${alt.headingFamily} with ${alt.bodyFamily} instead`)
+
+    const sample = document.createElement('span')
+    sample.className = 'alternate-sample'
+    sample.style.fontFamily = alt.headingFallback
+    sample.textContent = rec.brandName || alt.headingFamily
+
+    const families = document.createElement('span')
+    families.className = 'alternate-families'
+    families.textContent = `${alt.headingFamily} + ${alt.bodyFamily}`
+
+    const reason = document.createElement('span')
+    reason.className = 'alternate-reason'
+    reason.style.fontFamily = alt.bodyFallback
+    reason.textContent = aiResult?.rationale || alt.rationale
+
+    card.append(sample, families, reason)
+    card.addEventListener('click', () => {
+      showPick(promotePick(state.recommendation, offset + 1))
+      document.getElementById('results')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+    list.append(card)
+  })
+  alternatesEl.append(list)
+}
+
+// Let users correct the brand name we guessed; keep every preview in sync
+previewBrand?.addEventListener('input', () => {
+  if (!state.recommendation) return
+  state.recommendation.brandName = previewBrand.textContent.trim().slice(0, 60)
+  if (displaySample) {
+    if (state.recommendation.brandName) displaySample.textContent = state.recommendation.brandName
+    else if (state.activeProfile) displaySample.innerHTML = state.activeProfile.sample
+  }
+  alternatesEl?.querySelectorAll('.alternate-sample').forEach((el, i) => {
+    const alt = state.recommendation.picks[i + 1]
+    if (alt) el.textContent = state.recommendation.brandName || buildProfile(alt.profile).headingFamily
+  })
+})
+previewBrand?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); previewBrand.blur() }
+})
+previewBrand?.addEventListener('paste', (e) => {
+  e.preventDefault()
+  const text = (e.clipboardData?.getData('text/plain') || '').replace(/\s+/g, ' ').slice(0, 60)
+  document.execCommand('insertText', false, text)
 })
 
 const dummyPresets = {
@@ -497,8 +561,8 @@ async function updateRecommendation() {
   }
 
   try {
-    const recommendation = await recommendProfile(prompt)
-    state.setActiveProfile(recommendation.profile, { aiResult: recommendation.aiResult })
+    const result = await recommendProfile(prompt)
+    showPick({ ...result, brief: prompt })
     document.getElementById('results')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   } catch (error) {
     if (error.name === 'AbortError') return

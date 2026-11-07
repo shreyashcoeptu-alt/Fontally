@@ -81,6 +81,7 @@
               <p id="displayMeta">SERIF / VARIABLE</p>
               <p id="licenseDisclaimer" class="license-disclaimer" style="display: none;"></p>
               <p id="archetype" class="archetype"></p>
+              <p id="aiRationale" class="ai-rationale" hidden></p>
             </div>
           </div>
 
@@ -89,6 +90,17 @@
             <strong id="pairName">Neue Montreal</strong>
             <span id="pairMeta">GROTESK / 18PX</span>
           </div>
+
+          <!-- Live preview with the user's own brand name and brief -->
+          <div class="brief-preview" id="briefPreview" hidden>
+            <span class="brief-preview-label">IN YOUR WORDS <small>(click the name to edit)</small></span>
+            <p class="brief-preview-brand" id="previewBrand" contenteditable="plaintext-only" spellcheck="false"
+              role="textbox" aria-label="Brand name preview, editable"></p>
+            <p class="brief-preview-body" id="previewBody"></p>
+          </div>
+
+          <!-- Alternate picks (#2 and #3) -->
+          <div class="alternates" id="alternates" hidden aria-label="Alternative font pairings"></div>
 
           <!-- Developer Export Bar -->
           <div class="export-bar">
