@@ -12,3 +12,6 @@ dist
 eval-results/
 .vercel
 .env*
+
+# Embedding checkpoint for npm run build-index
+.cache/

@@ -26,20 +26,28 @@ const analyse = $('#analyse')
 const toast = $('#toast')
 
 // Specimen & Type Lab Handles
+const typeLab = $('.type-lab')
 const testerPreview = $('#testerPreview')
-const activeFontBadge = $('#activeFontBadge')
-const specimenTextInput = $('#specimenTextInput')
+const labHeadingName = $('#labHeadingName')
+const labBodyName = $('#labBodyName')
 const fontSizeSlider = $('#fontSizeSlider')
 const fontSizeVal = $('#fontSizeVal')
+const trackingSlider = $('#trackingSlider')
+const trackingVal = $('#trackingVal')
+const leadingSlider = $('#leadingSlider')
+const leadingVal = $('#leadingVal')
 const toggleCase = $('#toggleCase')
 const toggleItalic = $('#toggleItalic')
 const toggleBold = $('#toggleBold')
+const togglePaper = $('#togglePaper')
 const specimenColorPicker = $('#specimenColorPicker')
 const customColorPreview = $('#customColorPreview')
 const customColorWrapper = $('.custom-color-wrapper')
 const clearSpecimenText = $('#clearSpecimenText')
 const colorSwatches = document.querySelectorAll('.color-swatch')
 const specimenPresetChips = document.querySelectorAll('.specimen-preset-chip')
+const labTargetBtns = document.querySelectorAll('.lab-target-btn')
+const labViewBtns = document.querySelectorAll('.lab-view-btn')
 
 // Export Handles
 const copyCssBtn = $('#copyCssBtn')
@@ -340,32 +348,139 @@ window.addEventListener("popstate", () => {
   if (index > 0) showPick(promotePick(state.recommendation, index), { updateUrl: false })
   else state.setActiveProfile(profile, { updateUrl: false })
 })
-// Interactive Specimen State for Type Lab
+// Interactive Specimen State for Type Lab.
+// Heading and body each keep their own size/tracking/leading, because a
+// 56px display line and an 18px paragraph need very different settings.
+const LAB_TARGETS = {
+  heading: { min: 20, max: 120, waterfall: [96, 64, 44, 30, 20] },
+  body: { min: 10, max: 36, waterfall: [28, 22, 18, 15, 12] }
+}
+
 const specimenState = {
   text: 'The quick brown fox jumps over the lazy dog',
-  fontSize: 56,
+  target: 'heading',
+  view: 'line',
+  paper: 'light',
   isBold: false,
   isItalic: false,
   isUppercase: false,
-  color: '#121212'
+  color: 'auto',
+  settings: {
+    heading: { fontSize: 56, tracking: 0, leading: 1.05 },
+    body: { fontSize: 18, tracking: 0, leading: 1.5 }
+  }
+}
+
+const currentSettings = () => specimenState.settings[specimenState.target]
+const SPECIMEN_PLACEHOLDER = 'Type something to preview'
+
+function specimenLineSizes() {
+  return specimenState.view === 'waterfall'
+    ? LAB_TARGETS[specimenState.target].waterfall
+    : [currentSettings().fontSize]
+}
+
+// Rebuild the specimen lines. Lines are plaintext-only contenteditable so
+// pasted rich text can't smuggle in styles; typing in one line syncs the rest.
+function buildSpecimenLines() {
+  if (!testerPreview) return
+  const sizes = specimenLineSizes()
+  testerPreview.replaceChildren(...sizes.map((size) => {
+    const row = document.createElement('div')
+    row.className = 'specimen-row'
+    if (specimenState.view === 'waterfall') {
+      const marker = document.createElement('span')
+      marker.className = 'specimen-size'
+      marker.setAttribute('aria-hidden', 'true')
+      marker.textContent = size
+      row.append(marker)
+    }
+    const line = document.createElement('div')
+    line.className = 'specimen-line'
+    line.contentEditable = 'plaintext-only'
+    line.spellcheck = false
+    line.dataset.size = size
+    line.dataset.placeholder = SPECIMEN_PLACEHOLDER
+    line.setAttribute('role', 'textbox')
+    line.setAttribute('aria-label', `Specimen text at ${size} pixels`)
+    line.style.fontSize = `${size}px`
+    line.textContent = specimenState.text
+    row.append(line)
+    return row
+  }))
 }
 
 function renderSpecimenContent() {
-  const content = specimenState.text.trim() || 'Type something to preview...'
-  if (testerPreview && document.activeElement !== testerPreview) {
-    testerPreview.textContent = content
-  }
+  if (!testerPreview) return
+  testerPreview.querySelectorAll('.specimen-line').forEach((line) => {
+    // Never rewrite the line being typed in, or the caret jumps to the start.
+    if (line !== document.activeElement && line.textContent !== specimenState.text) {
+      line.textContent = specimenState.text
+    }
+  })
+}
+
+function specimenFontFamily() {
+  const profile = state.activeProfile
+  if (!profile) return ''
+  return specimenState.target === 'body' ? profile.bodyFallback : profile.headingFallback
 }
 
 function applySpecimenStyles() {
+  const s = currentSettings()
+  if (typeLab) {
+    typeLab.dataset.target = specimenState.target
+    typeLab.dataset.view = specimenState.view
+    typeLab.dataset.paper = specimenState.paper
+  }
   if (testerPreview) {
-    testerPreview.style.fontSize = `${specimenState.fontSize}px`
+    const family = specimenFontFamily()
+    if (family) testerPreview.style.fontFamily = family
     testerPreview.style.fontWeight = specimenState.isBold ? '700' : '400'
     testerPreview.style.fontStyle = specimenState.isItalic ? 'italic' : 'normal'
     testerPreview.style.textTransform = specimenState.isUppercase ? 'uppercase' : 'none'
-    testerPreview.style.color = specimenState.color
-    testerPreview.style.setProperty('--specimen-color', specimenState.color)
+    testerPreview.style.letterSpacing = `${s.tracking}em`
+    testerPreview.style.lineHeight = String(s.leading)
+    if (specimenState.color === 'auto') testerPreview.style.removeProperty('--specimen-color')
+    else testerPreview.style.setProperty('--specimen-color', specimenState.color)
+    if (specimenState.view === 'line') {
+      testerPreview.querySelectorAll('.specimen-line').forEach((line) => {
+        line.style.fontSize = `${s.fontSize}px`
+      })
+    }
   }
+  syncSpecimenControls()
+}
+
+// Keep sliders and readouts in step with whichever font is being tested.
+function syncSpecimenControls() {
+  const s = currentSettings()
+  const range = LAB_TARGETS[specimenState.target]
+  if (fontSizeSlider) {
+    fontSizeSlider.min = range.min
+    fontSizeSlider.max = range.max
+    fontSizeSlider.value = s.fontSize
+    fontSizeSlider.disabled = specimenState.view === 'waterfall'
+  }
+  if (fontSizeVal) fontSizeVal.textContent = specimenState.view === 'waterfall' ? 'Waterfall' : `${s.fontSize}px`
+  if (trackingSlider) trackingSlider.value = Math.round(s.tracking * 1000)
+  if (trackingVal) trackingVal.textContent = s.tracking === 0 ? '0' : `${s.tracking > 0 ? '+' : ''}${Math.round(s.tracking * 1000)}`
+  if (leadingSlider) leadingSlider.value = Math.round(s.leading * 100)
+  if (leadingVal) leadingVal.textContent = s.leading.toFixed(2)
+}
+
+function setRadioGroup(buttons, attr, value) {
+  buttons.forEach((btn) => {
+    const on = btn.dataset[attr] === value
+    btn.classList.toggle('active', on)
+    btn.setAttribute('aria-checked', String(on))
+  })
+}
+
+function setSpecimenText(text) {
+  specimenState.text = text
+  renderSpecimenContent()
+  updateActivePresetChip(text)
 }
 
 function setSpecimenColor(color, isCustom = false) {
@@ -381,10 +496,10 @@ function setSpecimenColor(color, isCustom = false) {
   if (customColorWrapper) {
     customColorWrapper.classList.toggle('active', isCustom)
   }
-  if (customColorPreview) {
+  if (customColorPreview && isCustom) {
     customColorPreview.style.backgroundColor = color
   }
-  if (specimenColorPicker && specimenColorPicker.value !== color) {
+  if (specimenColorPicker && isCustom && specimenColorPicker.value !== color) {
     specimenColorPicker.value = color
   }
 }
@@ -403,17 +518,16 @@ state.subscribe((profile) => {
     else displaySample.innerHTML = profile.sample
   }
 
-  if (activeFontBadge) {
-    activeFontBadge.textContent = profile.headingFamily
-  }
-  
+  if (labHeadingName) labHeadingName.textContent = profile.headingFamily
+  if (labBodyName) labBodyName.textContent = profile.bodyFamily
+
   if (profile.headingFallback) {
     if (displaySample) displaySample.style.fontFamily = profile.headingFallback
     if (displayName) displayName.style.fontFamily = profile.headingFallback
-    if (testerPreview) testerPreview.style.fontFamily = profile.headingFallback
   }
   if (profile.bodyFallback && pairName) pairName.style.fontFamily = profile.bodyFallback
 
+  if (testerPreview && !testerPreview.childElementCount) buildSpecimenLines()
   renderSpecimenContent()
   applySpecimenStyles()
 
@@ -814,104 +928,87 @@ brief?.addEventListener('keydown', (e) => {
 analyse?.addEventListener('click', updateRecommendation)
 
 // Specimen Customizer Handlers in Type Lab
-if (specimenTextInput) {
-  specimenTextInput.addEventListener('input', (e) => {
-    specimenState.text = e.target.value
-    renderSpecimenContent()
-    updateActivePresetChip(specimenState.text)
-  })
-}
-
 if (testerPreview) {
-  // Plain text paste handler to prevent external rich-text style pollution
-  testerPreview.addEventListener('paste', (e) => {
-    e.preventDefault()
-    const text = (e.clipboardData || window.clipboardData)?.getData('text/plain') || ''
-    if (document.queryCommandSupported && document.queryCommandSupported('insertText')) {
-      document.execCommand('insertText', false, text)
-    } else {
-      const selection = window.getSelection()
-      if (selection && selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0)
-        range.deleteContents()
-        const node = document.createTextNode(text)
-        range.insertNode(node)
-        range.setStartAfter(node)
-        range.setEndAfter(node)
-        selection.removeAllRanges()
-        selection.addRange(range)
-      } else {
-        testerPreview.textContent = text
-      }
-    }
-    specimenState.text = testerPreview.innerText || testerPreview.textContent || ''
-    if (specimenTextInput) specimenTextInput.value = specimenState.text
-    updateActivePresetChip(specimenState.text)
+  // Delegated: lines are rebuilt when the layout changes.
+  testerPreview.addEventListener('input', (e) => {
+    const line = e.target.closest?.('.specimen-line')
+    if (!line) return
+    setSpecimenText(line.textContent || '')
   })
-
-  testerPreview.addEventListener('input', () => {
-    specimenState.text = testerPreview.innerText || testerPreview.textContent || ''
-    if (specimenTextInput) specimenTextInput.value = specimenState.text
-    updateActivePresetChip(specimenState.text)
+  testerPreview.addEventListener('keydown', (e) => {
+    // Specimens are single strings; Enter would only desync the waterfall.
+    if (e.key === 'Enter' && e.target.closest?.('.specimen-line')) e.preventDefault()
   })
 }
 
 if (clearSpecimenText) {
   clearSpecimenText.addEventListener('click', () => {
-    specimenState.text = ''
-    if (specimenTextInput) specimenTextInput.value = ''
-    renderSpecimenContent()
-    updateActivePresetChip('')
-    if (specimenTextInput) specimenTextInput.focus()
+    setSpecimenText('')
+    testerPreview?.querySelector('.specimen-line')?.focus()
   })
 }
 
 specimenPresetChips.forEach(chip => {
   chip.addEventListener('click', () => {
-    const presetKey = chip.dataset.preset
-    if (dummyPresets[presetKey]) {
-      specimenState.text = dummyPresets[presetKey]
-      if (specimenTextInput) specimenTextInput.value = dummyPresets[presetKey]
-      renderSpecimenContent()
-      updateActivePresetChip(dummyPresets[presetKey])
-    }
+    const preset = dummyPresets[chip.dataset.preset]
+    if (preset) setSpecimenText(preset)
   })
 })
 
-if (fontSizeSlider) {
-  fontSizeSlider.addEventListener('input', (e) => {
-    specimenState.fontSize = Number(e.target.value)
-    if (fontSizeVal) fontSizeVal.textContent = `${specimenState.fontSize}px`
+labTargetBtns.forEach((btn) => {
+  btn.addEventListener('click', () => {
+    if (specimenState.target === btn.dataset.target) return
+    specimenState.target = btn.dataset.target
+    setRadioGroup(labTargetBtns, 'target', specimenState.target)
+    buildSpecimenLines()
     applySpecimenStyles()
   })
-}
+})
 
-if (toggleCase) {
-  toggleCase.addEventListener('click', () => {
-    specimenState.isUppercase = !specimenState.isUppercase
-    toggleCase.classList.toggle('active', specimenState.isUppercase)
-    toggleCase.setAttribute('aria-pressed', String(specimenState.isUppercase))
+labViewBtns.forEach((btn) => {
+  btn.addEventListener('click', () => {
+    if (specimenState.view === btn.dataset.view) return
+    specimenState.view = btn.dataset.view
+    setRadioGroup(labViewBtns, 'view', specimenState.view)
+    buildSpecimenLines()
     applySpecimenStyles()
   })
-}
+})
 
-if (toggleItalic) {
-  toggleItalic.addEventListener('click', () => {
-    specimenState.isItalic = !specimenState.isItalic
-    toggleItalic.classList.toggle('active', specimenState.isItalic)
-    toggleItalic.setAttribute('aria-pressed', String(specimenState.isItalic))
-    applySpecimenStyles()
-  })
-}
+fontSizeSlider?.addEventListener('input', (e) => {
+  currentSettings().fontSize = Number(e.target.value)
+  applySpecimenStyles()
+})
 
-if (toggleBold) {
-  toggleBold.addEventListener('click', () => {
-    specimenState.isBold = !specimenState.isBold
-    toggleBold.classList.toggle('active', specimenState.isBold)
-    toggleBold.setAttribute('aria-pressed', String(specimenState.isBold))
+trackingSlider?.addEventListener('input', (e) => {
+  currentSettings().tracking = Number(e.target.value) / 1000
+  applySpecimenStyles()
+})
+
+leadingSlider?.addEventListener('input', (e) => {
+  currentSettings().leading = Number(e.target.value) / 100
+  applySpecimenStyles()
+})
+
+function bindToggle(button, key) {
+  button?.addEventListener('click', () => {
+    specimenState[key] = !specimenState[key]
+    button.classList.toggle('active', specimenState[key])
+    button.setAttribute('aria-pressed', String(specimenState[key]))
     applySpecimenStyles()
   })
 }
+bindToggle(toggleCase, 'isUppercase')
+bindToggle(toggleItalic, 'isItalic')
+bindToggle(toggleBold, 'isBold')
+
+togglePaper?.addEventListener('click', () => {
+  specimenState.paper = specimenState.paper === 'light' ? 'dark' : 'light'
+  const dark = specimenState.paper === 'dark'
+  togglePaper.classList.toggle('active', dark)
+  togglePaper.setAttribute('aria-pressed', String(dark))
+  applySpecimenStyles()
+})
 
 // Color Selector Handlers
 colorSwatches.forEach(swatch => {

@@ -117,69 +117,79 @@
           </div>
         </article>
 
-        <!-- Right Side: Interactive Type Testing Lab -->
-        <aside class="type-lab" aria-label="Interactive Type Testing Lab">
-          <div class="type-lab-header">
-            <div class="type-lab-title">
-              <h3>TYPE LAB</h3>
+        <!-- Right Side: Type Lab — proof the pairing at real sizes -->
+        <aside class="type-lab" aria-labelledby="typeLabHeading" data-target="heading" data-view="line" data-paper="light">
+          <div class="lab-head">
+            <h3 id="typeLabHeading">Type lab</h3>
+            <div class="lab-target" role="radiogroup" aria-label="Font to test">
+              <button type="button" class="lab-target-btn active" data-target="heading" role="radio" aria-checked="true">
+                <span class="lab-target-role">Heading</span>
+                <span class="lab-target-name" id="labHeadingName">Spezia Variable</span>
+              </button>
+              <button type="button" class="lab-target-btn" data-target="body" role="radio" aria-checked="false">
+                <span class="lab-target-role">Body</span>
+                <span class="lab-target-name" id="labBodyName">Neue Montreal</span>
+              </button>
             </div>
-            <span class="active-font-badge" id="activeFontBadge">Spezia Variable</span>
           </div>
 
-          <!-- Formatting & Color Toolbar -->
-          <div class="specimen-controls" aria-label="Specimen formatting controls">
-            <div class="control-group range-group">
-              <label for="fontSizeSlider">SIZE <span id="fontSizeVal">56px</span></label>
-              <input type="range" id="fontSizeSlider" min="20" max="120" value="56" />
+          <div class="lab-controls" aria-label="Specimen controls">
+            <div class="lab-sliders">
+              <label class="lab-slider" id="sizeControl">
+                <span class="lab-slider-label">Size <output id="fontSizeVal" for="fontSizeSlider">56px</output></span>
+                <input type="range" id="fontSizeSlider" min="20" max="120" value="56" />
+              </label>
+              <label class="lab-slider">
+                <span class="lab-slider-label">Tracking <output id="trackingVal" for="trackingSlider">0</output></span>
+                <input type="range" id="trackingSlider" min="-80" max="200" step="5" value="0" />
+              </label>
+              <label class="lab-slider">
+                <span class="lab-slider-label">Leading <output id="leadingVal" for="leadingSlider">1.05</output></span>
+                <input type="range" id="leadingSlider" min="80" max="200" step="5" value="105" />
+              </label>
             </div>
 
-            <!-- Color Selector -->
-            <div class="control-group color-group" aria-label="Font color palette">
-              <span class="control-label" id="colorLabel">COLOR</span>
-              <div class="color-palette" role="radiogroup" aria-labelledby="colorLabel">
-                <button type="button" class="color-swatch active" data-color="#121212" style="--swatch-color: #121212;" title="Ink Black" aria-label="Ink Black" aria-checked="true" role="radio"></button>
-                <button type="button" class="color-swatch" data-color="#ff5f1f" style="--swatch-color: #ff5f1f;" title="Fontally Orange" aria-label="Fontally Orange" aria-checked="false" role="radio"></button>
-                <button type="button" class="color-swatch" data-color="#4e7200" style="--swatch-color: #4e7200;" title="Acid Olive" aria-label="Acid Olive" aria-checked="false" role="radio"></button>
-                <button type="button" class="color-swatch" data-color="#185adb" style="--swatch-color: #185adb;" title="Electric Cobalt" aria-label="Electric Cobalt" aria-checked="false" role="radio"></button>
-                <button type="button" class="color-swatch" data-color="#c9184a" style="--swatch-color: #c9184a;" title="Crimson Red" aria-label="Crimson Red" aria-checked="false" role="radio"></button>
-                <button type="button" class="color-swatch" data-color="#6f2dbd" style="--swatch-color: #6f2dbd;" title="Deep Violet" aria-label="Deep Violet" aria-checked="false" role="radio"></button>
-                <div class="custom-color-wrapper" title="Custom color picker">
-                  <input type="color" id="specimenColorPicker" value="#121212" aria-label="Custom color picker" />
-                  <span class="custom-color-preview" id="customColorPreview" style="background-color: #121212;"></span>
-                </div>
+            <div class="lab-toolbar">
+              <div class="lab-segment" role="radiogroup" aria-label="Specimen layout">
+                <button type="button" class="lab-view-btn active" data-view="line" role="radio" aria-checked="true">One size</button>
+                <button type="button" class="lab-view-btn" data-view="waterfall" role="radio" aria-checked="false">Waterfall</button>
+              </div>
+
+              <div class="color-palette" role="radiogroup" aria-label="Text color">
+                <button type="button" class="color-swatch active" data-color="auto" title="Ink" aria-label="Ink" aria-checked="true" role="radio"></button>
+                <button type="button" class="color-swatch" data-color="#ff5f1f" style="--swatch-color: #ff5f1f;" title="Fontally orange" aria-label="Fontally orange" aria-checked="false" role="radio"></button>
+                <button type="button" class="color-swatch" data-color="#4e7200" style="--swatch-color: #4e7200;" title="Olive" aria-label="Olive" aria-checked="false" role="radio"></button>
+                <button type="button" class="color-swatch" data-color="#185adb" style="--swatch-color: #185adb;" title="Cobalt" aria-label="Cobalt" aria-checked="false" role="radio"></button>
+                <button type="button" class="color-swatch" data-color="#c9184a" style="--swatch-color: #c9184a;" title="Crimson" aria-label="Crimson" aria-checked="false" role="radio"></button>
+                <label class="custom-color-wrapper" title="Pick any color">
+                  <input type="color" id="specimenColorPicker" value="#121212" aria-label="Pick any text color" />
+                  <span class="custom-color-preview" id="customColorPreview"></span>
+                </label>
+              </div>
+
+              <div class="control-actions">
+                <button id="togglePaper" type="button" title="Dark paper" aria-label="Dark paper" aria-pressed="false">
+                  <span class="paper-icon" aria-hidden="true"></span>
+                </button>
+                <button id="toggleCase" type="button" title="All caps" aria-label="All caps" aria-pressed="false">TT</button>
+                <button id="toggleItalic" type="button" title="Italic" aria-label="Italic" aria-pressed="false"><i>I</i></button>
+                <button id="toggleBold" type="button" title="Bold" aria-label="Bold" aria-pressed="false"><strong>B</strong></button>
               </div>
             </div>
-
-            <div class="control-actions">
-              <button id="toggleCase" type="button" title="Toggle uppercase" aria-label="Toggle uppercase"
-                aria-pressed="false">Aa</button>
-              <button id="toggleItalic" type="button" title="Toggle italic" aria-label="Toggle italic"
-                aria-pressed="false"><i>I</i></button>
-              <button id="toggleBold" type="button" title="Toggle bold" aria-label="Toggle bold"
-                aria-pressed="false"><strong>B</strong></button>
-            </div>
           </div>
 
-          <!-- Live Rendered Specimen Display in Type Lab -->
-          <div class="tester-preview-box" aria-live="polite">
-            <div id="testerPreview" class="tester-preview-content" contenteditable="true" spellcheck="false" aria-label="Live interactive specimen preview">The quick brown fox jumps over the lazy dog</div>
-          </div>
+          <!-- The specimen itself: every line is editable and stays in sync -->
+          <div class="lab-stage" id="testerPreview" aria-label="Specimen. Click any line to type your own words."></div>
 
-          <!-- Type Box & Presets -->
-          <div class="specimen-input-line">
-            <div class="type-input-header">
-              <label for="specimenTextInput">TYPE BOX</label>
-              <button id="clearSpecimenText" type="button" class="btn-clear-specimen" title="Clear text" aria-label="Clear text">✕</button>
-            </div>
-            <textarea id="specimenTextInput" rows="2" placeholder="Type any dummy text here to test the font in real time..." aria-label="Type custom specimen text" spellcheck="false">The quick brown fox jumps over the lazy dog</textarea>
-            <div class="specimen-presets" aria-label="Dummy text presets">
-              <span class="presets-label">DUMMY PRESETS:</span>
+          <div class="lab-foot">
+            <div class="specimen-presets" aria-label="Sample text">
               <button type="button" class="specimen-preset-chip" data-preset="pangram">Pangram</button>
               <button type="button" class="specimen-preset-chip" data-preset="headline">Headline</button>
               <button type="button" class="specimen-preset-chip" data-preset="alphabet">A–Z</button>
-              <button type="button" class="specimen-preset-chip" data-preset="numbers">0–9 &amp; Symbols</button>
+              <button type="button" class="specimen-preset-chip" data-preset="numbers">0–9 &amp; symbols</button>
               <button type="button" class="specimen-preset-chip" data-preset="paragraph">Paragraph</button>
             </div>
+            <button id="clearSpecimenText" type="button" class="btn-clear-specimen">Clear</button>
           </div>
         </aside>
       </div>

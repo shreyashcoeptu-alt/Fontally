@@ -40,7 +40,7 @@
 - 📏 **Measured, not guessed**: a 70-brief evaluation set scores the offline matcher on every `npm test` and live Gemini models with `npm run eval`. See [docs/RECOMMENDATION_ENGINE.md](docs/RECOMMENDATION_ENGINE.md).
 - 🛡️ **Gibberish guard** (shared by browser and server): rejects keyboard mashing like `afrvq1r1` without blocking acronyms (`CRM`, `BBQ`) or non-Latin text.
 - 🔍 **Catalog search API**: fuzzy (Fuse.js), filters, and pgvector semantic search over 130 enriched fonts, plus font similarity.
-- 🧪 **Type Lab**: live editable specimen, size slider, case/italic/bold toggles, colours, text presets.
+- 🧪 **Type Lab**: proof the heading *or* body font, as one size or a size waterfall; size, tracking and leading sliders, light/dark paper, case/italic/bold, colours, text presets. Type straight onto the specimen.
 - 💻 **Developer export**: `@import` + CSS custom properties using the real Google Fonts families, and a link to each specimen.
 
 ---

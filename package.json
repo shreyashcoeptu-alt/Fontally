@@ -10,7 +10,8 @@
     "test": "vitest",
     "seed": "node scripts/seed-fonts.mjs",
     "eval": "node scripts/eval-recommendations.mjs",
-    "sync-fonts": "node scripts/sync-font-metadata.mjs"
+    "sync-fonts": "node scripts/sync-font-metadata.mjs",
+    "build-index": "node scripts/build-profile-index.mjs"
   },
   "devDependencies": {
     "@hono/node-server": "^2.1.6",
