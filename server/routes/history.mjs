@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { getUserHistory, saveUserHistory } from '../db/supabase.mjs'
+import { parseLimit } from '../lib/params.mjs'
 
 export const historyRoute = new Hono()
 
@@ -9,7 +10,7 @@ historyRoute.get('/', async (c) => {
     return c.json({ error: 'Session ID is required.' }, 400)
   }
 
-  const limit = Math.min(100, Math.max(1, parseInt(c.req.query('limit') || '20', 10)))
+  const limit = parseLimit(c.req.query('limit'), { fallback: 20, max: 100 })
   const history = await getUserHistory(sessionId, limit)
   return c.json({ history })
 })

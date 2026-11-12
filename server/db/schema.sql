@@ -32,10 +32,11 @@ CREATE TABLE IF NOT EXISTS fonts (
   created_at       TIMESTAMPTZ DEFAULT now()
 );
 
--- Index for vector cosine similarity search
-CREATE INDEX IF NOT EXISTS fonts_embedding_idx 
-  ON fonts USING ivfflat (embedding vector_cosine_ops) 
-  WITH (lists = 50);
+-- No vector index on purpose. An exact scan of ~130 rows takes well under a
+-- millisecond. The old ivfflat index was never used (match_fonts orders by
+-- similarity, not by `embedding <=> q`) and was built on an empty table, which
+-- leaves ivfflat with useless centroids. Revisit (HNSW) only past ~10k fonts.
+DROP INDEX IF EXISTS fonts_embedding_idx;
 
 -- Indexes for fast filtering and full-text search
 CREATE INDEX IF NOT EXISTS fonts_category_idx ON fonts(category);
@@ -108,8 +109,20 @@ CREATE TABLE IF NOT EXISTS recommendation_cache (
 ALTER TABLE recommendation_cache ADD COLUMN IF NOT EXISTS picks JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE recommendation_cache ADD COLUMN IF NOT EXISTS brand_name TEXT DEFAULT '';
 
-CREATE INDEX IF NOT EXISTS recommendation_cache_last_hit_idx 
+CREATE INDEX IF NOT EXISTS recommendation_cache_last_hit_idx
   ON recommendation_cache(last_hit_at DESC);
+
+-- Atomic hit counter. The API used to read hit_count and write back +1, which
+-- lost counts when two visitors hit the same brief at once.
+CREATE OR REPLACE FUNCTION increment_cache_hit(key text)
+RETURNS void
+LANGUAGE sql
+AS $$
+  UPDATE recommendation_cache
+  SET hit_count = hit_count + 1, last_hit_at = now()
+  WHERE cache_key = key;
+$$;
+REVOKE EXECUTE ON FUNCTION increment_cache_hit(text) FROM PUBLIC, anon, authenticated;
 
 -- 5. User Search & Brief History (Anonymous session-based)
 CREATE TABLE IF NOT EXISTS user_history (
@@ -153,6 +166,32 @@ CREATE TABLE IF NOT EXISTS feedback_events (
 
 CREATE INDEX IF NOT EXISTS feedback_events_brief_idx ON feedback_events(brief_key);
 
+-- 6c. Daily embedding budget shared by every serverless instance.
+-- The Gemini free tier allows ~1,000 embeds/day per key; per-IP limits alone let
+-- one client exhaust it. Days follow Pacific time, when Gemini quotas reset.
+CREATE TABLE IF NOT EXISTS embed_usage (
+  day   DATE PRIMARY KEY,
+  count INT NOT NULL DEFAULT 0
+);
+
+-- true = one embed reserved for today; false = today's budget is spent
+CREATE OR REPLACE FUNCTION try_consume_embed(max_per_day int)
+RETURNS boolean
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  used int;
+BEGIN
+  INSERT INTO embed_usage AS u (day, count)
+  VALUES ((now() AT TIME ZONE 'America/Los_Angeles')::date, 1)
+  ON CONFLICT (day) DO UPDATE SET count = u.count + 1
+    WHERE u.count < max_per_day
+  RETURNING u.count INTO used;
+  RETURN used IS NOT NULL;
+END;
+$$;
+REVOKE EXECUTE ON FUNCTION try_consume_embed(int) FROM PUBLIC, anon, authenticated;
+
 -- =============================================================
 -- 7. Row Level Security (RLS) Configuration
 -- =============================================================
@@ -163,6 +202,7 @@ ALTER TABLE recommendation_cache ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_favourites ENABLE ROW LEVEL SECURITY;
 ALTER TABLE feedback_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE embed_usage ENABLE ROW LEVEL SECURITY;
 
 -- The API server talks to Supabase with the SERVICE ROLE key, which bypasses RLS.
 -- So the only policy needed is public read access to the font catalog.

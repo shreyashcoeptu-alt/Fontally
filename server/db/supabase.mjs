@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { runInBackground } from '../lib/background.mjs'
 
 let supabaseClient = null
 
@@ -79,19 +80,19 @@ export async function getRecommendationCache(cacheKey) {
   try {
     const { data, error } = await client
       .from('recommendation_cache')
-      .select('profile_id, confidence, rationale, tags, picks, brand_name, hit_count')
+      .select('profile_id, confidence, rationale, tags, picks, brand_name')
       .eq('cache_key', cacheKey)
       .maybeSingle()
 
     if (error || !data) return inMemoryCache.get(cacheKey) || null
 
-    // Increment hit counter asynchronously
-    client
-      .from('recommendation_cache')
-      .update({ hit_count: (data.hit_count || 1) + 1, last_hit_at: new Date().toISOString() })
-      .eq('cache_key', cacheKey)
-      .then(() => {})
-      .catch(() => {})
+    // Atomic increment in the database (a read-then-write lost counts under
+    // concurrent hits), kept alive past the response by waitUntil
+    runInBackground(
+      client.rpc('increment_cache_hit', { key: cacheKey }).then(({ error }) => {
+        if (error) throw error
+      })
+    )
 
     return {
       profileId: data.profile_id,
@@ -165,6 +166,45 @@ export async function searchFontsWithVector(embedding, {
     console.warn('Supabase vector query error:', err.message)
     return null
   }
+}
+
+// -------------------------------------------------------------
+// Daily embedding budget
+// -------------------------------------------------------------
+
+const pacificDay = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' })
+const inMemoryEmbedUsage = { day: '', count: 0 }
+
+function consumeEmbedQuotaInMemory(maxPerDay) {
+  const day = pacificDay()
+  if (inMemoryEmbedUsage.day !== day) Object.assign(inMemoryEmbedUsage, { day, count: 0 })
+  if (inMemoryEmbedUsage.count >= maxPerDay) return false
+  inMemoryEmbedUsage.count++
+  return true
+}
+
+/**
+ * Reserves one Gemini embedding call from today's budget. Returns false when it
+ * is spent. Shared across instances through Supabase; without Supabase the
+ * budget is per instance.
+ */
+export async function consumeEmbedQuota(maxPerDay) {
+  if (!(maxPerDay > 0)) return false
+  const client = getSupabaseClient()
+  if (!client) return consumeEmbedQuotaInMemory(maxPerDay)
+  try {
+    const { data, error } = await client.rpc('try_consume_embed', { max_per_day: maxPerDay })
+    if (error) throw error
+    return data === true
+  } catch (err) {
+    console.warn('Embed budget check failed, using per-instance budget:', err.message)
+    return consumeEmbedQuotaInMemory(maxPerDay)
+  }
+}
+
+// Test helper
+export function resetEmbedQuota() {
+  Object.assign(inMemoryEmbedUsage, { day: '', count: 0 })
 }
 
 // -------------------------------------------------------------

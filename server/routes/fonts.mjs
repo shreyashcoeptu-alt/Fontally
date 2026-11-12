@@ -1,13 +1,23 @@
 import { Hono } from 'hono'
-import { ENRICHED_FONT_CATALOG, FONT_MAP } from '../lib/font-catalog.mjs'
+import { ENRICHED_FONT_CATALOG } from '../lib/font-catalog.mjs'
 import { createFontSearchIndex } from '../lib/fuzzy.mjs'
 import { getGeminiEmbedding } from '../lib/embeddings.mjs'
-import { searchFontsWithVector } from '../db/supabase.mjs'
+import { searchFontsWithVector, consumeEmbedQuota } from '../db/supabase.mjs'
 import { clientIp, createRateLimiter } from '../lib/rate-limit.mjs'
+import { parseLimit } from '../lib/params.mjs'
 
 // Semantic search costs a Gemini embedding call per query; cap it per client.
 // Over the limit, the request quietly uses free fuzzy search instead.
 const isSemanticLimited = createRateLimiter({ limit: 10, windowMs: 60_000 })
+
+// Daily cap on query embeddings across all instances. The free tier allows ~1,000
+// embeds/day per key, and `npm run seed` / `npm run build-index` share that key,
+// so live search only gets part of it. Over the cap, search falls back to fuzzy.
+const EMBED_DAILY_LIMIT = (() => {
+  const n = Number(process.env.EMBED_DAILY_LIMIT)
+  return Number.isFinite(n) && n >= 0 ? Math.floor(n) : 500
+})()
+const reserveEmbed = () => consumeEmbedQuota(EMBED_DAILY_LIMIT)
 
 // Import base fonts list for full 250+ font coverage
 let allFontsCatalog = []
@@ -34,6 +44,12 @@ function getUnifiedCatalog() {
 
   allFontsCatalog = Array.from(map.values())
   return allFontsCatalog
+}
+
+let catalogMap = null
+function catalogByFamily() {
+  if (!catalogMap) catalogMap = new Map(getUnifiedCatalog().map((f) => [f.family.toLowerCase(), f]))
+  return catalogMap
 }
 
 // Build fuzzy search index
@@ -65,7 +81,7 @@ fontsRoute.get('/', async (c) => {
   const minWeightParam = c.req.query('min_weight')
   const maxWeightParam = c.req.query('max_weight')
   const mode = (c.req.query('mode') || 'auto').toLowerCase()
-  const limit = Math.min(500, Math.max(1, parseInt(c.req.query('limit') || '250', 10)))
+  const limit = parseLimit(c.req.query('limit'), { fallback: 250, max: 500 })
 
   const catalog = getUnifiedCatalog()
 
@@ -105,22 +121,27 @@ fontsRoute.get('/', async (c) => {
   
   if (isSemanticIntent && !isSemanticLimited(clientIp(c))) {
     try {
-      const embedding = await getGeminiEmbedding(query)
+      const embedding = await getGeminiEmbedding(query, { beforeRequest: reserveEmbed })
       if (embedding) {
         // Try Supabase pgvector search first if configured
+        // Ask for every match: weight filters aren't in match_fonts, so they are
+        // applied below, and a capped result could otherwise come back short
         const dbResults = await searchFontsWithVector(embedding, {
           category,
           isVariable: isVariableParam !== undefined && isVariableParam !== '' ? (isVariableParam === 'true' || isVariableParam === '1') : null,
-          limit
+          limit: catalog.length
         })
 
         if (dbResults && dbResults.length > 0) {
           // match_fonts returns a subset of columns; merge with the catalog entry
           // so every search mode returns the same font shape
-          const fonts = dbResults.slice(0, limit).map((row) => {
-            const base = catalog.find((f) => f.family.toLowerCase() === String(row.family).toLowerCase())
-            return { ...(base || {}), ...row, searchScore: Number(Number(row.similarity || 0).toFixed(3)) }
-          })
+          const fonts = dbResults
+            .map((row) => {
+              const base = catalogByFamily().get(String(row.family).toLowerCase())
+              return { ...(base || {}), ...row, searchScore: Number(Number(row.similarity || 0).toFixed(3)) }
+            })
+            .filter(matchesFilters)
+            .slice(0, limit)
           return c.json({
             total: fonts.length,
             searchMode: 'vector_pgvector',
@@ -160,10 +181,10 @@ fontsRoute.get('/', async (c) => {
  */
 fontsRoute.get('/similar/:family', async (c) => {
   const targetFamily = decodeURIComponent(c.req.param('family') || '').trim()
-  const limit = Math.min(20, Math.max(1, parseInt(c.req.query('limit') || '6', 10)))
+  const limit = parseLimit(c.req.query('limit'), { fallback: 6, max: 20 })
 
   const catalog = getUnifiedCatalog()
-  const target = catalog.find((f) => f.family.toLowerCase() === targetFamily.toLowerCase())
+  const target = catalogByFamily().get(targetFamily.toLowerCase())
 
   if (!target) {
     return c.json({ error: `Font '${targetFamily}' not found in catalog.` }, 404)

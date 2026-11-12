@@ -89,7 +89,7 @@ On the held-out paraphrases it still only reaches **56% top-3**. That's the evid
 
 1. **Quality:** tied for best on the easy set and **alone at 100%** on the hard set.
 2. **Reliability:** the only top-quality model that completed every request on the free tier with zero errors.
-3. **Latency:** about 2.5s, comfortably inside the 12s server budget and the 14s browser timeout.
+3. **Latency:** about 2.5s, comfortably inside the 10s Gemini budget and the 14s browser timeout.
 4. **Cost:** Flash-Lite is Gemini's cheapest tier, which matters once billing is on.
 5. **Resilience:** the chain spans two model generations, each with its own quota, and a model that just hit quota is skipped for its retry window.
 

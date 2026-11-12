@@ -10,6 +10,7 @@ import { recommendWithGemini, getModelChain } from '../lib/gemini-client.mjs'
 import { clientIp, createRateLimiter } from '../lib/rate-limit.mjs'
 import { SERVER_PROFILE_IDS, selectCandidates, annotateScriptSupport } from '../lib/candidates.mjs'
 import { normalizeBriefKey } from '../../shared/brief-key.js'
+import { runInBackground } from '../lib/background.mjs'
 
 const MAX_PROMPT_CHARS = 1_500
 const isRateLimited = createRateLimiter({ limit: 20, windowMs: 60_000 })
@@ -68,13 +69,13 @@ recommendRoute.post('/', async (c) => {
   const cacheKey = `v2:${briefKey}`
   const recordHistory = (result) => {
     if (!sessionId) return
-    saveUserHistory({
+    runInBackground(saveUserHistory({
       sessionId,
       brief: prompt,
       profileId: result.picks[0].profileId,
       rationale: result.picks[0].rationale,
       tags: result.picks[0].tags
-    }).catch(() => {})
+    }))
   }
 
   // 1. Cache (Supabase, or in-memory when Supabase is unavailable)
@@ -107,7 +108,8 @@ recommendRoute.post('/', async (c) => {
       picks: applyPreferences(raw.picks, preferences)
     }, script)
 
-    await setRecommendationCache(cacheKey, { ...result.picks[0], ...result })
+    // Not awaited: the visitor shouldn't wait up to 2.5s on a cache write
+    runInBackground(setRecommendationCache(cacheKey, { ...result.picks[0], ...result }))
     recordHistory(result)
     return respond(c, result, { briefKey, model })
   } catch (error) {

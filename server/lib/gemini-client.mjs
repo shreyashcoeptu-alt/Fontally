@@ -26,7 +26,7 @@ export function getModelChain(env = process.env) {
   return [...new Set([primary, ...fallbacks].filter(Boolean))]
 }
 
-function retryAfterMs(payload, fallbackMs) {
+export function retryAfterMs(payload, fallbackMs) {
   const seconds = Number(/retry in ([\d.]+)s/i.exec(payload?.error?.message || '')?.[1])
   return Number.isFinite(seconds) ? Math.ceil(seconds * 1000) : fallbackMs
 }
@@ -42,7 +42,10 @@ export async function recommendWithGemini({
   allowedIds,
   apiKey,
   models = getModelChain(),
-  totalBudgetMs = 12_000,
+  // Worst case server time = cache read (2.5s Supabase timeout) + this budget.
+  // 2.5s + 10s stays under the browser's 14s abort in src/main.js; past that the
+  // browser falls back offline and the Gemini call is quota spent for nothing.
+  totalBudgetMs = 10_000,
   perModelTimeoutMs = 8_000,
   fetchImpl = globalThis.fetch,
   now = Date.now

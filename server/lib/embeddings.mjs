@@ -1,8 +1,14 @@
+import { retryAfterMs } from './gemini-client.mjs'
+
 const GEMINI_EMBED_BASE = 'https://generativelanguage.googleapis.com/v1beta/models'
 const DEFAULT_EMBED_MODEL = 'gemini-embedding-001'
 
 const embeddingCache = new Map()
 const MAX_EMBEDDING_CACHE = 500
+
+// After a 429/503, skip the API until this time instead of re-hitting it on
+// every request (failures used to be uncached, so each search retried Gemini).
+let embedCooldownUntil = 0
 
 /**
  * Calculates cosine similarity between two float vectors.
@@ -37,7 +43,11 @@ export async function getGeminiEmbedding(text, {
   // RETRIEVAL_QUERY for user searches, RETRIEVAL_DOCUMENT when embedding catalog fonts.
   // Asymmetric task types noticeably improve query -> document matching.
   taskType = 'RETRIEVAL_QUERY',
-  fetchImpl = globalThis.fetch
+  fetchImpl = globalThis.fetch,
+  // Called only when the API will actually be hit (not on cache hits or during a
+  // cooldown). Resolve false to skip the call, e.g. when the daily budget is spent.
+  beforeRequest = null,
+  now = Date.now
 } = {}) {
   if (!text || typeof text !== 'string' || !text.trim()) return null
   if (!apiKey) return null
@@ -46,6 +56,8 @@ export async function getGeminiEmbedding(text, {
   if (embeddingCache.has(key)) {
     return embeddingCache.get(key)
   }
+  if (embedCooldownUntil > now()) return null
+  if (beforeRequest && !(await beforeRequest())) return null
 
   try {
     const controller = new AbortController()
@@ -74,6 +86,10 @@ export async function getGeminiEmbedding(text, {
     }
 
     if (!res.ok) {
+      if (res.status === 429 || res.status === 503) {
+        const payload = await res.json().catch(() => ({}))
+        embedCooldownUntil = now() + (res.status === 429 ? retryAfterMs(payload, 60_000) : 20_000)
+      }
       console.warn(`Gemini embedding failed with status ${res.status}`)
       return null
     }
@@ -96,4 +112,10 @@ export async function getGeminiEmbedding(text, {
   }
 
   return null
+}
+
+// Test helper
+export function resetEmbeddingState() {
+  embeddingCache.clear()
+  embedCooldownUntil = 0
 }

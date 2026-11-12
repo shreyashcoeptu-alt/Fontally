@@ -144,8 +144,9 @@ async function recommendProfile(promptText) {
   }
   recommendationAbortController = new AbortController()
   const controller = recommendationAbortController
-  // Must be longer than the server's Gemini timeout (10s), otherwise the browser gives up
-  // on requests the server would have answered and silently uses the offline matcher.
+  // Must be longer than the server's worst case (2.5s cache read + 10s Gemini budget,
+  // see server/lib/gemini-client.mjs), otherwise the browser gives up on requests the
+  // server would have answered and silently uses the offline matcher.
   const timeout = setTimeout(() => controller.abort(), 14000)
 
   try {
