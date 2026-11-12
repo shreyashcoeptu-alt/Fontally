@@ -2,7 +2,6 @@
 
 # **FONTALLY**
 
-### *Make your type talk.*
 
 **An intelligent brief-to-type pairing engine & typography playground for designers, founders, and engineers.**
 
