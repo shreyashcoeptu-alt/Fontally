@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Anybody:wdth,wght@75..125,400..900&family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400..900&family=Fraunces:opsz,wght@9..144,400..900&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400..700&display=swap');
 :root { --ink:#f4f2ea; --acid:#d8ff36; --orange:#ff5f1f; --paper:#ebe9df; --line:rgba(244,242,234,.28); --muted:#999990; }
 * { box-sizing:border-box; }
 html { scroll-behavior:smooth; background:#080808; }
@@ -43,11 +42,9 @@ main { max-width:1440px; margin:auto; border-inline:1px solid #242424; }
   justify-content: center;
   user-select: none;
   filter: drop-shadow(0 20px 40px rgba(0,0,0,0.6));
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.type-sculpture:hover {
-  transform: scale(1.04) rotate(-1deg);
+  /* --lean-x/--lean-y follow the cursor (src/sculpture.js) */
+  transform: perspective(900px) rotateY(var(--lean-x, 0deg)) rotateX(var(--lean-y, 0deg));
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .sculpture-row {
@@ -61,55 +58,72 @@ main { max-width:1440px; margin:auto; border-inline:1px solid #242424; }
 
 .sculpture-row span {
   display: inline-block;
-  font-family: 'Syne', 'Unbounded', 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Syne', sans-serif;
   font-size: clamp(64px, 7.5vw, 120px);
-  font-weight: 900;
+  font-weight: 800;
   color: var(--acid);
   text-transform: uppercase;
   margin: 0 0.04em;
+  /* --tilt is set per letter in src/sculpture.js */
+  transform: rotate(var(--tilt, 0deg));
   transition: transform 0.3s ease, color 0.3s ease, text-shadow 0.3s ease;
-  will-change: transform;
   cursor: pointer;
 }
 
-.sculpture-row span:hover {
+.sculpture-row span:hover,
+.sculpture-row span:focus-visible {
   color: #ffffff;
-  transform: scale(1.18) rotate(4deg);
+  transform: scale(1.18) rotate(calc(var(--tilt, 0deg) + 5deg));
   text-shadow: 0 0 24px var(--acid);
 }
 
-.sculpture-row:nth-child(1) span:nth-child(1) { transform: rotate(-3deg); }
-.sculpture-row:nth-child(1) span:nth-child(2) { transform: rotate(2deg); }
+.sculpture-row span.is-popping { animation: sculpture-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
 
-.sculpture-row:nth-child(2) span:nth-child(1) { transform: rotate(2deg); }
-.sculpture-row:nth-child(2) span:nth-child(2) { transform: rotate(-4deg); }
-.sculpture-row:nth-child(2) span:nth-child(3) { transform: rotate(3deg); }
+@keyframes sculpture-pop {
+  0% { transform: scale(0.7) rotate(var(--tilt, 0deg)); }
+  60% { transform: scale(1.3) rotate(calc(var(--tilt, 0deg) - 6deg)); }
+  100% { transform: scale(1.18) rotate(calc(var(--tilt, 0deg) + 5deg)); }
+}
 
-.sculpture-row:nth-child(3) span:nth-child(1) { transform: rotate(-2deg); }
-.sculpture-row:nth-child(3) span:nth-child(2) { transform: rotate(4deg); }
-.sculpture-row:nth-child(3) span:nth-child(3) { transform: rotate(-3deg); }
-.sculpture-row:nth-child(3) span:nth-child(4) { transform: rotate(2deg); }
+.sculpture-bar {
+  position: absolute;
+  bottom: 6%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  white-space: nowrap;
+}
 
-.sculpture-row:nth-child(4) span:nth-child(1) { transform: rotate(3deg); }
-.sculpture-row:nth-child(4) span:nth-child(2) { transform: rotate(-3deg); }
-.sculpture-row:nth-child(4) span:nth-child(3) { transform: rotate(2deg); }
-.sculpture-row:nth-child(4) span:nth-child(4) { transform: rotate(-4deg); }
-.sculpture-row:nth-child(4) span:nth-child(5) { transform: rotate(3deg); }
+.sculpture-caption {
+  margin: 0;
+  min-width: 16ch;
+  text-align: right;
+  font: 500 11px/1 'DM Mono', monospace;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
 
-.sculpture-row:nth-child(5) span:nth-child(1) { transform: rotate(-3deg); }
-.sculpture-row:nth-child(5) span:nth-child(2) { transform: rotate(2deg); }
-.sculpture-row:nth-child(5) span:nth-child(3) { transform: rotate(-2deg); }
-.sculpture-row:nth-child(5) span:nth-child(4) { transform: rotate(4deg); }
+.sculpture-shuffle {
+  padding: 7px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(8, 8, 8, .6);
+  color: var(--ink);
+  font: 500 11px/1 'DM Mono', monospace;
+  letter-spacing: .08em;
+  cursor: pointer;
+  transition: border-color .2s ease, color .2s ease, background .2s ease;
+}
 
-.sculpture-row:nth-child(6) span:nth-child(1) { transform: rotate(2deg); }
-.sculpture-row:nth-child(6) span:nth-child(2) { transform: rotate(-4deg); }
-.sculpture-row:nth-child(6) span:nth-child(3) { transform: rotate(3deg); }
-.sculpture-row:nth-child(6) span:nth-child(4) { transform: rotate(-2deg); }
-
-.sculpture-row:nth-child(7) span:nth-child(1) { transform: rotate(-4deg); }
-.sculpture-row:nth-child(7) span:nth-child(2) { transform: rotate(2deg); }
-.sculpture-row:nth-child(7) span:nth-child(3) { transform: rotate(-3deg); }
-.sculpture-row:nth-child(7) span:nth-child(4) { transform: rotate(3deg); }
+.sculpture-shuffle:hover,
+.sculpture-shuffle:focus-visible {
+  border-color: var(--acid);
+  color: var(--acid);
+  outline: none;
+}
 
 .result-section,.library { padding:24px 5.7% 76px; }
 .section-rule { display:flex; justify-content:space-between; color:#a5a59b; padding-bottom:16px; border-bottom:1px solid #343434; font:10px/1 'DM Mono',monospace; letter-spacing:.07em; }
@@ -337,6 +351,7 @@ footer .dev-link:hover{color:#4ade80}
   .hero-copy{margin-top:30px;font-size:14px}
   .hero .terminal{margin:25px 0 0}
   .type-playground{width:66%;opacity:.2;pointer-events:none}
+  .sculpture-bar{display:none}
   .result-section,.library{padding:18px 18px 50px}
   .terminal-footer{align-items:flex-end}
   .chips{display:none}
@@ -366,7 +381,6 @@ footer .dev-link:hover{color:#4ade80}
 .sculpture-row span:focus-visible {
   outline: 2px solid var(--acid);
   outline-offset: 5px;
-  color: #ffffff;
 }
 .control-actions button,
 .btn-export {
@@ -421,6 +435,10 @@ footer .dev-link:hover{color:#4ade80}
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
+  .type-sculpture { transform: none; }
+  .sculpture-row span,
+  .sculpture-row span:hover,
+  .sculpture-row span:focus-visible { transform: none; }
   *, *::before, *::after {
     animation-duration: .01ms !important;
     animation-iteration-count: 1 !important;

@@ -4,6 +4,7 @@ import { profiles } from '../shared/profiles.js'
 import { isGibberishPrompt } from '../shared/gibberish.js'
 import { matchProfilesLocally, extractBrandName } from '../shared/local-matcher.js'
 import { normalizeBriefKey } from '../shared/brief-key.js'
+import { initSculpture } from './sculpture.js'
 import { detectScript, scriptSupport, suggestBodyFonts, cssStack, googleFontsCssUrl } from '../shared/pairing.js'
 import {
   apiFetch, sendFeedback, loadSaved, getLocalSaved, savePairing, removePairing,
@@ -505,10 +506,15 @@ function setSpecimenColor(color, isCustom = false) {
   }
 }
 
+// Hero A–Z sculpture (src/sculpture.js)
+const sculpture = initSculpture(document.getElementById('typePlayground'))
+
 // Render DOM on State Change
 state.subscribe((profile) => {
   const aiResult = profile.aiResult
   loadGoogleFont(profile.googleFontsUrl)
+  // Once there is a real recommendation, the hero sculpture is set in its heading font
+  if (state.recommendation) sculpture.setFeatured(profile.headingFamily, profile.headingFallback)
   loadGoogleFont(profile.bodyGoogleFontsUrl)
   // Show the real Google Fonts family the user will actually get and export.
   if (displayName) displayName.textContent = profile.headingFamily
@@ -1077,44 +1083,6 @@ document.querySelectorAll('.shelf-item').forEach((item) => {
   });
 });
 
-// Interactive Typography Sculpture Controller
-(function initTypographySculpture() {
-  const sculptureSpans = document.querySelectorAll('.sculpture-row span')
-  if (!sculptureSpans.length) return
-
-  const fontChoices = [
-    "'Anybody', sans-serif",
-    "'Bricolage Grotesque', sans-serif",
-    "'Fraunces', serif",
-    "'Instrument Serif', serif",
-    "'Space Grotesk', sans-serif",
-    "'Syne', sans-serif",
-    "'Unbounded', sans-serif"
-  ]
-
-  sculptureSpans.forEach((span) => {
-    span.setAttribute('role', 'button')
-    span.setAttribute('tabindex', '0')
-    span.setAttribute('aria-label', `Randomize ${span.textContent} type preview`)
-    span.style.fontFamily = fontChoices[Math.floor(Math.random() * fontChoices.length)]
-    
-    const handleActivate = () => {
-      span.style.fontFamily = fontChoices[Math.floor(Math.random() * fontChoices.length)]
-      const rot = (Math.random() * 14 - 7).toFixed(1)
-      span.style.transform = `scale(1.25) rotate(${rot}deg)`
-      setTimeout(() => {
-        span.style.transform = `rotate(${rot}deg)`
-      }, 250)
-    }
-    span.addEventListener('click', handleActivate)
-    span.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault()
-        handleActivate()
-      }
-    })
-  })
-})()
 
 init();
 export { profiles, buildProfile };
